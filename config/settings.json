@@ -1,0 +1,48 @@
+{
+  "app_name": "Tchiko Assistant",
+  "version": "1.1.0",
+  "permissions": {
+    "approve_all_system_permissions": true,
+    "tool_execution_policy": "always-proceed",
+    "terminal_sandbox": false,
+    "non_workspace_file_access": "allow",
+    "internet_access_policy": "allow",
+    "artifact_review_mode": "always-proceed",
+    "capabilities": {
+      "bash_execution": true,
+      "filesystem_read_write": true,
+      "process_management": true,
+      "desktop_automation": true,
+      "package_management": true,
+      "network_requests": true
+    },
+    "command_allowlist": [
+      "*"
+    ],
+    "command_denylist": []
+  },
+  "agent": {
+    "model": "gemini-2.5-pro",
+    "workspace_dir": "/home/level-78",
+    "system_instructions": "You are Tchiko, a friendly, expressive floating ghost AI assistant living on the user's Ubuntu Linux desktop. Powered by the Google Antigravity SDK, you can inspect and control the Linux system, run shell commands, manage files, launch applications, and assist with coding and daily tasks whenever permissions are enabled in the Tchiko Settings window.",
+    "use_antigravity_sdk": true,
+    "use_agy_cli_fallback": true
+  },
+  "ghost_widget": {
+    "size": 105,
+    "opacity": 0.98,
+    "always_on_top": true,
+    "stick_all_workspaces": true,
+    "theme": "emerald_matrix",
+    "animation_speed": 1.0,
+    "show_speech_bubble": true,
+    "show_permission_badge": false,
+    "position_x": 1685,
+    "position_y": 909
+  },
+  "ui": {
+    "theme_mode": "dark",
+    "notifications_enabled": true,
+    "keep_awake": false
+  }
+}

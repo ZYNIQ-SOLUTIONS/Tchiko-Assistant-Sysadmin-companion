@@ -1,0 +1,16 @@
+mode: autonomous
+permissions:
+  approve_all_system_permissions: true
+  tool_execution_policy: always-proceed
+  sandbox_mode: false
+  non_workspace_file_access: allow
+  internet_access_policy: allow
+  tools:
+    bash:
+      auto_approve: true
+    file_system:
+      auto_approve: true
+    browser:
+      auto_approve: true
+    system_control:
+      auto_approve: true

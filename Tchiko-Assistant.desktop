@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Tchiko Assistant
+Comment=Floating SVG Ghost AI Companion powered by Google Antigravity SDK
+Exec=/usr/bin/python3 "/home/level-78/Desktop/Tchiko Assistant/main.py"
+Path=/home/level-78/Desktop/Tchiko Assistant
+Icon=/home/level-78/Desktop/Tchiko Assistant/assets/tchiko_ghost.svg
+Terminal=false
+Categories=Utility;Development;ArtificialIntelligence;
+StartupNotify=false

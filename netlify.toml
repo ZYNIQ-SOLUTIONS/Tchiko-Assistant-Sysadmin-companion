@@ -1,0 +1,22 @@
+# Netlify Deployment Configuration for Tchiko Assistant Landing Page
+[build]
+  publish = "landing"
+  command = "echo 'Deploying Tchiko Assistant static landing page from landing/'"
+
+[[headers]]
+  for = "/assets/*.svg"
+  [headers.values]
+    Content-Type = "image/svg+xml"
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

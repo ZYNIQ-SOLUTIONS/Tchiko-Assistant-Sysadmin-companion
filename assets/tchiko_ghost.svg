@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 250 230" width="250" height="230">
+  <defs>
+    <radialGradient id="petAura" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ef4444" stop-opacity="0.34"/>
+      <stop offset="60%" stop-color="#f8fafc" stop-opacity="0.14"/>
+      <stop offset="100%" stop-color="#090d16" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="fluffyFur" cx="44%" cy="34%" r="64%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="48%" stop-color="#f1f5f9"/>
+      <stop offset="80%" stop-color="#475569"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </radialGradient>
+    <linearGradient id="plushWing" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="52%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#dc2626"/>
+    </linearGradient>
+    <linearGradient id="chubbyLeg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f1f5f9"/>
+      <stop offset="45%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Soft Warm Crimson & White Aura -->
+  <circle cx="125" cy="116" r="100" fill="url(#petAura)"/>
+
+  <!-- 4 Plump, Fluffy Feathered Wings (White, Velvet Black & Crimson Tips) -->
+  <!-- Upper Left Wing -->
+  <path d="M 72 90 C 26 52, 8 68, 22 92 C 12 100, 22 114, 38 112 C 30 122, 44 128, 70 114 Z"
+        fill="url(#plushWing)" stroke="#0f172a" stroke-width="2" stroke-linejoin="round"/>
+  <!-- Upper Right Wing -->
+  <path d="M 178 90 C 224 52, 242 68, 228 92 C 238 100, 228 114, 212 112 C 220 122, 206 128, 180 114 Z"
+        fill="url(#plushWing)" stroke="#0f172a" stroke-width="2" stroke-linejoin="round"/>
+  <!-- Lower Left Wing -->
+  <path d="M 68 114 C 32 108, 20 124, 34 138 C 30 146, 46 150, 70 134 Z"
+        fill="url(#plushWing)" stroke="#0f172a" stroke-width="1.8" stroke-linejoin="round"/>
+  <!-- Lower Right Wing -->
+  <path d="M 182 114 C 218 108, 230 124, 216 138 C 220 146, 204 150, 180 134 Z"
+        fill="url(#plushWing)" stroke="#0f172a" stroke-width="1.8" stroke-linejoin="round"/>
+
+  <!-- 6 Chubby Squishy Pet Legs (Hind, Middle, Front Pairs) -->
+  <ellipse cx="68" cy="158" rx="12" ry="18" transform="rotate(24 68 158)" fill="url(#chubbyLeg)" stroke="#0f172a" stroke-width="1.8"/>
+  <ellipse cx="182" cy="158" rx="12" ry="18" transform="rotate(-24 182 158)" fill="url(#chubbyLeg)" stroke="#0f172a" stroke-width="1.8"/>
+  <ellipse cx="83" cy="168" rx="13" ry="19" transform="rotate(14 83 168)" fill="url(#chubbyLeg)" stroke="#0f172a" stroke-width="1.8"/>
+  <ellipse cx="167" cy="168" rx="13" ry="19" transform="rotate(-14 167 168)" fill="url(#chubbyLeg)" stroke="#0f172a" stroke-width="1.8"/>
+
+  <!-- Ultra-Fluffy, Chubby, Squishy Tchiko Body -->
+  <ellipse cx="125" cy="114" rx="62" ry="52" fill="url(#fluffyFur)" stroke="#1e293b" stroke-width="2.2"/>
+
+  <!-- Soft Fluffy Fur Swirls & Faceless Dimples -->
+  <path d="M 98 86 Q 125 74 152 86" fill="none" stroke="#dc2626" stroke-width="2.4" stroke-linecap="round" opacity="0.75"/>
+  <path d="M 90 104 Q 125 118 160 104" fill="none" stroke="#1e293b" stroke-width="2.6" stroke-linecap="round" opacity="0.65"/>
+  <path d="M 104 122 Q 125 132 146 122" fill="none" stroke="#dc2626" stroke-width="2.0" stroke-linecap="round" opacity="0.60"/>
+
+  <!-- Chubby Front Pair of Paws with Crimson Toe-Beans -->
+  <ellipse cx="101" cy="172" rx="13.5" ry="20" transform="rotate(6 101 172)" fill="url(#chubbyLeg)" stroke="#0f172a" stroke-width="2"/>
+  <ellipse cx="149" cy="172" rx="13.5" ry="20" transform="rotate(-6 149 172)" fill="url(#chubbyLeg)" stroke="#0f172a" stroke-width="2"/>
+</svg>
