@@ -1,6 +1,11 @@
-# Tchiko Assistant — Antigravity SDK & Desktop Overlay Dependencies
-google-antigravity>=0.1.0
-PyGObject>=3.42.0
-pycairo>=1.20.0
-PyYAML>=6.0
-httpx>=0.27.0
+# =============================================================================
+# Tchiko Assistant — Python Requirements
+# =============================================================================
+# Note for Ubuntu Desktop:
+#   GTK3 and Cairo bindings are provided natively by Ubuntu apt packages:
+#     sudo apt install -y python3-gi python3-gi-cairo gir1.2-gtk-3.0 xclip
+#
+# Note for Netlify / CI:
+#   This file is intentionally kept free of native C-extension packages
+#   (like PyGObject/pycairo) so Netlify's automatic `pip install -r requirements.txt`
+#   step completes instantaneously with exit code 0 when deploying `landing/`.
