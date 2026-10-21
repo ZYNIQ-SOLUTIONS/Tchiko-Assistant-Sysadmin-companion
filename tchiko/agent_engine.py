@@ -1,22 +1,29 @@
-"""Google Antigravity SDK & Advanced Autonomous Linux Agent Engine for Tchiko Assistant.
+"""Google Antigravity SDK, NDJSON Stream Bridge & 5-Tier Autonomous Linux Agent Engine.
 
-Capabilities:
-1. Official Google Antigravity Python SDK (`google.antigravity`: `Agent`,
-   `LocalAgentConfig`, `CapabilitiesConfig`) with real-time streaming of
-   `response.thoughts`, `response.tool_calls`, and `response` tokens.
-2. Persistent Conversational & Contextual Memory (`config/agent_memory.json`):
-   - Remembers conversation history, active working directory (`cwd`), last executed
-     command & output, last generated artifact (e.g. OpenSSH `.pub` key or folder),
-     and user-saved facts/notes (`"remember my hetzner ip is ..."`).
-   - Resolves contextual follow-ups (*"copy it"*, *"run it again"*, *"where did you save it?"*).
-3. Multi-Step Autonomous Linux & DevOps Action Planner:
-   - OpenSSH key generation (`ed25519` / `rsa`) + automatic clipboard copy + `~/.ssh/config` host setup
-   - Comprehensive Ubuntu System Doctor (`/doctor` or *"diagnose system"*)
-   - Port & Process Doctor (*"what is using port 8000"*, *"kill port 3000"*, *"what is eating my RAM/CPU"*)
-   - Multi-step folder + Git repo / script scaffolding
-   - Smart file finder & code search (`find` / `grep`)
-   - Docker, systemd service management, package version checks, and network auditing
-4. Multi-Turn ReAct Tool Loop for Gemini REST API & Local Ollama with `<bash>` execution.
+Architectural Overview (`tchiko/agent_engine.py`):
+--------------------------------------------------
+Orchestrates prompt dispatch across five prioritized execution tiers on a dedicated
+daemon worker thread while marshaling UI updates (`on_thought`, `on_tool_call`,
+`on_token`, `on_complete`, `on_state_change`) back to the GTK3 main loop:
+
+- **Tier 1 (`_try_handle_slash_commands`)**: Zero-latency built-in operator commands
+  (`/doctor`, `/sysinfo`, `/procs`, `/files`, `/memory`, `/permissions`, `/run`).
+- **Tier 2 (`_try_contextual_followup`)**: Anaphoric & stateful follow-up resolution
+  (`"copy it"`, `"retry"`, `"where did you save it?"`, `"cd <dir>"`, `"remember ..."`),
+  backed by `config/agent_memory.json`.
+- **Tier 3 (`_try_autonomous_linux_action`)**: Deterministic sysadmin & DevOps planners:
+  - 6-Step Autonomous IDE & Application Crash Doctor (`_run_ide_crash_doctor`)
+  - 5-Point Ubuntu System Health Audit (`_run_system_doctor`)
+  - OpenSSH (`ed25519` / `rsa`) Keypair & `~/.ssh/config` Lifecycle Manager
+  - Port & Process Reaper (`ss -tulnp` / `lsof -i`) and Git Repository Scaffolder
+- **Tier 4A / 4B (`google.antigravity` SDK & `_run_agy_cli_stream_json`)**:
+  - Streams real-time NDJSON events (`init`, `step_update`, `result`) from
+    `agy -p --output-format stream-json --dangerously-skip-permissions`, preserving
+    multi-turn session state via `agy_conversation_id`.
+- **Tier 5 (`_try_external_llm_with_tools`)**: 8-step Multi-Tool ReAct Loop for
+  Gemini 2.5 Flash REST API and Local Ollama (`gemma4:e4b`, `qwen2.5-coder:1.5b`,
+  `llama3.2:latest`, `lfm2.5:8b`) supporting `<view_file>`, `<grep>`, `<patch_file>`,
+  `<write_file>`, and `<bash>` with `<think>...</think>` chain-of-thought isolation.
 """
 
 from __future__ import annotations
@@ -261,7 +268,20 @@ class TchikoAgentEngine:
             on_complete("".join(full_text))
             return
 
-        # 5. Try Optional Gemini API / Local Ollama LLM with Multi-Turn Memory & ReAct Tool Loop
+        # 4B. If Antigravity CLI (`agy`) is installed & enabled, run via `agy -p --output-format stream-json`!
+        if self.agy_bin and self.config.data.get("agent", {}).get("use_agy_cli_fallback", True):
+            agy_handled = await self._run_agy_cli_stream_json(
+                prompt,
+                on_thought,
+                on_tool_call,
+                on_token,
+                on_complete,
+                on_state_change,
+            )
+            if agy_handled:
+                return
+
+        # 5. Try Optional Gemini API / Local Ollama LLM with Multi-Turn Memory & Multi-Tool ReAct Loop
         llm_reply = await self._try_external_llm_with_tools(
             prompt,
             on_thought,
@@ -442,6 +462,14 @@ class TchikoAgentEngine:
     ) -> bool:
         """Parse single or multi-step natural-language Linux tasks and execute them directly on Ubuntu."""
         lower = prompt.lower()
+
+        # ── A0. ANTIGRAVITY CODE IDE / VSCODE / APP CRASH DOCTOR & AUTO-HEAL ──
+        if any(k in lower for k in ("antigravity", "agy", "code ide", "vscode", "vs code")) and any(
+            w in lower for w in ("crash", "crashing", "not working", "fix", "broken", "error", "won't start", "why")
+        ):
+            return await self._run_ide_crash_doctor(
+                prompt, on_thought, on_tool_call, on_token, on_complete, on_state_change
+            )
 
         # ── A. SYSTEM DOCTOR / COMPREHENSIVE HEALTH DIAGNOSTIC ────────────────
         if any(
@@ -845,6 +873,244 @@ class TchikoAgentEngine:
             on_approval_needed,
         )
 
+    async def _run_ide_crash_doctor(
+        self,
+        prompt: str,
+        on_thought: Callable[[str], None],
+        on_tool_call: Callable[[str, str], None],
+        on_token: Callable[[str], None],
+        on_complete: Callable[[str], None],
+        on_state_change: Callable[[str], None],
+    ) -> bool:
+        """Run the 6-step autonomous application & IDE crash doctor and auto-repair pipeline."""
+        on_state_change("executing")
+        lower = prompt.lower()
+        target_app = "Antigravity Code IDE"
+        if "vscode" in lower or "vs code" in lower:
+            target_app = "VS Code"
+
+        def _on_step(step_msg: str, t_name: str, t_args: str) -> None:
+            on_thought(step_msg)
+            if t_name:
+                on_tool_call(t_name, t_args)
+
+        res = await asyncio.to_thread(self.toolkit.diagnose_and_heal_app, target_app, _on_step)
+        await self._stream_markdown(res.output, on_token)
+        on_state_change("happy" if res.ok else "alert")
+        on_complete(res.output)
+        return True
+
+    async def _run_agy_cli_stream_json(
+        self,
+        prompt: str,
+        on_thought: Callable[[str], None],
+        on_tool_call: Callable[[str, str], None],
+        on_token: Callable[[str], None],
+        on_complete: Callable[[str], None],
+        on_state_change: Callable[[str], None],
+    ) -> bool:
+        """Execute prompt via the official Antigravity CLI (`agy -p --output-format stream-json`) with real-time tool and token streaming."""
+        if not self.agy_bin or not os.path.exists(self.agy_bin):
+            return False
+
+        active_cwd = self.memory.get("cwd", str(Path.home()))
+        if not os.path.isdir(active_cwd):
+            active_cwd = str(Path.home())
+
+        cmd_args = [
+            self.agy_bin,
+            "-p",
+            prompt,
+            "--output-format",
+            "stream-json",
+            "--add-dir",
+            active_cwd,
+        ]
+        if self.config.is_all_permissions_approved() or not self.config.requires_manual_review():
+            cmd_args.append("--dangerously-skip-permissions")
+
+        prev_conv_id = self.memory.get("agy_conversation_id", "")
+        if prev_conv_id:
+            cmd_args.extend(["--conversation", str(prev_conv_id)])
+
+        on_thought("Launching Antigravity CLI (`agy --output-format stream-json`)...")
+        full_tokens: List[str] = []
+        final_response_text = ""
+
+        try:
+            proc = await asyncio.create_subprocess_exec(
+                *cmd_args,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+                cwd=active_cwd,
+            )
+            assert proc.stdout is not None
+
+            while True:
+                line_bytes = await asyncio.wait_for(proc.stdout.readline(), timeout=120.0)
+                if not line_bytes:
+                    break
+                line = line_bytes.decode("utf-8", errors="replace").strip()
+                if not line or not line.startswith("{"):
+                    continue
+                try:
+                    ev = json.loads(line)
+                except Exception:
+                    continue
+
+                ev_type = ev.get("event")
+                if ev_type == "init":
+                    conv_id = ev.get("conversation_id", "")
+                    if conv_id:
+                        self.memory["agy_conversation_id"] = conv_id
+                        self._save_memory()
+                    tools_count = len(ev.get("init", {}).get("tools", []))
+                    on_thought(f"Antigravity agent initialized ({tools_count} tools ready)...")
+
+                elif ev_type == "step_update":
+                    su = ev.get("step_update", {})
+                    step_type = su.get("step_type", "")
+                    state = su.get("state", "")
+                    if step_type == "tool":
+                        t_info = su.get("tool_info", {})
+                        t_name = su.get("tool_name") or t_info.get("name", "tool")
+                        t_params = t_info.get("parameters", {})
+                        t_out = t_info.get("output", "")
+                        param_str = json.dumps(t_params)[:160]
+                        if state == "ACTIVE":
+                            on_state_change("executing")
+                            on_tool_call(t_name, param_str)
+                            on_thought(f"Executing `{t_name}`: {param_str}")
+                        elif state == "DONE" and t_out:
+                            on_thought(f"Completed `{t_name}` → {str(t_out)[:120]}")
+                    elif step_type == "agent_response":
+                        delta = su.get("text_delta", "")
+                        if delta:
+                            full_tokens.append(delta)
+                            on_token(delta)
+
+                elif ev_type == "result":
+                    res_obj = ev.get("result", {})
+                    final_response_text = res_obj.get("response", "")
+
+            await asyncio.wait_for(proc.wait(), timeout=10.0)
+            combined = "".join(full_tokens).strip() or final_response_text.strip()
+            if proc.returncode == 0 and combined:
+                if not full_tokens and final_response_text:
+                    await self._stream_markdown(final_response_text, on_token)
+                on_state_change("happy")
+                on_complete(combined)
+                return True
+
+            # If resuming an old conversation_id failed, clear it so next call starts fresh
+            if prev_conv_id:
+                self.memory["agy_conversation_id"] = ""
+                self._save_memory()
+            return False
+        except Exception:
+            return False
+
+    @staticmethod
+    def _strip_think_blocks(raw_text: str) -> Tuple[str, List[str]]:
+        """Extract <think>...</think> blocks cleanly so internal reasoning never leaks into <bash> parsing or chat output."""
+        thoughts: List[str] = []
+        for m in re.finditer(r"<think>(.*?)</think>", raw_text, flags=re.DOTALL | re.IGNORECASE):
+            t_body = m.group(1).strip()
+            if t_body:
+                thoughts.append(t_body)
+        cleaned = re.sub(r"<think>.*?</think>", "", raw_text, flags=re.DOTALL | re.IGNORECASE)
+        if "<think>" in cleaned.lower():
+            idx = cleaned.lower().find("<think>")
+            tail_thought = cleaned[idx + 7 :].strip()
+            if tail_thought:
+                thoughts.append(tail_thought)
+            cleaned = cleaned[:idx]
+        return cleaned.strip(), thoughts
+
+    @staticmethod
+    def _extract_valid_bash_commands(clean_text: str) -> List[str]:
+        """Extract executable bash commands from <bash>...</bash> outside <think> blocks, ignoring placeholders."""
+        commands: List[str] = []
+        placeholders = {
+            "command", "your_command", "your_command_here", "<command>",
+            "bash_command", "cmd", "ls /path/to/...",
+        }
+        for m in re.finditer(r"<bash>(.*?)</bash>", clean_text, flags=re.DOTALL | re.IGNORECASE):
+            cmd = m.group(1).strip()
+            if not cmd or cmd.lower() in placeholders:
+                continue
+            commands.append(cmd)
+        return commands
+
+    @classmethod
+    def _extract_tool_actions(cls, clean_text: str) -> List[Dict[str, Any]]:
+        """Extract multi-tool calls (<view_file>, <grep>, <patch_file>, <write_file>, <bash>) from LLM output."""
+        actions: List[Dict[str, Any]] = []
+
+        # 1. <view_file path="..." start="1" end="120" /> or <view_file path="...">
+        for m in re.finditer(
+            r'<view_file\s+path=["\']([^"\']+)["\'](?:\s+start=["\']?(\d+)["\']?)?(?:\s+end=["\']?(\d+)["\']?)?\s*/?>',
+            clean_text,
+            flags=re.IGNORECASE,
+        ):
+            actions.append(
+                {
+                    "tool": "view_file",
+                    "path": m.group(1),
+                    "start": int(m.group(2) or 1),
+                    "end": int(m.group(3) or 120),
+                }
+            )
+
+        # 2. <grep pattern="..." path="..." />
+        for m in re.finditer(
+            r'<grep\s+pattern=["\']([^"\']+)["\'](?:\s+path=["\']([^"\']+)["\'])?\s*/?>',
+            clean_text,
+            flags=re.IGNORECASE,
+        ):
+            actions.append(
+                {
+                    "tool": "grep",
+                    "pattern": m.group(1),
+                    "path": m.group(2) or "~",
+                }
+            )
+
+        # 3. <patch_file path="..."><search>...</search><replace>...</replace></patch_file>
+        for m in re.finditer(
+            r'<patch_file\s+path=["\']([^"\']+)["\']>\s*<search>(.*?)</search>\s*<replace>(.*?)</replace>\s*</patch_file>',
+            clean_text,
+            flags=re.DOTALL | re.IGNORECASE,
+        ):
+            actions.append(
+                {
+                    "tool": "patch_file",
+                    "path": m.group(1),
+                    "search": m.group(2),
+                    "replace": m.group(3),
+                }
+            )
+
+        # 4. <write_file path="...">...</write_file>
+        for m in re.finditer(
+            r'<write_file\s+path=["\']([^"\']+)["\']>(.*?)</write_file>',
+            clean_text,
+            flags=re.DOTALL | re.IGNORECASE,
+        ):
+            actions.append(
+                {
+                    "tool": "write_file",
+                    "path": m.group(1),
+                    "content": m.group(2).strip("\n"),
+                }
+            )
+
+        # 5. <bash>...</bash>
+        for cmd in cls._extract_valid_bash_commands(clean_text):
+            actions.append({"tool": "bash", "command": cmd})
+
+        return actions
+
     async def _try_external_llm_with_tools(
         self,
         prompt: str,
@@ -855,7 +1121,7 @@ class TchikoAgentEngine:
         on_state_change: Callable[[str], None],
         on_approval_needed: Optional[Callable[[str, Callable[[], None], Callable[[], None]], None]],
     ) -> bool:
-        """Query Gemini API or Local Ollama with conversation memory and execute <bash> tool blocks."""
+        """Run an 8-step autonomous multi-tool ReAct loop (`view_file`, `grep`, `patch_file`, `write_file`, `bash`)."""
         telemetry = self.toolkit.get_system_telemetry()
         cwd = self.memory.get("cwd", str(Path.home()))
         notes = json.dumps(self.memory.get("notes", {}))
@@ -865,13 +1131,19 @@ class TchikoAgentEngine:
         )
 
         sys_prompt = (
-            f"You are Tchiko, an advanced autonomous Ubuntu Linux desktop AI companion on host '{telemetry['hostname']}' "
+            f"You are Tchiko, an advanced autonomous Ubuntu Linux desktop AI engineer on host '{telemetry['hostname']}' "
             f"({telemetry['distro']}), working directory '{cwd}'.\n"
             f"User saved memory notes: {notes}\n"
             f"Recent conversation context:\n{recent_turns}\n\n"
-            "Whenever the user asks you to perform any action, create keys/files, inspect the system, or configure something on Linux, "
-            "include the exact bash command inside <bash>COMMAND</bash> tags so Tchiko executes it automatically on Ubuntu. "
-            "Be concise, helpful, and action-oriented."
+            "You have full autonomous tools to investigate, debug, and fix any Linux or codebase issue:\n"
+            "- Run shell commands: <bash>ls -la ~/.config</bash>\n"
+            "- View file lines: <view_file path=\"/path/to/file\" start=\"1\" end=\"120\" />\n"
+            "- Search logs/code: <grep pattern=\"error\" path=\"/path/to/dir\" />\n"
+            "- Patch a file (auto-creates .bak backup): <patch_file path=\"/path/to/file\"><search>old</search><replace>new</replace></patch_file>\n"
+            "- Write a file: <write_file path=\"/path/to/file\">content</write_file>\n\n"
+            "Rules:\n"
+            "1. NEVER put placeholder words inside tool tags and NEVER put tool tags inside <think> blocks.\n"
+            "2. Investigate step-by-step: locate binaries/logs -> read error traces -> patch/fix the root cause -> verify and summarize."
         )
 
         gemini_key = (
@@ -879,41 +1151,107 @@ class TchikoAgentEngine:
             or self.config.data.get("agent", {}).get("gemini_api_key", "")
         ).strip()
 
-        llm_text: Optional[str] = None
-        if gemini_key and gemini_key != "your_gemini_api_key_here":
-            on_thought("Querying Gemini 2.5 Flash with multi-turn memory...")
-            llm_text = await asyncio.to_thread(self._call_gemini_rest, gemini_key, sys_prompt, prompt)
-
-        if not llm_text:
+        async def _query_llm(current_prompt: str) -> Optional[str]:
+            if gemini_key and gemini_key != "your_gemini_api_key_here":
+                on_thought("Querying Gemini 2.5 Flash with multi-tool ReAct loop...")
+                res_txt = await asyncio.to_thread(self._call_gemini_rest, gemini_key, sys_prompt, current_prompt)
+                if res_txt:
+                    return res_txt
             for port in (11434, 11435):
-                llm_text = await asyncio.to_thread(self._call_local_ollama, port, sys_prompt, prompt)
-                if llm_text:
-                    break
+                res_txt = await asyncio.to_thread(self._call_local_ollama, port, sys_prompt, current_prompt)
+                if res_txt:
+                    return res_txt
+            return None
 
-        if not llm_text:
-            return False
+        accumulated_markdown: List[str] = []
+        rolling_prompt = prompt
 
-        m_bash = re.search(r"<bash>(.*?)</bash>", llm_text, re.DOTALL)
-        clean_reply = re.sub(r"<bash>.*?</bash>", "", llm_text, flags=re.DOTALL).strip()
-        if clean_reply:
-            await self._stream_markdown(clean_reply + "\n\n", on_token)
+        for step in range(8):
+            llm_text = await _query_llm(rolling_prompt)
+            if not llm_text:
+                return bool(accumulated_markdown)
 
-        if m_bash:
-            cmd = m_bash.group(1).strip()
-            if cmd:
-                await self._execute_command_with_policy(
-                    cmd,
-                    on_thought,
-                    on_tool_call,
-                    on_token,
-                    on_complete,
-                    on_state_change,
-                    on_approval_needed,
+            visible_text, thoughts = self._strip_think_blocks(llm_text)
+            for th in thoughts:
+                first_line = next((l.strip() for l in th.splitlines() if l.strip()), "Reasoning...")
+                on_thought(first_line[:140])
+
+            actions = self._extract_tool_actions(visible_text)
+            clean_reply = re.sub(
+                r"(<bash>.*?</bash>|<view_file[^>]*/?>|<grep[^>]*/?>|<patch_file.*?</patch_file>|<write_file.*?</write_file>)",
+                "",
+                visible_text,
+                flags=re.DOTALL | re.IGNORECASE,
+            ).strip()
+
+            if clean_reply:
+                accumulated_markdown.append(clean_reply)
+                await self._stream_markdown(clean_reply + "\n\n", on_token)
+
+            if not actions:
+                break
+
+            action = actions[0]
+            t_kind = action["tool"]
+            active_cwd = self.memory.get("cwd", str(Path.home()))
+            on_state_change("executing")
+
+            if t_kind == "view_file":
+                on_tool_call("view_file", f"{{'path': {action['path']!r}, 'lines': '{action['start']}-{action['end']}'}}")
+                res = await asyncio.to_thread(
+                    self.toolkit.view_file_lines, action["path"], action["start"], action["end"]
                 )
-                return True
+            elif t_kind == "grep":
+                on_tool_call("grep_files", f"{{'pattern': {action['pattern']!r}, 'path': {action['path']!r}}}")
+                res = await asyncio.to_thread(self.toolkit.grep_files, action["pattern"], action["path"])
+            elif t_kind == "patch_file":
+                on_tool_call("patch_file_content", f"{{'path': {action['path']!r}}}")
+                res = await asyncio.to_thread(
+                    self.toolkit.patch_file_content, action["path"], action["search"], action["replace"], True
+                )
+            elif t_kind == "write_file":
+                on_tool_call("write_file_content", f"{{'path': {action['path']!r}}}")
+                res = await asyncio.to_thread(
+                    self.toolkit.write_file_content, action["path"], action["content"], True
+                )
+            else:
+                cmd = action["command"]
+                if self.config.requires_manual_review() and on_approval_needed is not None:
+                    await self._execute_command_with_policy(
+                        cmd,
+                        on_thought,
+                        on_tool_call,
+                        on_token,
+                        on_complete,
+                        on_state_change,
+                        on_approval_needed,
+                    )
+                    return True
+                on_tool_call("run_shell_command", f"{{'command': {cmd!r}, 'cwd': {active_cwd!r}}}")
+                res = await asyncio.to_thread(self.toolkit.run_shell_command, cmd, active_cwd)
+                self.memory["last_command"] = cmd
+                self.memory["last_output"] = res.output
+                self._save_memory()
 
+            status_icon = "✅" if res.ok else "⚠️"
+            cmd_card = (
+                f"{status_icon} **{res.title}**\n"
+                f"```text\n{res.output[:1800]}\n```\n\n"
+            )
+            accumulated_markdown.append(cmd_card.strip())
+            await self._stream_markdown(cmd_card, on_token)
+
+            rolling_prompt = (
+                f"Original user request: {prompt}\n\n"
+                f"Step {step + 1} tool `{t_kind}` result (ok={res.ok}):\n"
+                f"{res.output[:3000]}\n\n"
+                "If further investigation or repair steps are needed, output the next tool tag (<view_file>, <grep>, <patch_file>, <write_file>, or <bash>). "
+                "Otherwise, provide a clear final summary of the root cause and fix without any tool tags."
+            )
+
+        final_summary = "\n\n".join(accumulated_markdown).strip() or "Completed."
         on_state_change("idle")
-        on_complete(clean_reply or llm_text)
+        on_complete(final_summary)
         return True
 
     @staticmethod
@@ -944,7 +1282,18 @@ class TchikoAgentEngine:
                 tags = json.loads(resp.read().decode("utf-8")).get("models", [])
                 if not tags:
                     return None
-                model_name = tags[0]["name"]
+                available = [m.get("name", "") for m in tags if m.get("name")]
+                preferred_order = (
+                    "gemma4:e4b",
+                    "qwen2.5-coder:1.5b",
+                    "llama3.2:latest",
+                    "lfm2.5:8b",
+                )
+                model_name = available[0]
+                for pref in preferred_order:
+                    if pref in available:
+                        model_name = pref
+                        break
             chat_url = f"http://127.0.0.1:{port}/api/chat"
             payload = {
                 "model": model_name,
@@ -960,7 +1309,7 @@ class TchikoAgentEngine:
                 headers={"Content-Type": "application/json"},
                 method="POST",
             )
-            with urllib.request.urlopen(req, timeout=20) as c_resp:
+            with urllib.request.urlopen(req, timeout=25) as c_resp:
                 c_data = json.loads(c_resp.read().decode("utf-8"))
                 return c_data.get("message", {}).get("content")
         except Exception:

@@ -1,0 +1,70 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tchiko-assistant"
+version = "1.2.0"
+description = "Autonomous Linux Systems Engineer, DevOps Companion & Parametric Cairo Desktop Agent powered by Google Antigravity"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+  { name = "ZYNIQ SOLUTIONS", email = "dev@zyniq.solutions" }
+]
+keywords = [
+  "linux",
+  "sysadmin",
+  "devops",
+  "ai-agent",
+  "antigravity",
+  "gtk3",
+  "cairo",
+  "desktop-companion",
+  "ubuntu"
+]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Environment :: X11 Applications :: GTK",
+  "Intended Audience :: Developers",
+  "Intended Audience :: System Administrators",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: System :: Systems Administration",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+  "pycairo>=1.20.0",
+  "PyGObject>=3.42.0",
+]
+
+[project.optional-dependencies]
+sdk = [
+  "google-antigravity>=0.1.0",
+]
+dev = [
+  "pytest>=8.0.0",
+  "ruff>=0.6.0",
+  "mypy>=1.11.0",
+]
+
+[project.scripts]
+tchiko = "main:main"
+
+[tool.setuptools]
+py-modules = ["main"]
+packages = ["tchiko"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py310"
+
+[tool.mypy]
+python_version = "3.10"
+ignore_missing_imports = true
+strict_optional = true

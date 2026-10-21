@@ -850,9 +850,9 @@ class TchikoAssistantWindow(Gtk.Window):
         self._set_header_mood("thinking", "Thinking...")
         self.engine.process_prompt_async(
             prompt=prompt,
-            on_thought=lambda th: GLib.idle_add(self._append_activity, f"[Thinking] {th}"),
+            on_thought=lambda th: GLib.idle_add(self._on_thought_update, th),
             on_tool_call=lambda name, args: GLib.idle_add(
-                self._append_activity, f"[Executing Tool] {name} {args}"
+                self._on_tool_update, name, args
             ),
             on_token=lambda tok: GLib.idle_add(self._append_token, tok),
             on_complete=lambda _full: GLib.idle_add(self._on_response_complete),
@@ -861,6 +861,29 @@ class TchikoAssistantWindow(Gtk.Window):
                 self._prompt_inline_approval, cmd, yes, no
             ),
         )
+
+    def _on_thought_update(self, thought_text: str) -> bool:
+        self._append_activity(f"[Thinking] {thought_text}")
+        if not self._active_stream_text:
+            status_line = f"🧠 {thought_text}"
+            if self._active_stream_label is not None:
+                self._active_stream_label.set_text(status_line)
+            bubble_cb = getattr(self, "_bubble_listener", None)
+            if bubble_cb is not None:
+                bubble_cb(f"### ⚡ Tchiko Autonomous Agent\n- {status_line}")
+        return False
+
+    def _on_tool_update(self, name: str, args: str) -> bool:
+        self._append_activity(f"[Executing Tool] {name} {args}")
+        self._set_header_mood("executing", f"Running {name}...")
+        if not self._active_stream_text:
+            status_line = f"🔧 Tool `{name}`: {args[:120]}"
+            if self._active_stream_label is not None:
+                self._active_stream_label.set_text(status_line)
+            bubble_cb = getattr(self, "_bubble_listener", None)
+            if bubble_cb is not None:
+                bubble_cb(f"### ⚡ Tchiko Autonomous Agent\n- {status_line}")
+        return False
 
     def _on_engine_state(self, state: str) -> bool:
         labels = {
