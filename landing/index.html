@@ -3,28 +3,62 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tchiko — Hand-Crafted Mythical Linux Companion (Open Source)</title>
-  <meta name="description" content="An artist-crafted open-source floating Ubuntu desktop pet inspired by the mythical six-legged, four-winged Dijiang of Ta Lo and powered by the Google Antigravity SDK." />
+  <title>Tchiko Assistant — Autonomous Linux Systems Engineer &amp; Parametric Cairo Desktop Companion</title>
+  <meta name="description" content="Open-source autonomous Ubuntu Linux systems engineer, DevOps companion, and 60 FPS parametric Cairo desktop pet built on the Google Antigravity SDK &amp; CLI." />
   <link rel="icon" type="image/svg+xml" href="assets/tchiko-logo.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Fraunces:ital,opsz,wght@0,9..144,700;0,9..144,900;1,9..144,600&family=JetBrains+Mono:wght@500;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --sumi-ink: #0d0e12;
-      --sumi-deep: #141720;
-      --sumi-charcoal: #1e2330;
-      --parchment: #f8f5ee;
-      --parchment-warm: #efe9dc;
-      --snow-pure: #ffffff;
-      --cinnabar: #e62e2d;
-      --cinnabar-bright: #ff4747;
-      --cinnabar-deep: #9e1b1b;
-      --ink-muted: #94a3b8;
-      --font-serif: 'Fraunces', Georgia, 'Times New Roman', serif;
-      --font-hand: 'Caveat', 'Comic Sans MS', cursive;
-      --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      /* Carbon Dark-Premium Token Spine */
+      --surface-0: #080a0f;
+      --surface-1: #0d1119;
+      --surface-2: #131926;
+      --surface-3: #1a2234;
+      --surface-glass: rgba(13, 17, 25, 0.82);
+
+      --line-subtle: rgba(255, 255, 255, 0.07);
+      --line-default: rgba(255, 255, 255, 0.12);
+      --line-strong: rgba(255, 255, 255, 0.22);
+
+      --text-1: #f4f7fb;
+      --text-2: #9ba8be;
+      --text-3: #64748b;
+
+      /* Canonical Tchiko Brand Accent: Warm Crimson Red & Snowy White */
+      --accent: #e62e2d;
+      --accent-hover: #ff4242;
+      --accent-tint: rgba(230, 46, 45, 0.12);
+      --accent-border: rgba(230, 46, 45, 0.42);
+      --on-accent: #ffffff;
+
+      /* Semantic Status Tokens */
+      --success: #10b981;
+      --success-tint: rgba(16, 185, 129, 0.12);
+      --warning: #f59e0b;
+      --warning-tint: rgba(245, 158, 11, 0.12);
+      --info: #38bdf8;
+      --info-tint: rgba(56, 189, 248, 0.12);
+
+      /* Typography */
+      --font-display: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       --font-mono: 'JetBrains Mono', monospace;
+
+      /* Radius Scale (Varied by component anatomy) */
+      --radius-xs: 6px;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 22px;
+      --radius-pill: 9999px;
+
+      /* Motion Scale */
+      --motion-fast: 140ms;
+      --motion-base: 220ms;
+      --motion-slow: 340ms;
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     * {
@@ -35,32 +69,29 @@
 
     html {
       scroll-behavior: smooth;
-      background-color: var(--sumi-ink);
-      color: var(--parchment);
+      background-color: var(--surface-0);
+      color: var(--text-1);
       font-family: var(--font-sans);
+      color-scheme: dark;
+      -webkit-font-smoothing: antialiased;
     }
 
     body {
-      background-color: var(--sumi-ink);
+      background-color: var(--surface-0);
       overflow-x: hidden;
-      line-height: 1.65;
-      position: relative;
-      /* Subtle artist canvas dot-grid texture */
+      line-height: 1.6;
+      font-size: 15px;
       background-image:
-        radial-gradient(rgba(255, 255, 255, 0.055) 1px, transparent 1px),
-        radial-gradient(circle at 72% 18%, rgba(230, 46, 45, 0.16) 0%, transparent 48%),
-        radial-gradient(circle at 18% 68%, rgba(230, 46, 45, 0.10) 0%, transparent 50%);
-      background-size: 28px 28px, 100% 100%, 100% 100%;
+        radial-gradient(circle at 75% 8%, rgba(230, 46, 45, 0.11) 0%, transparent 42%),
+        radial-gradient(circle at 20% 35%, rgba(56, 189, 248, 0.05) 0%, transparent 45%),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 48px 48px, 48px 48px;
     }
 
-    /* Tactile SVG Paper Grain Overlay */
-    .paper-grain {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 999;
-      opacity: 0.038;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    .num, code, pre, .mono {
+      font-variant-numeric: tabular-nums;
+      font-family: var(--font-mono);
     }
 
     .container {
@@ -71,376 +102,379 @@
       z-index: 2;
     }
 
-    /* Hand-drawn organic sketch border helper */
-    .sketch-border {
-      border: 2px solid var(--parchment);
-      border-radius: 255px 18px 225px 18px / 18px 225px 18px 255px;
-    }
-
-    /* Artist Cinnabar Chop / Red Seal Stamp */
-    .artist-seal {
-      display: inline-flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      border: 2.5px solid var(--cinnabar);
-      color: var(--cinnabar);
-      padding: 4px 10px;
-      border-radius: 6px;
-      font-family: var(--font-mono);
-      font-weight: 800;
-      font-size: 0.7rem;
-      line-height: 1.1;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      transform: rotate(-4deg);
-      box-shadow: inset 0 0 0 1px rgba(230, 46, 45, 0.35);
-      background: rgba(230, 46, 45, 0.06);
-      user-select: none;
-    }
-
-    /* ── ARTISAN NAVBAR ─────────────────────────────────────────────────── */
+    /* ── STICKY NAVIGATION BAR ─────────────────────────────────────────── */
     .navbar {
-      padding: 20px 0;
+      height: 68px;
       position: sticky;
       top: 0;
       z-index: 100;
-      backdrop-filter: blur(14px);
-      background: rgba(13, 14, 18, 0.84);
-      border-bottom: 1px dashed rgba(248, 245, 238, 0.14);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      background: var(--surface-glass);
+      border-bottom: 1px solid var(--line-subtle);
+      display: flex;
+      align-items: center;
     }
 
     .nav-inner {
+      width: 100%;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 24px;
     }
 
     .brand {
       display: flex;
       align-items: center;
-      gap: 14px;
+      gap: 12px;
       text-decoration: none;
-      color: var(--snow-pure);
+      color: var(--text-1);
     }
 
-    .brand-avatar {
-      width: 56px;
-      height: 54px;
-      border-radius: 50% 45% 52% 48%;
-      background: radial-gradient(circle, rgba(230, 46, 45, 0.25), rgba(20, 23, 32, 0.95));
-      border: 2px solid var(--cinnabar);
+    .brand-mark {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-sm);
+      background: radial-gradient(circle at 50% 45%, rgba(230, 46, 45, 0.25), var(--surface-2));
+      border: 1px solid var(--accent-border);
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      transition: transform var(--motion-base) var(--ease-out), border-color var(--motion-fast) ease;
     }
 
-    .brand:hover .brand-avatar {
-      transform: rotate(-8deg) scale(1.1);
+    .brand:hover .brand-mark {
+      transform: translateY(-1px) scale(1.04);
+      border-color: var(--accent-hover);
     }
 
-    .brand-avatar img {
-      width: 50px;
-      height: 48px;
+    .brand-mark img {
+      width: 34px;
+      height: 34px;
       object-fit: contain;
     }
 
-    .brand-text {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .brand-name {
-      font-family: var(--font-serif);
-      font-size: 1.5rem;
-      font-weight: 900;
+    .brand-title {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 1.05rem;
       letter-spacing: -0.02em;
-      line-height: 1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
-    .brand-sub {
-      font-family: var(--font-hand);
-      font-size: 1.1rem;
-      color: var(--cinnabar-bright);
-      line-height: 1.1;
+    .brand-tag {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: var(--radius-xs);
+      background: var(--surface-2);
+      border: 1px solid var(--line-default);
+      color: var(--text-2);
     }
 
     .nav-links {
       display: flex;
-      gap: 32px;
-      list-style: none;
       align-items: center;
+      gap: 28px;
+      list-style: none;
     }
 
     .nav-links a {
-      color: var(--parchment);
+      color: var(--text-2);
       text-decoration: none;
-      font-weight: 600;
-      font-size: 0.95rem;
-      position: relative;
+      font-size: 0.88rem;
+      font-weight: 500;
+      transition: color var(--motion-fast) ease;
     }
 
-    .nav-links a::after {
-      content: "";
-      position: absolute;
-      left: 0;
-      bottom: -4px;
-      width: 100%;
-      height: 2px;
-      background: var(--cinnabar);
-      transform: scaleX(0);
-      transform-origin: right;
-      transition: transform 0.25s ease;
+    .nav-links a:hover {
+      color: var(--text-1);
     }
 
-    .nav-links a:hover::after {
-      transform: scaleX(1);
-      transform-origin: left;
-    }
-
-    /* Hand-Crafted Buttons */
-    .btn-art {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      padding: 12px 24px;
-      font-family: var(--font-sans);
-      font-weight: 800;
-      font-size: 0.95rem;
-      text-decoration: none;
-      cursor: pointer;
-      border-radius: 255px 25px 225px 25px / 25px 225px 25px 255px;
-      transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-
-    .btn-cinnabar {
-      background: var(--cinnabar);
-      color: var(--snow-pure);
-      border: 2px solid var(--snow-pure);
-      box-shadow: 4px 5px 0px var(--snow-pure);
-    }
-
-    .btn-cinnabar:hover {
-      transform: translate(-2px, -2px) rotate(-1deg);
-      box-shadow: 7px 8px 0px var(--snow-pure);
-      background: var(--cinnabar-bright);
-    }
-
-    .btn-sketch {
-      background: var(--sumi-deep);
-      color: var(--parchment);
-      border: 2px solid rgba(248, 245, 238, 0.45);
-      box-shadow: 4px 5px 0px rgba(230, 46, 45, 0.5);
-    }
-
-    .btn-sketch:hover {
-      transform: translate(-2px, -2px) rotate(1deg);
-      border-color: var(--snow-pure);
-      box-shadow: 6px 7px 0px var(--cinnabar);
-    }
-
-    /* ── HERO STORYBOOK SPREAD ──────────────────────────────────────────── */
-    .hero-spread {
-      padding: 56px 0 80px;
-      display: grid;
-      grid-template-columns: 1.05fr 0.95fr;
-      gap: 48px;
-      align-items: center;
-    }
-
-    .hand-note-badge {
-      display: inline-flex;
+    .nav-actions {
+      display: flex;
       align-items: center;
       gap: 12px;
+    }
+
+    .status-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 5px 11px;
+      border-radius: var(--radius-pill);
+      background: var(--surface-1);
+      border: 1px solid var(--line-default);
+      font-family: var(--font-mono);
+      font-size: 0.73rem;
+      color: var(--text-2);
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 8px var(--success);
+    }
+
+    /* ── BUTTONS (3-Tier CTA Hierarchy) ────────────────────────────────── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-family: var(--font-sans);
+      font-weight: 600;
+      font-size: 0.9rem;
+      padding: 10px 18px;
+      border-radius: var(--radius-sm);
+      text-decoration: none;
+      cursor: pointer;
+      border: 1px solid transparent;
+      white-space: nowrap;
+      transition: transform var(--motion-fast) var(--ease-out),
+                  background-color var(--motion-fast) ease,
+                  border-color var(--motion-fast) ease,
+                  box-shadow var(--motion-fast) ease;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: var(--on-accent);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 0 20px var(--accent-tint);
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px rgba(230, 46, 45, 0.35);
+    }
+
+    .btn-secondary {
+      background: var(--surface-2);
+      color: var(--text-1);
+      border-color: var(--line-default);
+    }
+
+    .btn-secondary:hover {
+      background: var(--surface-3);
+      border-color: var(--line-strong);
+      transform: translateY(-1px);
+    }
+
+    .btn-nav {
+      padding: 7px 14px;
+      font-size: 0.82rem;
+      background: var(--surface-2);
+      color: var(--text-1);
+      border-color: var(--line-default);
+    }
+
+    .btn-nav:hover {
+      border-color: var(--accent-border);
+      background: var(--accent-tint);
+    }
+
+    /* ── HERO SECTION (Product-Forward Split + Interactive Studio) ─────── */
+    .hero {
+      padding: 88px 0 72px;
+      display: grid;
+      grid-template-columns: 1.04fr 0.96fr;
+      gap: 52px;
+      align-items: center;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-2);
+      padding: 5px 12px;
+      border-radius: var(--radius-pill);
+      background: var(--surface-1);
+      border: 1px solid var(--line-default);
+      margin-bottom: 22px;
+    }
+
+    .eyebrow-accent {
+      color: #ff6b6b;
+      font-weight: 700;
+    }
+
+    .hero-h1 {
+      font-family: var(--font-display);
+      font-size: clamp(2.65rem, 4.6vw, 4.1rem);
+      font-weight: 800;
+      line-height: 1.06;
+      letter-spacing: -0.035em;
+      color: var(--text-1);
+      margin-bottom: 20px;
+      text-wrap: balance;
+    }
+
+    /* Signature Detail: Precision Crimson Vector Underline on Key Phrase */
+    .sig-highlight {
+      position: relative;
+      display: inline-block;
+      color: #ffffff;
+    }
+
+    .sig-highlight svg {
+      position: absolute;
+      left: 0;
+      bottom: -6px;
+      width: 100%;
+      height: 10px;
+      pointer-events: none;
+    }
+
+    .hero-sub {
+      font-size: 1.1rem;
+      line-height: 1.6;
+      color: var(--text-2);
+      max-width: 540px;
+      margin-bottom: 28px;
+    }
+
+    .hero-ctas {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
       margin-bottom: 18px;
     }
 
-    .hand-script {
-      font-family: var(--font-hand);
-      font-size: 1.55rem;
-      color: var(--cinnabar-bright);
-      transform: rotate(-2deg);
-      display: inline-block;
-    }
-
-    .hero-title {
-      font-family: var(--font-serif);
-      font-size: clamp(2.8rem, 5.2vw, 4.5rem);
-      font-weight: 900;
-      line-height: 1.03;
-      letter-spacing: -0.03em;
-      margin-bottom: 24px;
-      color: var(--snow-pure);
-    }
-
-    .hero-title .brush-underline {
-      position: relative;
-      display: inline-block;
-      color: var(--cinnabar-bright);
-      font-style: italic;
-    }
-
-    .hero-title .brush-underline svg {
-      position: absolute;
-      bottom: -10px;
-      left: 0;
-      width: 100%;
-      height: 16px;
-      pointer-events: none;
-    }
-
-    .hero-story {
-      font-size: 1.14rem;
-      color: #d6d3cd;
-      margin-bottom: 30px;
-      max-width: 580px;
-    }
-
-    .hero-story strong {
-      color: var(--snow-pure);
-      border-bottom: 1.5px dashed var(--cinnabar);
-    }
-
-    .cta-cluster {
+    .hero-trust {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--text-3);
       display: flex;
-      flex-wrap: wrap;
-      gap: 16px;
       align-items: center;
-      margin-bottom: 36px;
-    }
-
-    /* Hand-sketched Artist Margin Callouts */
-    .artist-margin-notes {
-      display: flex;
-      gap: 22px;
-      padding-top: 20px;
-      border-top: 1.5px dashed rgba(248, 245, 238, 0.16);
+      gap: 14px;
       flex-wrap: wrap;
     }
 
-    .margin-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .margin-num {
-      font-family: var(--font-serif);
-      font-size: 1.7rem;
-      font-weight: 900;
-      color: var(--cinnabar-bright);
-      line-height: 1;
-    }
-
-    .margin-text {
-      font-size: 0.85rem;
-      color: var(--parchment-warm);
-      line-height: 1.25;
-    }
-
-    /* ── RIGHT: ILLUSTRATOR'S LIVE CANVAS STAGE ─────────────────────────── */
-    .canvas-desk-wrap {
-      position: relative;
-      padding: 18px;
-    }
-
-    /* Hand-written callout floating around the stage */
-    .floating-hand-callout {
-      position: absolute;
-      font-family: var(--font-hand);
-      font-size: 1.35rem;
-      color: var(--parchment);
-      z-index: 15;
-      pointer-events: none;
-      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
-      display: flex;
+    .hero-trust span {
+      display: inline-flex;
       align-items: center;
       gap: 6px;
     }
 
-    .callout-top-left {
-      top: -12px;
-      left: 10px;
-      transform: rotate(-6deg);
-      color: #fca5a5;
-    }
-
-    .callout-mid-right {
-      top: 48%;
-      right: -14px;
-      transform: rotate(5deg);
-      background: rgba(13, 14, 18, 0.88);
-      padding: 4px 12px;
-      border-radius: 14px;
-      border: 1px dashed var(--cinnabar);
-    }
-
-    .artist-stage-board {
-      position: relative;
-      background:
-        radial-gradient(circle at 50% 46%, rgba(230, 46, 45, 0.20) 0%, rgba(20, 23, 32, 0.96) 68%);
-      border: 2.5px solid var(--parchment);
-      border-radius: 28px 180px 32px 140px / 140px 28px 160px 32px;
-      padding: 28px 24px 24px;
+    /* ── RIGHT: INTERACTIVE UBUNTU DESKTOP COMPANION STUDIO ─────────────── */
+    .studio-shell {
+      background: var(--surface-1);
+      border: 1px solid var(--line-default);
+      border-radius: var(--radius-xl);
       box-shadow:
-        12px 14px 0px var(--cinnabar),
-        0 28px 70px rgba(0, 0, 0, 0.8);
+        0 0 0 1px rgba(255, 255, 255, 0.03),
+        0 24px 60px rgba(0, 0, 0, 0.65);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .studio-topbar {
+      background: var(--surface-2);
+      border-bottom: 1px solid var(--line-subtle);
+      padding: 11px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .window-dots {
+      display: flex;
+      gap: 7px;
+      align-items: center;
+    }
+
+    .win-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--surface-3);
+      border: 1px solid var(--line-default);
+    }
+
+    .win-dot.close { background: #ef4444; border-color: #dc2626; }
+    .win-dot.min { background: #f59e0b; border-color: #d97706; }
+    .win-dot.max { background: #10b981; border-color: #059669; }
+
+    .studio-title {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-2);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .studio-telemetry-badge {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--success);
+      background: var(--success-tint);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      padding: 2px 8px;
+      border-radius: var(--radius-xs);
+    }
+
+    .studio-stage {
+      padding: 20px;
+      background:
+        radial-gradient(circle at 50% 48%, rgba(230, 46, 45, 0.14) 0%, rgba(13, 17, 25, 0.96) 70%);
       display: flex;
       flex-direction: column;
       align-items: center;
-      min-height: 560px;
       justify-content: space-between;
+      min-height: 490px;
+      position: relative;
     }
 
-    /* Masking Tape Graphic at Top of Sketchboard */
-    .masking-tape {
-      position: absolute;
-      top: -15px;
-      left: 50%;
-      transform: translateX(-50%) rotate(-2deg);
-      width: 130px;
-      height: 30px;
-      background: rgba(248, 245, 238, 0.88);
-      box-shadow: 0 3px 8px rgba(0,0,0,0.35);
-      border-left: 2px dotted rgba(0,0,0,0.2);
-      border-right: 2px dotted rgba(0,0,0,0.2);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: var(--font-mono);
-      font-size: 0.68rem;
-      font-weight: 800;
-      color: var(--sumi-ink);
-      letter-spacing: 0.08em;
-    }
-
-    /* 1. LIVE TALKING SPEECH BUBBLE (Matches Desktop Widget!) */
+    /* 1. Live Talking Speech Bubble (Matches tchiko/ghost_widget.py) */
     .tchiko-talk-bubble {
+      width: 100%;
+      max-width: 420px;
+      background: rgba(11, 15, 23, 0.96);
+      border: 1.5px solid var(--accent);
+      border-radius: 14px;
+      padding: 12px 14px;
+      color: var(--text-1);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.55);
       position: relative;
       z-index: 6;
-      width: 100%;
-      max-width: 350px;
-      background: rgba(13, 18, 28, 0.96);
-      border: 2px solid var(--cinnabar);
-      border-radius: 16px;
-      padding: 12px 14px;
-      color: #f8fafc;
-      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.65);
-      margin-top: 6px;
     }
 
     .tchiko-talk-bubble::after {
       content: "";
       position: absolute;
-      bottom: -10px;
+      bottom: -8px;
       left: 50%;
       transform: translateX(-50%) rotate(45deg);
-      width: 16px;
-      height: 16px;
-      background: rgba(13, 18, 28, 0.96);
-      border-right: 2px solid var(--cinnabar);
-      border-bottom: 2px solid var(--cinnabar);
+      width: 13px;
+      height: 13px;
+      background: rgba(11, 15, 23, 0.96);
+      border-right: 1.5px solid var(--accent);
+      border-bottom: 1.5px solid var(--accent);
     }
 
     .bubble-hdr {
@@ -448,55 +482,74 @@
       align-items: center;
       justify-content: space-between;
       margin-bottom: 6px;
+      gap: 8px;
     }
 
     .bubble-title {
-      font-size: 0.78rem;
-      font-weight: 800;
-      color: var(--cinnabar-bright);
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      font-weight: 700;
+      color: #ff6b6b;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .bubble-tier-tag {
+      font-size: 0.67rem;
+      padding: 1px 6px;
+      border-radius: 4px;
+      background: var(--surface-2);
+      border: 1px solid var(--line-default);
+      color: var(--text-2);
     }
 
     .bubble-btn-row {
       display: flex;
-      gap: 6px;
+      gap: 5px;
     }
 
     .bubble-btn {
-      background: rgba(30, 41, 59, 0.9);
-      color: #cbd5e1;
-      border: 1px solid #334155;
-      border-radius: 7px;
+      background: var(--surface-2);
+      color: var(--text-2);
+      border: 1px solid var(--line-default);
+      border-radius: var(--radius-xs);
       padding: 2px 8px;
-      font-size: 0.72rem;
-      font-weight: 700;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: 600;
       cursor: pointer;
+      transition: background-color var(--motion-fast) ease, color var(--motion-fast) ease, border-color var(--motion-fast) ease;
     }
 
     .bubble-btn:hover {
-      background: var(--cinnabar);
-      color: #ffffff;
+      background: var(--accent);
+      color: var(--on-accent);
+      border-color: var(--accent);
     }
 
     .bubble-content {
-      font-size: 0.85rem;
-      line-height: 1.45;
-      color: #f8fafc;
+      font-size: 0.82rem;
+      line-height: 1.48;
+      color: var(--text-1);
+      max-height: 108px;
+      overflow-y: auto;
     }
 
     .bubble-content code {
       font-family: var(--font-mono);
       color: #fca5a5;
-      background: rgba(230, 46, 45, 0.16);
+      background: rgba(230, 46, 45, 0.14);
       padding: 1px 5px;
       border-radius: 4px;
-      font-size: 0.78rem;
+      font-size: 0.76rem;
     }
 
-    /* 2. EXACT DESKTOP RENDERER STAGE (SvgGhostRenderer 1:1 Port + Exported SVG) */
+    /* 2. Exact 1:1 Desktop Renderer Hitbox */
     .desktop-pet-hitbox {
       position: relative;
-      width: 260px;
-      height: 245px;
+      width: 240px;
+      height: 215px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -510,19 +563,34 @@
     }
 
     #desktop-tchiko-canvas {
-      width: 260px;
-      height: 245px;
+      width: 240px;
+      height: 215px;
       display: block;
     }
 
-    /* 3. BOTTOM QUICK-INPUT PILL (Appears on Middle-Click / Scroll-Wheel Click!) */
+    .physics-readout {
+      position: absolute;
+      bottom: 4px;
+      right: -8px;
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: var(--text-3);
+      background: rgba(8, 10, 15, 0.78);
+      border: 1px solid var(--line-subtle);
+      padding: 2px 7px;
+      border-radius: var(--radius-xs);
+      pointer-events: none;
+    }
+
+    /* 3. Bottom Quick-Input Pill (Middle-Click / Scroll-Wheel Click) */
     .quick-pill-zone {
       width: 100%;
-      max-width: 330px;
+      max-width: 380px;
       z-index: 7;
       display: flex;
       flex-direction: column;
       align-items: center;
+      gap: 6px;
     }
 
     .tchiko-quick-pill {
@@ -530,17 +598,23 @@
       display: flex;
       align-items: center;
       gap: 6px;
-      background: rgba(13, 18, 28, 0.95);
-      border: 1.5px solid rgba(239, 68, 68, 0.8);
-      border-radius: 18px;
-      padding: 5px 9px 5px 14px;
-      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.6);
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      background: rgba(11, 15, 23, 0.95);
+      border: 1.5px solid var(--accent-border);
+      border-radius: var(--radius-pill);
+      padding: 5px 8px 5px 14px;
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.5);
+      transition: opacity var(--motion-base) var(--ease-out),
+                  transform var(--motion-base) var(--ease-out),
+                  border-color var(--motion-fast) ease;
+    }
+
+    .tchiko-quick-pill:focus-within {
+      border-color: var(--accent);
     }
 
     .tchiko-quick-pill.is-hidden {
       opacity: 0;
-      transform: translateY(-8px) scale(0.9);
+      transform: translateY(-6px) scale(0.95);
       pointer-events: none;
       height: 0;
       padding-top: 0;
@@ -554,635 +628,1501 @@
       background: transparent;
       border: none;
       outline: none;
-      color: #f8fafc;
-      font-size: 0.9rem;
+      color: var(--text-1);
+      font-size: 0.83rem;
       font-family: var(--font-sans);
     }
 
-    .scroll-wheel-note {
-      font-family: var(--font-hand);
-      font-size: 1.25rem;
-      color: #fca5a5;
-      margin-top: 4px;
+    .gesture-hint {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-2);
       cursor: pointer;
       text-align: center;
+      transition: color var(--motion-fast) ease;
     }
 
-    .scroll-wheel-note span {
-      text-decoration: underline;
-      color: var(--snow-pure);
+    .gesture-hint:hover {
+      color: var(--text-1);
     }
 
-    /* Mood & Coat Artist Palette Controls */
-    .palette-strip {
+    .gesture-hint strong {
+      color: #ff6b6b;
+      font-weight: 600;
+    }
+
+    /* 4. Studio Control Deck (10 Emotions + 6 Live Agent Scenarios + 4 Coats) */
+    .studio-controls {
       width: 100%;
-      border-top: 1px dashed rgba(248, 245, 238, 0.16);
-      padding-top: 10px;
-      margin-top: 8px;
-      z-index: 6;
+      background: var(--surface-2);
+      border-top: 1px solid var(--line-subtle);
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
 
-    .palette-row {
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .control-label {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-3);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .pill-row {
       display: flex;
       flex-wrap: wrap;
-      gap: 6px;
-      justify-content: center;
-      margin-bottom: 6px;
+      gap: 5px;
     }
 
-    .sketch-pill-btn {
-      background: rgba(13, 14, 18, 0.85);
-      color: var(--parchment);
-      border: 1.5px solid rgba(248, 245, 238, 0.22);
-      border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
-      padding: 4px 10px;
-      font-size: 0.75rem;
-      font-weight: 700;
+    .ctrl-pill {
+      background: var(--surface-1);
+      color: var(--text-2);
+      border: 1px solid var(--line-default);
+      border-radius: var(--radius-xs);
+      padding: 4px 9px;
+      font-family: var(--font-mono);
+      font-size: 0.71rem;
+      font-weight: 500;
       cursor: pointer;
-      transition: all 0.15s ease;
+      transition: background-color var(--motion-fast) ease,
+                  color var(--motion-fast) ease,
+                  border-color var(--motion-fast) ease,
+                  transform var(--motion-fast) ease;
     }
 
-    .sketch-pill-btn:hover,
-    .sketch-pill-btn.active {
-      background: var(--cinnabar);
-      color: var(--snow-pure);
-      border-color: var(--snow-pure);
-      transform: translateY(-1px) rotate(-1deg);
+    .ctrl-pill:hover {
+      color: var(--text-1);
+      border-color: var(--line-strong);
+      background: var(--surface-3);
     }
 
-    /* ── ARTIST'S SKETCHBOOK STUDY GALLERY (EXACT EXPORTED DESKTOP SVGS!) ── */
-    .sketchbook-section {
-      padding: 90px 0;
+    .ctrl-pill.active {
+      background: var(--accent-tint);
+      color: #ff8080;
+      border-color: var(--accent);
+      font-weight: 600;
     }
 
-    .section-heading-wrap {
-      text-align: center;
-      max-width: 760px;
-      margin: 0 auto 56px;
-    }
-
-    .section-heading {
-      font-family: var(--font-serif);
-      font-size: clamp(2.2rem, 4vw, 3.3rem);
-      font-weight: 900;
-      color: var(--snow-pure);
-      margin-bottom: 12px;
-    }
-
-    .polaroid-gallery {
+    /* ── SECTION 2: TECHNICAL PROOF & TELEMETRY BAR (Distinct Layout #2) ── */
+    .proof-bar {
+      margin: 16px 0 96px;
+      background: var(--surface-1);
+      border: 1px solid var(--line-default);
+      border-radius: var(--radius-lg);
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 32px;
+      grid-template-columns: repeat(4, 1fr);
+      divide-x: 1px solid var(--line-subtle);
     }
 
-    .polaroid-card {
-      background: var(--parchment);
-      color: var(--sumi-ink);
-      padding: 18px 18px 22px;
-      border-radius: 6px;
-      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.65);
-      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-      position: relative;
-    }
-
-    .polaroid-card:nth-child(1) { transform: rotate(-2deg); }
-    .polaroid-card:nth-child(2) { transform: rotate(1.5deg) translateY(8px); }
-    .polaroid-card:nth-child(3) { transform: rotate(-1.2deg); }
-    .polaroid-card:nth-child(4) { transform: rotate(1.8deg); }
-    .polaroid-card:nth-child(5) { transform: rotate(-1.5deg) translateY(-6px); }
-    .polaroid-card:nth-child(6) { transform: rotate(2.1deg); }
-
-    .polaroid-card:hover {
-      transform: rotate(0deg) scale(1.04) !important;
-      z-index: 10;
-    }
-
-    .polaroid-stage {
-      background: radial-gradient(circle, #1e2536 0%, #0d1017 100%);
-      border-radius: 4px;
-      height: 220px;
+    .proof-cell {
+      padding: 24px 26px;
+      border-right: 1px solid var(--line-subtle);
       display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      overflow: hidden;
-      border: 1.5px solid #1e293b;
+      flex-direction: column;
+      gap: 4px;
     }
 
-    .polaroid-stage img {
-      width: 210px;
-      height: 200px;
-      object-fit: contain;
-      transition: transform 0.3s ease;
+    .proof-cell:last-child {
+      border-right: none;
     }
 
-    .polaroid-card:hover .polaroid-stage img {
-      transform: scale(1.08);
-    }
-
-    .polaroid-caption {
-      margin-top: 14px;
+    .proof-metric {
+      font-family: var(--font-display);
+      font-size: 1.9rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--text-1);
+      font-variant-numeric: tabular-nums;
       display: flex;
       align-items: baseline;
-      justify-content: space-between;
+      gap: 8px;
     }
 
-    .polaroid-title {
-      font-family: var(--font-serif);
-      font-weight: 900;
-      font-size: 1.15rem;
-      color: var(--sumi-ink);
+    .proof-unit {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #ff6b6b;
     }
 
-    .polaroid-hand {
-      font-family: var(--font-hand);
-      font-size: 1.25rem;
-      color: var(--cinnabar-deep);
-      font-weight: 700;
-    }
-
-    .polaroid-desc {
-      font-size: 0.86rem;
-      color: #334155;
-      margin-top: 4px;
+    .proof-desc {
+      font-size: 0.85rem;
+      color: var(--text-2);
       line-height: 1.45;
     }
 
-    /* ── STORYBOOK LORE & ANATOMY SPREAD (PARCHMENT ARTBOOK PAGE) ───────── */
-    .artbook-page {
-      background: var(--parchment);
-      color: var(--sumi-ink);
-      border-radius: 26px;
-      padding: 54px;
-      box-shadow:
-        14px 16px 0px var(--cinnabar),
-        0 30px 70px rgba(0, 0, 0, 0.75);
+    /* ── SECTION HEADERS ───────────────────────────────────────────────── */
+    .section {
+      padding: 64px 0;
+    }
+
+    .section-hdr {
+      max-width: 680px;
+      margin-bottom: 44px;
+    }
+
+    .section-h2 {
+      font-family: var(--font-display);
+      font-size: clamp(1.9rem, 3.2vw, 2.65rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.12;
+      color: var(--text-1);
+      margin-bottom: 12px;
+      text-wrap: balance;
+    }
+
+    .section-lead {
+      font-size: 1.02rem;
+      color: var(--text-2);
+      line-height: 1.6;
+    }
+
+    /* ── SECTION 3: 5-TIER AUTONOMOUS DISPATCH EXPLORER (Distinct Layout #3) */
+    .tier-explorer {
       display: grid;
-      grid-template-columns: 0.9fr 1.1fr;
-      gap: 48px;
-      align-items: center;
-      margin: 40px 0 90px;
-      position: relative;
+      grid-template-columns: 360px 1fr;
+      gap: 24px;
+      align-items: stretch;
     }
 
-    .artbook-illustration {
-      background: var(--sumi-ink);
-      border-radius: 20px;
-      padding: 28px;
-      text-align: center;
-      border: 3px solid var(--sumi-ink);
-      box-shadow: 8px 10px 0px var(--cinnabar);
-      position: relative;
+    .tier-tabs {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
 
-    .artbook-illustration img {
-      width: 270px;
-      height: 255px;
-      object-fit: contain;
+    .tier-tab {
+      text-align: left;
+      background: var(--surface-1);
+      border: 1px solid var(--line-default);
+      border-radius: var(--radius-md);
+      padding: 16px 18px;
+      cursor: pointer;
+      transition: background-color var(--motion-fast) ease,
+                  border-color var(--motion-fast) ease,
+                  transform var(--motion-fast) var(--ease-out);
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
     }
 
-    .artbook-page h2 {
-      font-family: var(--font-serif);
-      font-size: clamp(2rem, 3.5vw, 2.9rem);
-      font-weight: 900;
-      line-height: 1.08;
-      margin-bottom: 16px;
-      color: var(--sumi-ink);
+    .tier-tab:hover {
+      background: var(--surface-2);
+      border-color: var(--line-strong);
     }
 
-    .artbook-page p {
-      color: #27303f;
-      font-size: 1.04rem;
-      margin-bottom: 18px;
+    .tier-tab.active {
+      background: var(--surface-2);
+      border-color: var(--accent);
+      box-shadow: inset 3px 0 0 var(--accent);
     }
 
-    .anatomy-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 14px;
-      margin-top: 22px;
-    }
-
-    .anatomy-item {
-      background: var(--parchment-warm);
-      border: 1.5px solid #cbd5e1;
-      border-left: 4px solid var(--cinnabar);
-      border-radius: 10px;
-      padding: 12px 16px;
-    }
-
-    .anatomy-item strong {
-      display: block;
-      font-family: var(--font-serif);
-      font-size: 1rem;
-      color: var(--sumi-ink);
-    }
-
-    .anatomy-item span {
-      font-size: 0.85rem;
-      color: #475569;
-    }
-
-    /* ── OPEN SOURCE TERMINAL NOTEBOOK ──────────────────────────────────── */
-    .terminal-notebook {
-      background: #090b10;
-      border: 2.5px solid var(--parchment);
-      border-radius: 20px;
-      box-shadow: 10px 12px 0px var(--cinnabar);
-      max-width: 880px;
-      margin: 0 auto;
-      overflow: hidden;
-    }
-
-    .term-top {
-      background: #141824;
-      padding: 14px 20px;
+    .tier-tab-top {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border-bottom: 1.5px dashed rgba(248, 245, 238, 0.16);
+      gap: 8px;
     }
 
-    .term-code {
-      padding: 26px 30px;
+    .tier-badge {
       font-family: var(--font-mono);
-      font-size: 0.92rem;
-      line-height: 1.8;
-      color: var(--parchment);
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #ff6b6b;
+      background: var(--accent-tint);
+      padding: 2px 8px;
+      border-radius: var(--radius-xs);
+    }
+
+    .tier-latency {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-3);
+    }
+
+    .tier-tab-title {
+      font-family: var(--font-display);
+      font-size: 0.98rem;
+      font-weight: 700;
+      color: var(--text-1);
+    }
+
+    .tier-tab-sub {
+      font-size: 0.82rem;
+      color: var(--text-2);
+      line-height: 1.4;
+    }
+
+    .tier-detail-pane {
+      background: var(--surface-1);
+      border: 1px solid var(--line-default);
+      border-radius: var(--radius-lg);
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 22px;
+    }
+
+    .tier-pane-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      border-bottom: 1px solid var(--line-subtle);
+      padding-bottom: 18px;
+    }
+
+    .tier-pane-title {
+      font-family: var(--font-display);
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--text-1);
+      margin-bottom: 6px;
+    }
+
+    .tier-pane-file {
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      color: var(--info);
+      background: var(--info-tint);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      padding: 4px 10px;
+      border-radius: var(--radius-xs);
+      white-space: nowrap;
+    }
+
+    .tier-cap-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+
+    .tier-cap-item {
+      background: var(--surface-2);
+      border: 1px solid var(--line-subtle);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+    }
+
+    .tier-cap-item h4 {
+      font-family: var(--font-sans);
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text-1);
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tier-cap-item p {
+      font-size: 0.81rem;
+      color: var(--text-2);
+      line-height: 1.45;
+    }
+
+    .tier-code-preview {
+      background: #06080c;
+      border: 1px solid var(--line-default);
+      border-radius: var(--radius-sm);
+      padding: 14px 18px;
+      font-family: var(--font-mono);
+      font-size: 0.79rem;
+      color: #cbd5e1;
+      overflow-x: auto;
+      line-height: 1.65;
+    }
+
+    /* ── SECTION 4: ASYMMETRIC BENTO CAPABILITY MATRIX (Distinct Layout #4) */
+    .bento-grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 20px;
+    }
+
+    .bento-card {
+      background: var(--surface-1);
+      border: 1px solid var(--line-default);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 18px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color var(--motion-base) ease, transform var(--motion-base) var(--ease-out);
+    }
+
+    .bento-card:hover {
+      border-color: var(--line-strong);
+      transform: translateY(-2px);
+    }
+
+    .bento-span-7 { grid-column: span 7; }
+    .bento-span-5 { grid-column: span 5; }
+    .bento-span-6 { grid-column: span 6; }
+    .bento-span-4 { grid-column: span 4; }
+    .bento-span-8 { grid-column: span 8; }
+
+    .bento-card.primary-tint {
+      background: linear-gradient(160deg, rgba(230, 46, 45, 0.08) 0%, var(--surface-1) 55%);
+      border-color: var(--accent-border);
+    }
+
+    .bento-kicker {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: #ff6b6b;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .bento-title {
+      font-family: var(--font-display);
+      font-size: 1.28rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text-1);
+      margin-bottom: 6px;
+    }
+
+    .bento-desc {
+      font-size: 0.88rem;
+      color: var(--text-2);
+      line-height: 1.55;
+    }
+
+    /* 6-Step Crash Doctor Pipeline Timeline inside Dominant Bento Card */
+    .doctor-steps {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .doc-step {
+      background: var(--surface-2);
+      border: 1px solid var(--line-subtle);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .doc-step-num {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--on-accent);
+      background: var(--accent);
+      width: 20px;
+      height: 20px;
+      border-radius: 5px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .doc-step-body strong {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--text-1);
+      font-family: var(--font-mono);
+    }
+
+    .doc-step-body span {
+      font-size: 0.76rem;
+      color: var(--text-2);
+      line-height: 1.35;
+      display: block;
+      margin-top: 2px;
+    }
+
+    /* Mini GTK3 Studio Preview inside Bento Card */
+    .gtk-studio-mock {
+      background: var(--surface-0);
+      border: 1px solid var(--line-default);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .gtk-tabs-row {
+      display: flex;
+      gap: 6px;
+      border-bottom: 1px solid var(--line-subtle);
+      padding-bottom: 8px;
+    }
+
+    .gtk-tab-pill {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      padding: 3px 9px;
+      border-radius: var(--radius-xs);
+      background: var(--surface-2);
+      color: var(--text-2);
+    }
+
+    .gtk-tab-pill.active {
+      background: #1d4ed8;
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    .meter-row {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .meter-hdr {
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-2);
+    }
+
+    .meter-bar {
+      height: 7px;
+      background: var(--surface-2);
+      border-radius: var(--radius-pill);
+      overflow: hidden;
+    }
+
+    .meter-fill {
+      height: 100%;
+      border-radius: var(--radius-pill);
+      background: linear-gradient(90deg, #38bdf8, #818cf8);
+    }
+
+    /* RBAC Capability Matrix Tags */
+    .rbac-tags {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .rbac-chip {
+      background: var(--surface-2);
+      border: 1px solid var(--line-subtle);
+      border-radius: var(--radius-xs);
+      padding: 7px 10px;
+      font-family: var(--font-mono);
+      font-size: 0.73rem;
+      color: var(--text-1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .rbac-chip .dot-on {
+      color: var(--success);
+      font-weight: 700;
+    }
+
+    /* ── SECTION 5: PARAMETRIC CAIRO VECTOR SPECIMEN GALLERY (Layout #5) ── */
+    .specimen-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 14px;
+    }
+
+    .specimen-card {
+      background: var(--surface-1);
+      border: 1px solid var(--line-default);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      cursor: pointer;
+      transition: border-color var(--motion-fast) ease,
+                  background-color var(--motion-fast) ease,
+                  transform var(--motion-fast) var(--ease-out);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .specimen-card:hover,
+    .specimen-card.active {
+      border-color: var(--accent);
+      background: var(--surface-2);
+      transform: translateY(-2px);
+    }
+
+    .specimen-stage {
+      height: 130px;
+      background: radial-gradient(circle, var(--surface-3) 0%, var(--surface-0) 100%);
+      border: 1px solid var(--line-subtle);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .specimen-stage img {
+      width: 112px;
+      height: 112px;
+      object-fit: contain;
+      transition: transform var(--motion-base) var(--ease-out);
+    }
+
+    .specimen-card:hover .specimen-stage img {
+      transform: scale(1.08);
+    }
+
+    .specimen-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .specimen-code {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: #ff6b6b;
+    }
+
+    .specimen-name {
+      font-family: var(--font-display);
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--text-1);
+    }
+
+    .specimen-desc {
+      font-size: 0.75rem;
+      color: var(--text-2);
+      line-height: 1.38;
+    }
+
+    /* ── SECTION 6: INTERACTIVE PLAYBOOK & DESKTOP GESTURE TABLE (Layout #6) */
+    .split-tables {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .table-card {
+      background: var(--surface-1);
+      border: 1px solid var(--line-default);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .table-card-hdr {
+      padding: 16px 20px;
+      background: var(--surface-2);
+      border-bottom: 1px solid var(--line-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .table-card-hdr h3 {
+      font-family: var(--font-display);
+      font-size: 0.98rem;
+      font-weight: 700;
+      color: var(--text-1);
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+    }
+
+    .data-table th {
+      text-align: left;
+      padding: 10px 18px;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-3);
+      border-bottom: 1px solid var(--line-subtle);
+      background: rgba(19, 25, 38, 0.5);
+    }
+
+    .data-table td {
+      padding: 11px 18px;
+      border-bottom: 1px solid var(--line-subtle);
+      color: var(--text-2);
+      vertical-align: top;
+    }
+
+    .data-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .data-table tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+      color: var(--text-1);
+    }
+
+    .cmd-trigger {
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      color: #fca5a5;
+      background: rgba(230, 46, 45, 0.12);
+      border: 1px solid rgba(230, 46, 45, 0.28);
+      padding: 2px 7px;
+      border-radius: 4px;
+      cursor: pointer;
+      display: inline-block;
+      transition: background-color var(--motion-fast) ease, border-color var(--motion-fast) ease;
+    }
+
+    .cmd-trigger:hover {
+      background: var(--accent);
+      color: var(--on-accent);
+      border-color: var(--accent);
+    }
+
+    /* ── SECTION 7: UBUNTU CLI QUICKSTART & FINAL CTA (Layout #7) ──────── */
+    .cli-cta-band {
+      margin: 48px 0 80px;
+      background: linear-gradient(135deg, var(--surface-2) 0%, var(--surface-1) 100%);
+      border: 1px solid var(--line-default);
+      border-radius: var(--radius-xl);
+      padding: 44px;
+      display: grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: 40px;
+      align-items: center;
+    }
+
+    .terminal-box {
+      background: #05070b;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+    }
+
+    .terminal-hdr {
+      background: var(--surface-2);
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--line-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .terminal-body {
+      padding: 20px 22px;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      line-height: 1.75;
+      color: #e2e8f0;
       overflow-x: auto;
     }
 
-    footer {
-      padding: 64px 0 48px;
-      text-align: center;
-      border-top: 1.5px dashed rgba(248, 245, 238, 0.14);
-      margin-top: 90px;
+    .terminal-body .comment { color: #64748b; }
+    .terminal-body .prompt { color: #ff6b6b; font-weight: 700; user-select: none; }
+
+    /* ── FOOTER ────────────────────────────────────────────────────────── */
+    .footer {
+      border-top: 1px solid var(--line-subtle);
+      padding: 40px 0;
+      color: var(--text-3);
+      font-size: 0.84rem;
     }
 
-    @media (max-width: 980px) {
-      .hero-spread,
-      .artbook-page {
+    .footer-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 24px;
+      list-style: none;
+    }
+
+    .footer-links a {
+      color: var(--text-2);
+      text-decoration: none;
+      transition: color var(--motion-fast) ease;
+    }
+
+    .footer-links a:hover {
+      color: var(--text-1);
+    }
+
+    /* ── ACCESSIBILITY & RESPONSIVE BREAKPOINTS ────────────────────────── */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+
+    @media (max-width: 1080px) {
+      .hero,
+      .tier-explorer,
+      .split-tables,
+      .cli-cta-band {
         grid-template-columns: 1fr;
       }
-      .polaroid-gallery {
-        grid-template-columns: 1fr;
+      .proof-bar {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .specimen-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+      .bento-span-7, .bento-span-5, .bento-span-6, .bento-span-4, .bento-span-8 {
+        grid-column: span 12;
       }
       .nav-links {
         display: none;
       }
-      .callout-mid-right {
-        display: none;
+    }
+
+    @media (max-width: 640px) {
+      .proof-bar,
+      .tier-cap-grid,
+      .doctor-steps,
+      .rbac-tags {
+        grid-template-columns: 1fr;
+      }
+      .specimen-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .hero {
+        padding: 48px 0 40px;
+      }
+      .cli-cta-band {
+        padding: 24px;
       }
     }
   </style>
 </head>
 <body>
-  <div class="paper-grain"></div>
 
-  <!-- ── NAVBAR ─────────────────────────────────────────────────────────── -->
+  <!-- ── STICKY PRO NAVIGATION BAR ──────────────────────────────────────── -->
   <header class="navbar">
     <div class="container nav-inner">
       <a href="#" class="brand">
-        <div class="brand-avatar">
-          <!-- Exact Desktop SVG exported from SvgGhostRenderer -->
-          <img src="assets/tchiko-logo.svg" alt="Exact Desktop Tchiko SVG" />
+        <div class="brand-mark">
+          <img src="assets/tchiko-logo.svg" alt="Tchiko Assistant Vector Emblem" />
         </div>
-        <div class="brand-text">
-          <span class="brand-name">Tchiko Assistant</span>
-          <span class="brand-sub">The Mythical Ta Lo Desktop Pet</span>
+        <div class="brand-title">
+          <span>Tchiko Assistant</span>
+          <span class="brand-tag">Ubuntu X11 / Wayland</span>
         </div>
       </a>
 
       <ul class="nav-links">
-        <li><a href="#playground">Interactive Stage</a></li>
-        <li><a href="#sketchbook">Field Sketchbook</a></li>
-        <li><a href="#anatomy">Dijiang Anatomy</a></li>
-        <li><a href="#install">Open Source CLI</a></li>
+        <li><a href="#studio">Live Studio</a></li>
+        <li><a href="#pipeline">5-Tier Engine</a></li>
+        <li><a href="#capabilities">Sysadmin Toolkit</a></li>
+        <li><a href="#physics">Cairo Physics</a></li>
+        <li><a href="#playbook">Command Playbook</a></li>
       </ul>
 
-      <div style="display: flex; align-items: center; gap: 14px;">
-        <div class="artist-seal">
-          <span>太羅 • TA LO</span>
-          <span>OPEN SOURCE</span>
+      <div class="nav-actions">
+        <div class="status-indicator" title="Powered by Google Antigravity SDK &amp; CLI Stream-JSON">
+          <span class="status-dot"></span>
+          <span>Antigravity SDK + agy IPC</span>
         </div>
-        <a href="#install" class="btn-art btn-cinnabar">Summon Tchiko 🐾</a>
+        <a href="#install" class="btn btn-nav">Install on Ubuntu</a>
       </div>
     </div>
   </header>
 
   <main class="container">
-    <!-- ── HERO SPREAD ──────────────────────────────────────────────────── -->
-    <section class="hero-spread" id="playground">
+    <!-- ── HERO SECTION: SPLIT PRODUCT-FORWARD + LIVE DESKTOP STUDIO ───── -->
+    <section class="hero" id="studio">
       <div>
-        <div class="hand-note-badge">
-          <span class="artist-seal">SPECIMEN #01</span>
-          <span class="hand-script">✨ Hand-crafted for Ubuntu Linux &amp; Antigravity SDK</span>
+        <div class="eyebrow">
+          <span class="eyebrow-accent">Autonomous SRE Companion</span>
+          <span>•</span>
+          <span>Dijiang (Hundun) Desktop Agent</span>
         </div>
 
-        <h1 class="hero-title">
-          Meet Tchiko.<br />
-          Your Squishy, Six-Legged
-          <span class="brush-underline">
-            Hero Agent.
-            <svg viewBox="0 0 300 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M3 13C72 3 210 2 297 12" stroke="#e62e2d" stroke-width="5" stroke-linecap="round"/>
+        <h1 class="hero-h1">
+          Crafted like a companion.<br />
+          Engineered like a
+          <span class="sig-highlight">
+            Linux SRE.
+            <svg viewBox="0 0 240 10" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M2 7.5C68 2.2 164 1.8 238 7.2" stroke="#e62e2d" stroke-width="3.5" stroke-linecap="round"/>
             </svg>
           </span>
         </h1>
 
-        <p class="hero-story">
-          Inspired by the mythical faceless <strong>Dijiang (Hundun)</strong> from <em>Shang-Chi’s</em> realm of Ta Lo,
-          <strong>Tchiko</strong> floats right on your Ubuntu desktop as a cloud-soft marshmallow pet in
-          <strong>Snowy White, Crimson Red, and Velvet Black</strong>.
-          <br /><br />
-          <strong>Click your mouse scroll-wheel</strong> on Tchiko to pop open his quick input bar, press
-          <code>Enter</code>, and watch him talk back in a floating speech bubble while generating OpenSSH keys,
-          checking ports, and running Linux commands.
+        <p class="hero-sub">
+          Tchiko floats natively on your Ubuntu workspace at 60 FPS—combining a 5-tier Antigravity reasoning engine with autonomous crash repair, OpenSSH lifecycle automation, and live <code>/proc</code> telemetry.
         </p>
 
-        <div class="cta-cluster">
-          <button class="btn-art btn-cinnabar" onclick="triggerScrollWheelDemo()">
-            🖱️ Click Scroll-Wheel Demo
-          </button>
-          <a href="assets/tchiko-logo.svg" target="_blank" class="btn-art btn-sketch">
-            🎨 View Raw Desktop SVG
+        <div class="hero-ctas">
+          <a href="#install" class="btn btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+            Install on Ubuntu
           </a>
+          <button type="button" class="btn btn-secondary" onclick="runScenario('crash_doctor')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+            Simulate 6-Step Crash Doctor
+          </button>
         </div>
 
-        <div class="artist-margin-notes">
-          <div class="margin-item">
-            <span class="margin-num">32</span>
-            <span class="margin-text">Cloud-Soft Fur Puffs<br />with Jelly Squish Physics</span>
-          </div>
-          <div class="margin-item">
-            <span class="margin-num">6</span>
-            <span class="margin-text">Stubby Velvet Paws<br />&amp; Crimson Toe-Beans</span>
-          </div>
-          <div class="margin-item">
-            <span class="margin-num">4</span>
-            <span class="margin-text">Feathered Wings<br />in White, Black &amp; Red</span>
-          </div>
+        <div class="hero-trust">
+          <span>✓ Native GTK3 + PyCairo RGBA Overlay</span>
+          <span>•</span>
+          <span>✓ Gemini 2.5 Flash &amp; Local Ollama ReAct</span>
+          <span>•</span>
+          <span>✓ MIT Open Source</span>
         </div>
       </div>
 
-      <!-- ── RIGHT: EXACT DESKTOP TCHIKO RENDERER & INTERACTIVE STAGE ──── -->
-      <div class="canvas-desk-wrap">
-        <div class="floating-hand-callout callout-top-left">
-          <span>↙ Exact Desktop Cairo SVG Renderer!</span>
-        </div>
-        <div class="floating-hand-callout callout-mid-right">
-          <span>← Rub cursor to pet &amp; squish!</span>
+      <!-- ── RIGHT: INTERACTIVE UBUNTU DESKTOP REPLICA ────────────────── -->
+      <div class="studio-shell">
+        <div class="studio-topbar">
+          <div class="window-dots" aria-hidden="true">
+            <span class="win-dot close"></span>
+            <span class="win-dot min"></span>
+            <span class="win-dot max"></span>
+          </div>
+          <div class="studio-title">
+            <span>FloatingGhostWidget • X11/XWayland RGBA</span>
+          </div>
+          <span class="studio-telemetry-badge" id="live-state-badge">STATE: IDLE (60 FPS)</span>
         </div>
 
-        <div class="artist-stage-board" id="stage-board">
-          <div class="masking-tape">LIVE DESKTOP REPLICA</div>
-
+        <div class="studio-stage" id="stage-board">
           <!-- 1. TOP TALKING SPEECH BUBBLE -->
           <div class="tchiko-talk-bubble" id="hero-bubble">
             <div class="bubble-hdr">
-              <span class="bubble-title">🐾 Tchiko</span>
+              <div class="bubble-title">
+                <span>🐾 Tchiko</span>
+                <span class="bubble-tier-tag" id="bubble-tier">Tier 1–5 Ready</span>
+              </div>
               <div class="bubble-btn-row">
-                <button class="bubble-btn" id="copy-btn" onclick="copyBubble()">📋 Copy</button>
-                <button class="bubble-btn" onclick="resetBubble()">↻ Reset</button>
+                <button type="button" class="bubble-btn" id="copy-btn" onclick="copyBubble()">Copy</button>
+                <button type="button" class="bubble-btn" onclick="resetBubble()">Reset</button>
               </div>
             </div>
             <div class="bubble-content" id="bubble-text">
-              <b>*Happy chirp!* ♪</b> I’m rendered with the exact same 32-puff mochi curve &amp; spring-jelly physics as your Ubuntu desktop app! Middle-click me (or click below) to talk!
+              <b>*Happy chirp!* ♪</b> I’m rendered in real time using the exact 32-puff cubic Bézier silhouette and Hooke’s law spring physics (<code>k=18.0, c=0.72</code>) from <code>tchiko/svg_ghost_renderer.py</code>. Middle-click me or trigger any sysadmin workflow below.
             </div>
           </div>
 
-          <!-- 2. MIDDLE: EXACT 1:1 PORT OF SvgGhostRenderer (tchiko/svg_ghost_renderer.py) -->
-          <div class="desktop-pet-hitbox" id="pet-hitbox" title="Middle-click (Scroll-Wheel Click) to open Quick Input! Move cursor over Tchiko to pet!">
-            <canvas id="desktop-tchiko-canvas" width="360" height="340"></canvas>
+          <!-- 2. MIDDLE: EXACT 1:1 PORT OF SvgGhostRenderer -->
+          <div class="desktop-pet-hitbox" id="pet-hitbox" title="Middle-click (or click gesture bar below) for Quick Input • Scroll wheel to cycle all 10 states • Move cursor to pet">
+            <canvas id="desktop-tchiko-canvas" width="360" height="330"></canvas>
+            <div class="physics-readout" id="physics-readout">squish: 1.00x, 1.00y</div>
           </div>
 
-          <!-- 3. BOTTOM: SCROLL-WHEEL CLICK QUICK INPUT BAR -->
+          <!-- 3. BOTTOM: MIDDLE-CLICK QUICK INPUT PILL -->
           <div class="quick-pill-zone">
             <div class="tchiko-quick-pill is-hidden" id="quick-pill">
               <input
                 type="text"
                 class="tchiko-quick-entry"
                 id="quick-entry"
-                placeholder="Ask Tchiko... ↵"
+                placeholder="Ask Tchiko or type /doctor, /sysinfo, ssh, port 8000... ↵"
+                aria-label="Quick prompt input for Tchiko"
                 autocomplete="off"
               />
-              <button class="bubble-btn" onclick="sendQuickPrompt()" title="Send (Enter)">↵</button>
-              <button class="bubble-btn" onclick="toggleQuickPill(false)" title="Hide (Esc)">✖</button>
+              <button type="button" class="bubble-btn" onclick="sendQuickPrompt()" title="Dispatch Prompt (Enter)">↵</button>
+              <button type="button" class="bubble-btn" onclick="toggleQuickPill(false)" title="Close (Esc)">✕</button>
             </div>
-            <div class="scroll-wheel-note" onclick="toggleQuickPill()">
-              🖱️ Click your mouse scroll-wheel on Tchiko (or <span>click here</span>) to open Quick Input!
+            <div class="gesture-hint" onclick="toggleQuickPill()">
+              <strong>Middle-Click</strong> avatar (or <u>click here</u>) for inline Quick Input • <strong>Scroll Wheel</strong> cycles 10 states
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. INTERACTIVE CAPABILITY & PHYSICS CONTROL DECK -->
+        <div class="studio-controls">
+          <div class="control-group">
+            <div class="control-label">
+              <span>Autonomous Sysadmin Scenarios (Click to Execute)</span>
+              <span class="num">tchiko/agent_engine.py</span>
+            </div>
+            <div class="pill-row">
+              <button type="button" class="ctrl-pill" onclick="runScenario('crash_doctor')">🩺 6-Step IDE Crash Doctor</button>
+              <button type="button" class="ctrl-pill" onclick="runScenario('system_doctor')">⚡ /doctor Health Audit</button>
+              <button type="button" class="ctrl-pill" onclick="runScenario('ssh_key')">🔑 OpenSSH ed25519 + Config</button>
+              <button type="button" class="ctrl-pill" onclick="runScenario('port_reaper')">🔌 Port 8000 Reaper</button>
+              <button type="button" class="ctrl-pill" onclick="runScenario('react_patch')">🧠 8-Step ReAct Patch</button>
+              <button type="button" class="ctrl-pill" onclick="runScenario('memory_ctx')">📋 Context: "copy it"</button>
             </div>
           </div>
 
-          <!-- 4. ARTIST PALETTE: MOODS & COAT THEMES -->
-          <div class="palette-strip">
-            <div class="palette-row">
-              <button class="sketch-pill-btn active" id="btn-emo-idle" onclick="setEmotion('idle')">🐾 Hover</button>
-              <button class="sketch-pill-btn" id="btn-emo-love" onclick="setEmotion('love')">🎶 Pet &amp; Chirp</button>
-              <button class="sketch-pill-btn" id="btn-emo-happy" onclick="setEmotion('happy')">🐾 Tippy-Tap</button>
-              <button class="sketch-pill-btn" id="btn-emo-roar" onclick="setEmotion('roar')">☁️ Puff-Up</button>
-              <button class="sketch-pill-btn" id="btn-emo-wing_slash" onclick="setEmotion('wing_slash')">🌀 Roly-Poly</button>
-              <button class="sketch-pill-btn" id="btn-emo-executing" onclick="setEmotion('executing')">⭕ Rings</button>
-              <button class="sketch-pill-btn" id="btn-emo-sleepy" onclick="setEmotion('sleepy')">😴 Loaf (Zzz)</button>
+          <div class="control-group">
+            <div class="control-label">
+              <span>10 Procedural Physics States &amp; 4 Coat Palettes</span>
+              <button type="button" class="ctrl-pill" onclick="cycleTheme()" style="padding: 2px 8px;">
+                🎨 Coat: <strong id="coat-label" style="color: #fff;">Crimson Cloud</strong>
+              </button>
             </div>
-            <div class="palette-row" style="margin-bottom: 0;">
-              <button class="sketch-pill-btn" onclick="simulatePrompt('ssh')">🔑 Demo: Create Hetzner SSH Key</button>
-              <button class="sketch-pill-btn" onclick="simulatePrompt('sysinfo')">🖥️ Demo: Ubuntu Telemetry</button>
-              <button class="sketch-pill-btn" onclick="cycleTheme()">🎨 Coat: <span id="coat-label">Crimson Cloud</span></button>
+            <div class="pill-row">
+              <button type="button" class="ctrl-pill active" id="btn-emo-idle" onclick="setEmotion('idle')">idle</button>
+              <button type="button" class="ctrl-pill" id="btn-emo-love" onclick="setEmotion('love')">love ♪</button>
+              <button type="button" class="ctrl-pill" id="btn-emo-happy" onclick="setEmotion('happy')">happy</button>
+              <button type="button" class="ctrl-pill" id="btn-emo-roar" onclick="setEmotion('roar')">roar</button>
+              <button type="button" class="ctrl-pill" id="btn-emo-wing_slash" onclick="setEmotion('wing_slash')">wing_slash</button>
+              <button type="button" class="ctrl-pill" id="btn-emo-excited" onclick="setEmotion('excited')">excited</button>
+              <button type="button" class="ctrl-pill" id="btn-emo-thinking" onclick="setEmotion('thinking')">thinking</button>
+              <button type="button" class="ctrl-pill" id="btn-emo-executing" onclick="setEmotion('executing')">executing</button>
+              <button type="button" class="ctrl-pill" id="btn-emo-sleepy" onclick="setEmotion('sleepy')">sleepy</button>
+              <button type="button" class="ctrl-pill" id="btn-emo-dizzy" onclick="setEmotion('dizzy')">dizzy</button>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ── ARTIST'S SKETCHBOOK GALLERY (EXACT EXPORTED DESKTOP SVGS!) ──── -->
-    <section class="sketchbook-section" id="sketchbook">
-      <div class="section-heading-wrap">
-        <span class="hand-script">🎨 Pinned from the Desktop Cairo Renderer</span>
-        <h2 class="section-heading">The Tchiko Field Sketchbook</h2>
-        <p style="color: var(--ink-muted);">
-          Every illustration below is a genuine vector <code>.svg</code> exported directly from our Ubuntu desktop
-          engine (<code>SvgGhostRenderer.export_to_svg</code>) — zero external stock assets.
+    <!-- ── SECTION 2: TECHNICAL PROOF & ARCHITECTURE METRICS BAR ────────── -->
+    <section class="proof-bar" aria-label="Engineering Metrics">
+      <div class="proof-cell">
+        <div class="proof-metric">
+          <span>5-Tier</span>
+          <span class="proof-unit">Dispatch Pipeline</span>
+        </div>
+        <p class="proof-desc">
+          Routes prompts across zero-latency Slash Commands, Anaphoric Memory, Deterministic Linux Planners, Antigravity SDK/CLI, and an 8-step ReAct loop.
         </p>
       </div>
 
-      <div class="polaroid-gallery">
-        <!-- Study 1 -->
-        <div class="polaroid-card" onclick="setEmotion('idle')">
-          <div class="polaroid-stage">
-            <img src="assets/tchiko-logo.svg" alt="Tchiko Default Fluffy Hover SVG" />
-          </div>
-          <div class="polaroid-caption">
-            <span class="polaroid-title">Fig 01. Fluffy Hover</span>
-            <span class="polaroid-hand">tchiko-logo.svg</span>
-          </div>
-          <p class="polaroid-desc">
-            Default desktop state — 32 scalloped cloud puffs, snowy belly cushion, and gentle crimson fireflies.
-          </p>
+      <div class="proof-cell">
+        <div class="proof-metric">
+          <span>6-Step</span>
+          <span class="proof-unit">Auto-Heal Doctor</span>
+        </div>
+        <p class="proof-desc">
+          Resolves symlinks, removes broken <code>SingletonLock</code> files, inspects <code>Crashpad/*.dmp</code>, audits X.509 <code>.pem</code> expiry via OpenSSL, and patches JS bundles with <code>.bak</code> safety.
+        </p>
+      </div>
+
+      <div class="proof-cell">
+        <div class="proof-metric">
+          <span>60 FPS</span>
+          <span class="proof-unit">Cairo Bézier Vector</span>
+        </div>
+        <p class="proof-desc">
+          Zero static sprite sheets. Computes 32 harmonic fur puffs, 4 articulated feathered wings, and 6 velocity-coupled paws with area-conserving Hooke’s law squash-and-stretch.
+        </p>
+      </div>
+
+      <div class="proof-cell">
+        <div class="proof-metric">
+          <span>&lt;10 ms</span>
+          <span class="proof-unit">NDJSON IPC Bridge</span>
+        </div>
+        <p class="proof-desc">
+          Streams real-time <code>init</code>, <code>step_update</code>, and <code>text_delta</code> events from <code>agy --output-format stream-json</code> while persisting multi-turn <code>agy_conversation_id</code>.
+        </p>
+      </div>
+    </section>
+
+    <!-- ── SECTION 3: INTERACTIVE 5-TIER AUTONOMOUS DISPATCH PIPELINE ───── -->
+    <section class="section" id="pipeline">
+      <div class="section-hdr">
+        <h2 class="section-h2">Five-tier autonomous reasoning and execution architecture</h2>
+        <p class="section-lead">
+          Every prompt entered into Tchiko’s floating quick-input pill or GTK3 Chat Studio is evaluated through five prioritized execution layers on a non-blocking daemon worker thread bridged via <code>GLib.idle_add</code>.
+        </p>
+      </div>
+
+      <div class="tier-explorer">
+        <div class="tier-tabs" role="tablist" aria-label="Execution Tiers">
+          <button type="button" class="tier-tab active" onclick="selectTier(0)" id="tier-btn-0">
+            <div class="tier-tab-top">
+              <span class="tier-badge">TIER 1</span>
+              <span class="tier-latency">&lt; 2 ms • Deterministic</span>
+            </div>
+            <div class="tier-tab-title">Built-In Slash &amp; Direct Shell Router</div>
+            <div class="tier-tab-sub">Zero-latency operator commands (<code>/doctor</code>, <code>/sysinfo</code>, <code>/procs</code>, <code>/files</code>, <code>/permissions</code>, <code>$ cmd</code>).</div>
+          </button>
+
+          <button type="button" class="tier-tab" onclick="selectTier(1)" id="tier-btn-1">
+            <div class="tier-tab-top">
+              <span class="tier-badge">TIER 2</span>
+              <span class="tier-latency">Stateful • JSON Store</span>
+            </div>
+            <div class="tier-tab-title">Contextual &amp; Anaphoric Memory Resolver</div>
+            <div class="tier-tab-sub">Resolves follow-ups (<code>"copy it"</code>, <code>"retry"</code>, <code>"where did you save it?"</code>, <code>"cd ..."</code>, <code>"remember ..."</code>).</div>
+          </button>
+
+          <button type="button" class="tier-tab" onclick="selectTier(2)" id="tier-btn-2">
+            <div class="tier-tab-top">
+              <span class="tier-badge">TIER 3</span>
+              <span class="tier-latency">Autonomous SRE Planners</span>
+            </div>
+            <div class="tier-tab-title">Natural-Language Linux &amp; DevOps Playbooks</div>
+            <div class="tier-tab-sub">6-Step IDE Crash Doctor, OpenSSH key &amp; config lifecycle, Port Reaper, and Git repo scaffolder.</div>
+          </button>
+
+          <button type="button" class="tier-tab" onclick="selectTier(3)" id="tier-btn-3">
+            <div class="tier-tab-top">
+              <span class="tier-badge">TIER 4A / 4B</span>
+              <span class="tier-latency">NDJSON Stream Bridge</span>
+            </div>
+            <div class="tier-tab-title">Google Antigravity SDK &amp; agy CLI Runtime</div>
+            <div class="tier-tab-sub">Native <code>google.antigravity.Agent</code> &amp; <code>agy --output-format stream-json</code> with 48+ tools.</div>
+          </button>
+
+          <button type="button" class="tier-tab" onclick="selectTier(4)" id="tier-btn-4">
+            <div class="tier-tab-top">
+              <span class="tier-badge">TIER 5</span>
+              <span class="tier-latency">8-Step Multi-Tool ReAct</span>
+            </div>
+            <div class="tier-tab-title">Gemini 2.5 Flash &amp; Local Ollama ReAct Loop</div>
+            <div class="tier-tab-sub">Autonomous <code>&lt;view_file&gt;</code>, <code>&lt;grep&gt;</code>, <code>&lt;patch_file&gt;</code>, <code>&lt;write_file&gt;</code>, <code>&lt;bash&gt;</code> + <code>&lt;think&gt;</code> sanitizer.</div>
+          </button>
         </div>
 
-        <!-- Study 2 -->
-        <div class="polaroid-card" onclick="setEmotion('love')">
-          <div class="polaroid-stage">
-            <img src="assets/tchiko-love.svg" alt="Tchiko Squishy Petting SVG" />
-          </div>
-          <div class="polaroid-caption">
-            <span class="polaroid-title">Fig 02. Mochi Squish &amp; Chirp</span>
-            <span class="polaroid-hand">tchiko-love.svg</span>
-          </div>
-          <p class="polaroid-desc">
-            Triggered when you rub your cursor over Tchiko — squishes wide with musical notes (<code>♪</code>) and crimson glow.
-          </p>
-        </div>
-
-        <!-- Study 3 -->
-        <div class="polaroid-card" onclick="setEmotion('roar')">
-          <div class="polaroid-stage">
-            <img src="assets/tchiko-roar.svg" alt="Tchiko Marshmallow Puff-Up SVG" />
-          </div>
-          <div class="polaroid-caption">
-            <span class="polaroid-title">Fig 03. Marshmallow Puff-Up</span>
-            <span class="polaroid-hand">tchiko-roar.svg</span>
-          </div>
-          <p class="polaroid-desc">
-            Puffs out his chest and spreads all four crimson-tipped wings with a soft white shockwave ring.
-          </p>
-        </div>
-
-        <!-- Study 4 -->
-        <div class="polaroid-card" onclick="setEmotion('executing')">
-          <div class="polaroid-stage">
-            <img src="assets/tchiko-executing.svg" alt="Tchiko Ten-Rings Executing SVG" />
-          </div>
-          <div class="polaroid-caption">
-            <span class="polaroid-title">Fig 04. Ten-Rings Juggle</span>
-            <span class="polaroid-hand">tchiko-executing.svg</span>
-          </div>
-          <p class="polaroid-desc">
-            Active while executing Linux shell commands, generating OpenSSH keys, or inspecting system telemetry.
-          </p>
-        </div>
-
-        <!-- Study 5 -->
-        <div class="polaroid-card" onclick="setEmotion('thinking')">
-          <div class="polaroid-stage">
-            <img src="assets/tchiko-thinking.svg" alt="Tchiko Curious Head-Tilt SVG" />
-          </div>
-          <div class="polaroid-caption">
-            <span class="polaroid-title">Fig 05. Curious Head-Tilt</span>
-            <span class="polaroid-hand">tchiko-thinking.svg</span>
-          </div>
-          <p class="polaroid-desc">
-            Tilts his faceless fluffy body at a curious angle while reasoning with the Google Antigravity SDK.
-          </p>
-        </div>
-
-        <!-- Study 6 -->
-        <div class="polaroid-card" onclick="setEmotion('sleepy')">
-          <div class="polaroid-stage">
-            <img src="assets/tchiko-sleepy.svg" alt="Tchiko Curled-Up Mochi Loaf SVG" />
-          </div>
-          <div class="polaroid-caption">
-            <span class="polaroid-title">Fig 06. Cozy Mochi Loaf</span>
-            <span class="polaroid-hand">tchiko-sleepy.svg</span>
-          </div>
-          <p class="polaroid-desc">
-            After 38 seconds of desktop inactivity, Tchiko tucks in his 6 stubby paws and drifts off with crimson <code>Zzz</code>s.
-          </p>
+        <div class="tier-detail-pane" id="tier-detail-pane">
+          <!-- Populated dynamically by selectTier() -->
         </div>
       </div>
     </section>
 
-    <!-- ── PARCHMENT ARTBOOK SPREAD: ANATOMY & WORKFLOW ─────────────────── -->
-    <section class="artbook-page" id="anatomy">
-      <div class="artbook-illustration">
-        <img src="assets/tchiko-happy.svg" alt="Tchiko Bouncy Tippy-Tap SVG" />
-        <div style="font-family: var(--font-hand); font-size: 1.35rem; color: var(--parchment); margin-top: 8px;">
-          “No eyes, no mouth — pure Linux intuition &amp; happy chirps.”
+    <!-- ── SECTION 4: ASYMMETRIC BENTO CAPABILITY MATRIX ────────────────── -->
+    <section class="section" id="capabilities">
+      <div class="section-hdr">
+        <div class="eyebrow">
+          <span class="eyebrow-accent">Full Capability Inventory</span>
+          <span>•</span>
+          <span>Grounded in <code>tchiko/*</code></span>
         </div>
+        <h2 class="section-h2">Every subsystem built into your floating companion</h2>
+        <p class="section-lead">
+          From deep X.509 certificate inspection and minified JavaScript bundle patching to real-time <code>/proc</code> studio telemetry and bi-directional <code>antigravity.yaml</code> RBAC governance.
+        </p>
       </div>
 
+      <div class="bento-grid">
+        <!-- Dominant Card (7 cols): 6-Step Autonomous App & IDE Crash Doctor -->
+        <div class="bento-card bento-span-7 primary-tint">
+          <div>
+            <div class="bento-kicker">
+              <span>AUTONOMOUS DIAGNOSTICS &amp; SELF-HEALING</span>
+              <span>LinuxSystemToolkit.diagnose_and_heal_app()</span>
+            </div>
+            <h3 class="bento-title">6-Step Autonomous Application &amp; IDE Crash Doctor</h3>
+            <p class="bento-desc">
+              Ask Tchiko <em>“check why antigravity code ide or vscode is crashing and fix it”</em> and he executes a complete root-cause investigation and atomic binary/bundle repair workflow automatically:
+            </p>
+          </div>
+
+          <div class="doctor-steps">
+            <div class="doc-step">
+              <span class="doc-step-num">1</span>
+              <div class="doc-step-body">
+                <strong>find_binaries()</strong>
+                <span>Resolves <code>PATH</code>, <code>~/.local/bin</code> symlinks, and installation share roots.</span>
+              </div>
+            </div>
+            <div class="doc-step">
+              <span class="doc-step-num">2</span>
+              <div class="doc-step-body">
+                <strong>inspect_config_locks()</strong>
+                <span>Unlinks stale broken <code>SingletonLock</code> symlinks &amp; inspects <code>Crashpad/*.dmp</code>.</span>
+              </div>
+            </div>
+            <div class="doc-step">
+              <span class="doc-step-num">3</span>
+              <div class="doc-step-body">
+                <strong>scan_crash_logs()</strong>
+                <span>Extracts <code>ConnectError</code>, <code>TLS handshake</code>, and <code>SIGTRAP</code> traces from latest logs.</span>
+              </div>
+            </div>
+            <div class="doc-step">
+              <span class="doc-step-num">4</span>
+              <div class="doc-step-body">
+                <strong>audit_certificates()</strong>
+                <span>Runs <code>openssl x509 -noout -dates -checkend 0</code> on bundled <code>.pem</code>/<code>.crt</code> files.</span>
+              </div>
+            </div>
+            <div class="doc-step">
+              <span class="doc-step-num">5</span>
+              <div class="doc-step-body">
+                <strong>patch_file_content()</strong>
+                <span>Creates <code>.bak</code> backups and patches <code>main.js</code> / <code>extension.js</code> TLS <code>nodeOptions</code>.</span>
+              </div>
+            </div>
+            <div class="doc-step">
+              <span class="doc-step-num">6</span>
+              <div class="doc-step-body">
+                <strong>verify_fix()</strong>
+                <span>Streams structured Root Cause, Evidence &amp; Verification report to desktop UI.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Secondary Card (5 cols): Antigravity 2.0 GTK3 Chat & System Studio -->
+        <div class="bento-card bento-span-5">
+          <div>
+            <div class="bento-kicker">
+              <span>GTK3 DESKTOP STUDIO</span>
+              <span>tchiko/assistant_window.py</span>
+            </div>
+            <h3 class="bento-title">Antigravity 2.0 Chat, System Studio &amp; Live Activity Feed</h3>
+            <p class="bento-desc">
+              Single-click Tchiko to toggle the full desktop studio featuring card-based Markdown streaming, 1-click code copy, slash-command popup (<code>/</code>), and live <code>/proc</code> hardware meters.
+            </p>
+          </div>
+
+          <div class="gtk-studio-mock">
+            <div class="gtk-tabs-row">
+              <span class="gtk-tab-pill">💬 Chat</span>
+              <span class="gtk-tab-pill active">⚡ System Studio</span>
+              <span class="gtk-tab-pill">🧠 Activity (Live Tools)</span>
+            </div>
+            <div class="meter-row">
+              <div class="meter-hdr"><span>CPU Load (/proc/loadavg • 16 cores)</span><span class="num">1.42 (14%)</span></div>
+              <div class="meter-bar"><div class="meter-fill" style="width: 24%;"></div></div>
+            </div>
+            <div class="meter-row">
+              <div class="meter-hdr"><span>Memory (/proc/meminfo)</span><span class="num">32.8 / 60.9 GB (53.8%)</span></div>
+              <div class="meter-bar"><div class="meter-fill" style="width: 54%;"></div></div>
+            </div>
+            <div class="meter-row">
+              <div class="meter-hdr"><span>Disk (/home filesystem)</span><span class="num">42.1 / 500.0 GB (8.4%)</span></div>
+              <div class="meter-bar"><div class="meter-fill" style="width: 12%;"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3 (4 cols): OpenSSH Keypair & ~/.ssh/config Lifecycle -->
+        <div class="bento-card bento-span-4">
+          <div>
+            <div class="bento-kicker">
+              <span>ZERO-TOUCH SSH LIFECYCLE</span>
+              <span>ed25519 / RSA-4096</span>
+            </div>
+            <h3 class="bento-title">OpenSSH Key &amp; Config Automation</h3>
+            <p class="bento-desc">
+              Generates <code>~/.ssh/id_ed25519_&lt;host&gt;</code> (<code>-a 100</code>) for Hetzner, GitHub, GitLab, AWS, or DigitalOcean, backs up prior keys, sets strict <code>0700</code>/<code>0600</code>/<code>0644</code> permissions, auto-copies the <code>.pub</code> key to your X11/Wayland clipboard, and appends <code>Host</code> blocks to <code>~/.ssh/config</code>.
+            </p>
+          </div>
+          <div class="tier-code-preview">
+$ ssh-keygen -t ed25519 -a 100 -f ~/.ssh/id_ed25519_hetzner
+✓ Auto-copied .pub to clipboard (xclip / wl-copy)
+✓ Appended Host hetzner (ServerAliveInterval 60)</div>
+        </div>
+
+        <!-- Card 4 (4 cols): Minified-JS Grep, Line-Numbered View & Atomic .bak Patching -->
+        <div class="bento-card bento-span-4">
+          <div>
+            <div class="bento-kicker">
+              <span>PRECISION CODE &amp; LOG SURGERY</span>
+              <span>tchiko/system_tools.py</span>
+            </div>
+            <h3 class="bento-title">Byte-Window Grep &amp; Atomic <code>.bak</code> Patching</h3>
+            <p class="bento-desc">
+              Includes 1-indexed <code>view_file_lines()</code>, <code>grep_files()</code> with an automatic byte-offset snippet fallback for single-line minified JS bundles (<code>main.js</code>), and <code>patch_file_content()</code> that snapshots a <code>.bak</code> backup before every edit.
+            </p>
+          </div>
+          <div class="tier-code-preview">
+&lt;view_file path="/var/log/syslog" start="1" end="120" /&gt;
+&lt;grep pattern="ConnectError" path="~/.config/Antigravity" /&gt;
+&lt;patch_file path="..."&gt;&lt;search&gt;...&lt;/search&gt;&lt;/patch_file&gt;</div>
+        </div>
+
+        <!-- Card 5 (4 cols): RBAC Permission Governance & antigravity.yaml Sync -->
+        <div class="bento-card bento-span-4">
+          <div>
+            <div class="bento-kicker">
+              <span>RBAC &amp; POLICY GOVERNANCE</span>
+              <span>config_manager.py</span>
+            </div>
+            <h3 class="bento-title">Bi-Directional <code>antigravity.yaml</code> Sync</h3>
+            <p class="bento-desc">
+              Switch instantaneously between <strong>Full Autonomous Mode</strong> (<code>always-proceed</code>) and <strong>Supervised Review Mode</strong> (<code>request-review</code> inline approval banners) across 6 capability domains with hard <code>command_denylist</code> protection.
+            </p>
+          </div>
+          <div class="rbac-tags">
+            <div class="rbac-chip"><span>bash_execution</span><span class="dot-on">● ON</span></div>
+            <div class="rbac-chip"><span>filesystem_rw</span><span class="dot-on">● ON</span></div>
+            <div class="rbac-chip"><span>process_mgmt</span><span class="dot-on">● ON</span></div>
+            <div class="rbac-chip"><span>desktop_auto</span><span class="dot-on">● ON</span></div>
+            <div class="rbac-chip"><span>package_mgmt</span><span class="dot-on">● ON</span></div>
+            <div class="rbac-chip"><span>network_req</span><span class="dot-on">● ON</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── SECTION 5: PARAMETRIC CAIRO VECTOR & SPRING-JELLY PHYSICS ────── -->
+    <section class="section" id="physics">
+      <div class="section-hdr">
+        <h2 class="section-h2">Procedural Cairo Bézier rendering &amp; spring-jelly physics</h2>
+        <p class="section-lead">
+          Every vector below is exported directly by <code>SvgGhostRenderer.export_to_svg()</code> in <code>tchiko/svg_ghost_renderer.py</code>. Click any study to load its state into the interactive 60 FPS canvas above.
+        </p>
+      </div>
+
+      <div class="specimen-grid">
+        <div class="specimen-card active" onclick="selectSpecimen('idle', this)">
+          <div class="specimen-stage">
+            <img src="assets/tchiko-logo.svg" alt="Tchiko Idle Hover State SVG" />
+          </div>
+          <div class="specimen-meta">
+            <span class="specimen-code">FIG 01 • STATE: IDLE</span>
+            <span class="specimen-name">Fluffy Cloud Hover</span>
+            <p class="specimen-desc">32 radial cubic Bézier fur puffs, snowy belly cushion, and orbiting crimson fireflies.</p>
+          </div>
+        </div>
+
+        <div class="specimen-card" onclick="selectSpecimen('love', this)">
+          <div class="specimen-stage">
+            <img src="assets/tchiko-love.svg" alt="Tchiko Love Petting State SVG" />
+          </div>
+          <div class="specimen-meta">
+            <span class="specimen-code">FIG 02 • STATE: LOVE</span>
+            <span class="specimen-name">Mochi Squish &amp; Chirp</span>
+            <p class="specimen-desc">Triggered when cursor rub accumulator exceeds threshold; emits musical <code>♪</code> notes.</p>
+          </div>
+        </div>
+
+        <div class="specimen-card" onclick="selectSpecimen('happy', this)">
+          <div class="specimen-stage">
+            <img src="assets/tchiko-happy.svg" alt="Tchiko Happy Tippy-Tap SVG" />
+          </div>
+          <div class="specimen-meta">
+            <span class="specimen-code">FIG 03 • STATE: HAPPY</span>
+            <span class="specimen-name">Six-Paw Tippy-Tap</span>
+            <p class="specimen-desc">Celebratory bounce after completing a sysadmin task; crimson toe-beans wiggle in phase.</p>
+          </div>
+        </div>
+
+        <div class="specimen-card" onclick="selectSpecimen('roar', this)">
+          <div class="specimen-stage">
+            <img src="assets/tchiko-roar.svg" alt="Tchiko Roar Shockwave SVG" />
+          </div>
+          <div class="specimen-meta">
+            <span class="specimen-code">FIG 04 • STATE: ROAR</span>
+            <span class="specimen-name">Marshmallow Puff-Up</span>
+            <p class="specimen-desc">Expands wing span to <code>1.20x</code> and emits a concentric white radial shockwave ring.</p>
+          </div>
+        </div>
+
+        <div class="specimen-card" onclick="selectSpecimen('executing', this)">
+          <div class="specimen-stage">
+            <img src="assets/tchiko-executing.svg" alt="Tchiko Executing Ten-Rings SVG" />
+          </div>
+          <div class="specimen-meta">
+            <span class="specimen-code">FIG 05 • STATE: EXECUTING</span>
+            <span class="specimen-name">Ten-Rings Overdrive</span>
+            <p class="specimen-desc">Active while streaming <code>agy</code> tools, running shell commands, or patching files.</p>
+          </div>
+        </div>
+
+        <div class="specimen-card" onclick="selectSpecimen('sleepy', this)">
+          <div class="specimen-stage">
+            <img src="assets/tchiko-sleepy.svg" alt="Tchiko Sleepy Mochi Loaf SVG" />
+          </div>
+          <div class="specimen-meta">
+            <span class="specimen-code">FIG 06 • STATE: SLEEPY</span>
+            <span class="specimen-name">Cozy Mochi Loaf</span>
+            <p class="specimen-desc">After 38s of desktop inactivity, tucks all 6 stubby legs (<code>tuck_y = -11px</code>) with drifting <code>Zzz</code>s.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── SECTION 6: SYSADMIN COMMAND PLAYBOOK & GESTURE MATRIX ────────── -->
+    <section class="section" id="playbook">
+      <div class="section-hdr">
+        <h2 class="section-h2">Interactive operator playbook &amp; desktop gesture matrix</h2>
+        <p class="section-lead">
+          Click any prompt in the playbook below to simulate its execution live in Tchiko’s desktop studio above.
+        </p>
+      </div>
+
+      <div class="split-tables">
+        <!-- Left Table: Natural-Language & Slash Command Playbook -->
+        <div class="table-card">
+          <div class="table-card-hdr">
+            <h3>Built-In Slash &amp; Natural-Language Sysadmin Playbook</h3>
+            <span class="brand-tag">Click prompt to test ↑</span>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Prompt / Command</th>
+                <th>Tier</th>
+                <th>Autonomous Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="cmd-trigger" onclick="runScenario('crash_doctor')">"check why antigravity code ide is crashing and fix it"</span></td>
+                <td class="mono">Tier 3</td>
+                <td>Runs 6-step Crash Doctor: symlinks, <code>SingletonLock</code>, logs, OpenSSL X.509 audit, and JS <code>.bak</code> patching.</td>
+              </tr>
+              <tr>
+                <td><span class="cmd-trigger" onclick="runScenario('system_doctor')">/doctor</span></td>
+                <td class="mono">Tier 1/3</td>
+                <td>5-point Ubuntu health audit: <code>/proc</code> CPU/RAM/Disk thresholds, top processes, failed <code>systemd</code> units, listening sockets.</td>
+              </tr>
+              <tr>
+                <td><span class="cmd-trigger" onclick="runScenario('ssh_key')">"create an ssh key for hetzner in OpenSSH format"</span></td>
+                <td class="mono">Tier 3</td>
+                <td>Generates <code>~/.ssh/id_ed25519_hetzner</code>, sets <code>0600</code>/<code>0644</code>, backs up old keys, auto-copies <code>.pub</code> to clipboard.</td>
+              </tr>
+              <tr>
+                <td><span class="cmd-trigger" onclick="runScenario('port_reaper')">"what is using port 8000" / "kill port 8000"</span></td>
+                <td class="mono">Tier 3</td>
+                <td>Inspects listening sockets via <code>ss -tulnp</code> / <code>lsof -i:8000</code> or terminates bound PIDs.</td>
+              </tr>
+              <tr>
+                <td><span class="cmd-trigger" onclick="runScenario('react_patch')">"inspect logs and patch the TLS config"</span></td>
+                <td class="mono">Tier 4/5</td>
+                <td>Streams <code>agy</code> NDJSON tool events or runs 8-step ReAct loop with <code>&lt;view_file&gt;</code>, <code>&lt;grep&gt;</code>, <code>&lt;patch_file&gt;</code>.</td>
+              </tr>
+              <tr>
+                <td><span class="cmd-trigger" onclick="runScenario('memory_ctx')">"copy it" / "retry" / "where did you save it?"</span></td>
+                <td class="mono">Tier 2</td>
+                <td>Resolves against <code>config/agent_memory.json</code> to copy last artifact, re-run last command, or display path.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Right Table: X11 / XWayland Desktop Interaction Matrix -->
+        <div class="table-card">
+          <div class="table-card-hdr">
+            <h3>Desktop Gesture Matrix</h3>
+            <span class="brand-tag">ghost_widget.py</span>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Input Gesture</th>
+                <th>Desktop Companion Behavior</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mono" style="color: var(--text-1); font-weight: 600;">Middle-Click (Scroll Click)</td>
+                <td>Toggles the inline <code>Ask Tchiko... ↵</code> Quick Input Pill directly beneath Tchiko and grabs keyboard focus.</td>
+              </tr>
+              <tr>
+                <td class="mono" style="color: var(--text-1); font-weight: 600;">Single Left-Click</td>
+                <td>Toggles the full <strong>Antigravity 2.0 Chat &amp; System Studio</strong> window + triggers a marshmallow boop squish impulse.</td>
+              </tr>
+              <tr>
+                <td class="mono" style="color: var(--text-1); font-weight: 600;">Left-Click + Drag</td>
+                <td>Repositions Tchiko across X11/XWayland root coordinates with velocity leg-dangle physics and saves <code>(x, y)</code>.</td>
+              </tr>
+              <tr>
+                <td class="mono" style="color: var(--text-1); font-weight: 600;">Cursor Hover / Rubbing</td>
+                <td>Accumulates <code>_pet_rub_energy</code>; transitions into <code>love</code> state with musical chirps (<code>♪</code>) and warm crimson blush.</td>
+              </tr>
+              <tr>
+                <td class="mono" style="color: var(--text-1); font-weight: 600;">Scroll Wheel Up / Down</td>
+                <td>Cycles deterministically through all 10 procedural states (<code>idle</code> → <code>dizzy</code>).</td>
+              </tr>
+              <tr>
+                <td class="mono" style="color: var(--text-1); font-weight: 600;">Double / Right-Click</td>
+                <td>Opens <strong>Tchiko Settings &amp; RBAC Permissions</strong> (<code>⚙️</code>) or the quick sysadmin context menu.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── SECTION 7: UBUNTU CLI QUICKSTART & FINAL CTA ─────────────────── -->
+    <section class="cli-cta-band" id="install">
       <div>
-        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-          <span class="artist-seal">CHARACTER SHEET</span>
-          <span style="font-family: var(--font-hand); font-size: 1.4rem; color: var(--cinnabar-deep); font-weight: 700;">
-            How Tchiko Lives on Your Desktop
-          </span>
+        <div class="eyebrow" style="margin-bottom: 14px;">
+          <span class="eyebrow-accent">Zero-Overhead Native GTK3</span>
+          <span>•</span>
+          <span>Ubuntu 22.04 / 24.04 / 25.10</span>
         </div>
-
-        <h2>Crafted Like a Pet.<br />Engineered Like a Sysadmin.</h2>
-        <p>
-          Most AI tools trap you inside a browser tab. <strong>Tchiko</strong> lives right on your Ubuntu workspace —
-          quietly floating above your windows without cluttering your screen with status tags.
+        <h2 class="section-h2" style="margin-bottom: 14px;">Deploy Tchiko on your Ubuntu desktop in 30 seconds</h2>
+        <p class="section-lead" style="margin-bottom: 24px;">
+          Uses native system <code>python3-gi</code> and <code>python3-cairo</code> bindings for zero-overhead compositing. Run <code>--self-test</code> to verify all subsystems and export fresh vector SVGs.
         </p>
-
-        <div class="anatomy-grid">
-          <div class="anatomy-item">
-            <strong>🖱️ Scroll-Wheel Click Input</strong>
-            <span>Click your mouse scroll wheel on Tchiko to reveal the compact <code>Ask Tchiko... ↵</code> bar.</span>
-          </div>
-          <div class="anatomy-item">
-            <strong>💬 Talking Speech Bubble</strong>
-            <span>Press <code>Enter</code> and Tchiko replies in a speech bubble above his head with 1-click <code>📋 Copy</code>.</span>
-          </div>
-          <div class="anatomy-item">
-            <strong>🔑 Autonomous Linux Actions</strong>
-            <span>Creates OpenSSH keys (<code>ed25519</code>/<code>rsa</code>) for Hetzner, checks ports, and runs bash tools.</span>
-          </div>
-          <div class="anatomy-item">
-            <strong>🛡️ Antigravity SDK Permissions</strong>
-            <span>Master permission switch in GUI Settings &amp; <code>antigravity.yaml</code> for full Ubuntu control.</span>
-          </div>
+        <div class="hero-ctas" style="margin-bottom: 0;">
+          <button type="button" class="btn btn-primary" onclick="copyCli(this)">
+            📋 Copy Install Commands
+          </button>
+          <a href="assets/tchiko-logo.svg" target="_blank" class="btn btn-secondary">
+            Inspect Raw Cairo SVG
+          </a>
         </div>
       </div>
-    </section>
 
-    <!-- ── OPEN SOURCE CLI QUICKSTART ───────────────────────────────────── -->
-    <section id="install" style="padding: 40px 0;">
-      <div class="section-heading-wrap">
-        <span class="hand-script">⚡ 100% Open Source • Ready to Share</span>
-        <h2 class="section-heading">Bring Tchiko to Your Ubuntu Desktop</h2>
-        <p style="color: var(--ink-muted);">
-          Clone, run the self-test (which also exports all vector SVGs in <code>assets/</code>), and launch.
-        </p>
-      </div>
-
-      <div class="terminal-notebook">
-        <div class="term-top">
-          <span style="font-family: var(--font-hand); font-size: 1.3rem; color: var(--cinnabar-bright);">
-            ~/Desktop/Tchiko Assistant
-          </span>
-          <button class="bubble-btn" onclick="copyCli(this)">📋 Copy Commands</button>
+      <div class="terminal-box">
+        <div class="terminal-hdr">
+          <div class="window-dots" aria-hidden="true">
+            <span class="win-dot close"></span>
+            <span class="win-dot min"></span>
+            <span class="win-dot max"></span>
+          </div>
+          <span class="mono" style="font-size: 0.74rem; color: var(--text-2);">bash — ~/Desktop/Tchiko-Assistant-Sysadmin-companion</span>
+          <button type="button" class="bubble-btn" onclick="copyCli(this)">Copy</button>
         </div>
-        <div class="term-code">
-<span style="color:#64748b;"># 1. Clone the Tchiko Assistant repository</span>
-<span style="color:#ff4747;font-weight:bold;">$</span> git clone git@github.com:ZYNIQ-SOLUTIONS/Tchiko-Assistant-Sysadmin-companion.git
-<span style="color:#ff4747;font-weight:bold;">$</span> cd Tchiko-Assistant-Sysadmin-companion
+        <div class="terminal-body">
+<span class="comment"># 1. Clone the repository</span>
+<span class="prompt">$</span> git clone git@github.com:ZYNIQ-SOLUTIONS/Tchiko-Assistant-Sysadmin-companion.git
+<span class="prompt">$</span> cd Tchiko-Assistant-Sysadmin-companion
 
-<span style="color:#64748b;"># 2. Verify Cairo SVG export, Antigravity SDK &amp; Ubuntu permissions</span>
-<span style="color:#ff4747;font-weight:bold;">$</span> python3 main.py --self-test
+<span class="comment"># 2. Run automated self-test (ConfigManager, Toolkit, Engine &amp; Cairo SVG export)</span>
+<span class="prompt">$</span> python3 main.py --self-test
 
-<span style="color:#64748b;"># 3. Launch the floating Tchiko companion on your desktop</span>
-<span style="color:#ff4747;font-weight:bold;">$</span> ./run_tchiko.sh
+<span class="comment"># 3. Launch the floating Tchiko companion on your Ubuntu desktop</span>
+<span class="prompt">$</span> ./run_tchiko.sh
         </div>
       </div>
     </section>
   </main>
 
-  <footer>
-    <div class="container">
-      <img src="assets/tchiko-logo.svg" alt="Tchiko Logo" width="68" height="64" style="margin-bottom: 10px;" />
-      <p style="font-family: var(--font-serif); font-size: 1.2rem; color: var(--snow-pure);">
-        Tchiko Assistant — Open-Source Mythical Desktop Companion
-      </p>
-      <p style="font-family: var(--font-hand); font-size: 1.3rem; color: var(--cinnabar-bright); margin-top: 4px;">
-        Crafted with Snowy White, Crimson Red &amp; Velvet Black • Powered by Google Antigravity SDK
-      </p>
+  <!-- ── BORING-ON-PURPOSE PRO FOOTER ───────────────────────────────────── -->
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <img src="assets/tchiko-logo.svg" alt="Tchiko Emblem" width="28" height="28" />
+        <span><strong>Tchiko Assistant</strong> — Autonomous Linux Systems Engineer &amp; Desktop Companion • MIT License</span>
+      </div>
+      <ul class="footer-links">
+        <li><a href="#studio">Interactive Studio</a></li>
+        <li><a href="#pipeline">5-Tier Architecture</a></li>
+        <li><a href="#capabilities">Sysadmin Capabilities</a></li>
+        <li><a href="#physics">Cairo Vector Specs</a></li>
+        <li><a href="#install">Ubuntu CLI Install</a></li>
+      </ul>
     </div>
   </footer>
 
-  <!-- ── EXACT 1:1 JAVASCRIPT PORT OF tchiko/svg_ghost_renderer.py ──────── -->
+  <!-- ── EXACT 1:1 JAVASCRIPT PORT OF tchiko/svg_ghost_renderer.py + STUDIO LOGIC -->
   <script>
+    // 1. Exact 4 Coat Themes from tchiko/svg_ghost_renderer.py
     const THEMES = {
       phantom_cyan: {
         label: "Crimson Cloud",
@@ -1229,6 +2169,12 @@
     const THEME_KEYS = Object.keys(THEMES);
     let themeIdx = 0;
 
+    // All 10 Procedural Emotion States from EMOTION_LIST in tchiko/svg_ghost_renderer.py
+    const EMOTION_LIST = [
+      'idle', 'love', 'happy', 'roar', 'wing_slash',
+      'excited', 'thinking', 'executing', 'sleepy', 'dizzy'
+    ];
+
     const EMOTION_COLORS = {
       idle: [235, 46, 51],
       happy: [250, 56, 56],
@@ -1238,12 +2184,15 @@
       excited: [255, 66, 51],
       thinking: [240, 245, 255],
       executing: [242, 41, 46],
-      sleepy: [166, 41, 46]
+      sleepy: [166, 41, 46],
+      dizzy: [224, 41, 46]
     };
 
     const canvas = document.getElementById('desktop-tchiko-canvas');
     const ctx = canvas.getContext('2d');
     const hitbox = document.getElementById('pet-hitbox');
+    const physicsReadout = document.getElementById('physics-readout');
+    const liveStateBadge = document.getElementById('live-state-badge');
 
     const state = {
       phase: 0.5,
@@ -1280,7 +2229,6 @@
       grad.addColorStop(0.52, rgba(wm, 0.97));
       grad.addColorStop(1.0, rgba(wt, 0.98));
 
-      // Exact 3-puff feather contour from SvgGhostRenderer._draw_single_plush_wing
       ctx.beginPath();
       ctx.moveTo(0, -14);
       ctx.bezierCurveTo(24, -34, 52, -26, 58, -8);
@@ -1295,7 +2243,6 @@
       ctx.lineWidth = 2.0;
       ctx.stroke();
 
-      // Soft white downy shoulder puff inside wing
       ctx.beginPath();
       ctx.arc(12, -4, 9.0, -Math.PI * 0.4, Math.PI * 0.5);
       ctx.strokeStyle = rgba(wb, 0.75);
@@ -1421,7 +2368,6 @@
       bodyGrad.addColorStop(0.86, rgba(fd, 0.98));
       bodyGrad.addColorStop(1.0, rgba(fdeep, 0.96));
 
-      // Exact 32-puff mochi silhouette from SvgGhostRenderer._draw_fluffy_squishy_body
       const rx = 60.0, ry = 50.0, num_puffs = 32;
       ctx.beginPath();
       for (let i = 0; i < num_puffs; i++) {
@@ -1452,7 +2398,7 @@
       ctx.lineWidth = 2.2;
       ctx.stroke();
 
-      // Plush Snowy-White Belly Cushion Patch
+      // Snowy Belly Cushion Patch
       ctx.save();
       ctx.translate(shift_x * 0.55, 10 + shift_y * 0.45);
       ctx.scale(42.0, 33.0);
@@ -1465,7 +2411,7 @@
       ctx.fill();
       ctx.restore();
 
-      // Warm Crimson Cheek Glow
+      // Crimson Cheek Glow
       if (['love', 'happy', 'excited'].includes(state.emotion) || state.hovered) {
         const glow_a = ['love', 'happy'].includes(state.emotion) ? 0.36 : 0.20;
         for (const gx of [-28.0 + shift_x * 0.7, 28.0 + shift_x * 0.7]) {
@@ -1480,7 +2426,6 @@
         }
       }
 
-      // Faceless Fluffy Tchiko Fur-Swirls & Squishy Dimples
       const fx = shift_x * 0.95;
       const fy = shift_y * 0.85;
       ctx.lineCap = 'round';
@@ -1589,7 +2534,7 @@
 
       const speedMult = state.emotion === 'sleepy'
         ? 0.45
-        : (['excited', 'happy', 'love', 'executing', 'roar', 'wing_slash'].includes(state.emotion) ? 1.65 : 1.0);
+        : (['excited', 'happy', 'love', 'executing', 'roar', 'wing_slash', 'dizzy'].includes(state.emotion) ? 1.65 : 1.0);
       state.phase += 0.036 * 3.8 * speedMult;
       state.look_x += (state.target_look_x - state.look_x) * 0.25;
       state.look_y += (state.target_look_y - state.look_y) * 0.25;
@@ -1628,14 +2573,24 @@
         bob_y = 7.0 + Math.sin(state.phase * 0.7) * 2.0;
         squish_x = 1.10 + Math.sin(state.phase * 0.7) * 0.03;
         squish_y = 0.89 - Math.sin(state.phase * 0.7) * 0.02;
+      } else if (state.emotion === 'dizzy') {
+        bob_y = Math.sin(state.phase * 2.0) * 6.0;
+        squish_x = 1.05 + Math.sin(state.phase * 3.2) * 0.08 + jelly_wave;
+        squish_y = 0.95 - Math.sin(state.phase * 3.2) * 0.08 - jelly_wave * 0.7;
       } else {
         bob_y = Math.sin(state.phase) * 5.5;
         squish_x = 1.0 + Math.sin(state.phase * 1.1) * 0.028 + jelly_wave;
         squish_y = 1.0 - Math.sin(state.phase * 1.1) * 0.028 - jelly_wave * 0.7;
       }
 
-      const sway_x = Math.cos(state.phase * 0.5) * 2.5;
-      let tilt_rad = state.hovered ? state.look_x * 0.14 : 0;
+      const sway_x = state.emotion === 'dizzy'
+        ? Math.cos(state.phase * 2.2) * 9.0
+        : Math.cos(state.phase * 0.5) * 2.5;
+      let tilt_rad = state.emotion === 'thinking'
+        ? 0.24 + Math.sin(state.phase * 0.9) * 0.06
+        : (state.emotion === 'dizzy' ? Math.sin(state.phase * 2.5) * 0.28 : (state.hovered ? state.look_x * 0.14 : 0));
+
+      physicsReadout.textContent = `squish: ${squish_x.toFixed(2)}x, ${squish_y.toFixed(2)}y`;
 
       ctx.save();
       ctx.translate(width / 2.0 + sway_x, height / 2.0 + bob_y);
@@ -1648,7 +2603,7 @@
       ctx.scale(50 * shadow_scale, 8.5 * shadow_scale);
       ctx.beginPath();
       ctx.arc(0, 0, 1.0, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(5, 8, 15, 0.36)';
+      ctx.fillStyle = 'rgba(5, 8, 15, 0.42)';
       ctx.fill();
       ctx.restore();
 
@@ -1679,7 +2634,7 @@
 
     renderDesktopTchikoFrame();
 
-    // Pointer & Middle-Click Interactions on the Desktop Replica
+    // Pointer, Petting, Middle-Click & Scroll-Wheel Interactions
     hitbox.addEventListener('mouseenter', () => { state.hovered = true; });
     hitbox.addEventListener('mouseleave', () => {
       state.hovered = false;
@@ -1688,13 +2643,15 @@
     });
     hitbox.addEventListener('mousemove', (e) => {
       const rect = hitbox.getBoundingClientRect();
-      state.target_look_x = ((e.clientX - rect.left) - rect.width / 2) / (rect.width / 2);
-      state.target_look_y = ((e.clientY - rect.top) - rect.height / 2) / (rect.height / 2);
+      const nx = ((e.clientX - rect.left) - rect.width / 2) / (rect.width / 2);
+      const ny = ((e.clientY - rect.top) - rect.height / 2) / (rect.height / 2);
+      state.vel_x = (nx - state.target_look_x) * 45;
+      state.target_look_x = nx;
+      state.target_look_y = ny;
       state.squish_boost = Math.min(0.24, state.squish_boost + 0.02);
     });
     hitbox.addEventListener('mousedown', (e) => {
       state.squish_boost = 0.28;
-      // Middle-Click (Scroll-Wheel Click) toggles the quick input bar!
       if (e.button === 1) {
         e.preventDefault();
         toggleQuickPill();
@@ -1703,14 +2660,29 @@
     hitbox.addEventListener('auxclick', (e) => {
       if (e.button === 1) e.preventDefault();
     });
+    hitbox.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const currIdx = EMOTION_LIST.indexOf(state.emotion);
+      const dir = e.deltaY > 0 ? 1 : -1;
+      const nextIdx = (currIdx + dir + EMOTION_LIST.length) % EMOTION_LIST.length;
+      setEmotion(EMOTION_LIST[nextIdx]);
+    }, { passive: false });
 
     function setEmotion(emo) {
       state.emotion = emo;
       state.squish_boost = 0.24;
       if (emo === 'wing_slash') state.spin_angle = 0.01;
-      document.querySelectorAll('.palette-strip .sketch-pill-btn').forEach((b) => b.classList.remove('active'));
+      liveStateBadge.textContent = `STATE: ${emo.toUpperCase()} (60 FPS)`;
+      document.querySelectorAll('[id^="btn-emo-"]').forEach((b) => b.classList.remove('active'));
       const btn = document.getElementById(`btn-emo-${emo}`);
       if (btn) btn.classList.add('active');
+    }
+
+    function selectSpecimen(emo, cardEl) {
+      setEmotion(emo);
+      document.querySelectorAll('.specimen-card').forEach((c) => c.classList.remove('active'));
+      if (cardEl) cardEl.classList.add('active');
+      document.getElementById('studio').scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
     function cycleTheme() {
@@ -1719,9 +2691,11 @@
       state.squish_boost = 0.25;
     }
 
+    // Live Speech Bubble & Scenarios
     const quickPill = document.getElementById('quick-pill');
     const quickEntry = document.getElementById('quick-entry');
     const bubbleText = document.getElementById('bubble-text');
+    const bubbleTier = document.getElementById('bubble-tier');
     let lastCopyText = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINtchikoTaLoHetznerKey2026 level-78@ubuntu";
 
     function toggleQuickPill(force) {
@@ -1736,75 +2710,231 @@
       }
     }
 
-    function triggerScrollWheelDemo() {
-      document.getElementById('stage-board').scrollIntoView({ behavior: 'smooth', block: 'center' });
-      toggleQuickPill(true);
-      quickEntry.value = "tchiko create an ssh key for my remote hetzner server in OpenSSH format";
-      quickEntry.focus();
-    }
-
     quickEntry.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') sendQuickPrompt();
       if (e.key === 'Escape') toggleQuickPill(false);
     });
+
+    function runScenario(kind) {
+      document.getElementById('studio').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setEmotion('executing');
+
+      if (kind === 'crash_doctor') {
+        bubbleTier.textContent = 'Tier 3 • diagnose_and_heal_app()';
+        bubbleText.innerHTML = `<i>Step 1/6: Resolving binaries &amp; inspecting SingletonLock / Crashpad/*.dmp...</i>`;
+        setTimeout(() => {
+          bubbleText.innerHTML = `<i>Step 4/6: Auditing bundled .pem certificates via openssl x509 -checkend 0...</i>`;
+        }, 280);
+        setTimeout(() => {
+          setEmotion('happy');
+          lastCopyText = "Patched resources/app/out/main.js (.bak saved) — TLS certificate handshake fixed.";
+          bubbleText.innerHTML =
+            `<b>🛠️ Diagnosed &amp; Repaired: Antigravity Code IDE</b><br/>` +
+            `• <b>Root Cause:</b> Bundled localhost <code>cert.pem</code> expired → <code>ConnectError: TLS handshake</code><br/>` +
+            `• <b>Auto-Fix:</b> Removed stale <code>SingletonLock</code> &amp; patched <code>main.js</code> / <code>extension.js</code> (<code>.bak</code> saved).`;
+        }, 620);
+      } else if (kind === 'system_doctor') {
+        bubbleTier.textContent = 'Tier 1/3 • /doctor Health Audit';
+        bubbleText.innerHTML = `<i>Auditing /proc telemetry, top processes, systemd units &amp; listening sockets...</i>`;
+        setTimeout(() => {
+          setEmotion('happy');
+          lastCopyText = "Ubuntu Health: HEALTHY | CPU Load: 1.42 (16 cores) | RAM: 32.8/60.9 GB (53.8%) | Disk: 8.4% | 0 failed systemd units";
+          bubbleText.innerHTML =
+            `<b>🩺 Tchiko System Doctor — 🟢 HEALTHY</b><br/>` +
+            `• <b>CPU Load:</b> <code>1.42</code> (16 cores) • <b>RAM:</b> <code>32.8/60.9 GB (53.8%)</code> • <b>Disk:</b> <code>8.4%</code><br/>` +
+            `• <b>Systemd:</b> <code>0 failed units</code> • <b>Sockets:</b> Checked active <code>ss -tulnp</code> listeners.`;
+        }, 380);
+      } else if (kind === 'ssh_key') {
+        bubbleTier.textContent = 'Tier 3 • OpenSSH Lifecycle';
+        bubbleText.innerHTML = `<i>Generating ~/.ssh/id_ed25519_hetzner (-a 100) &amp; updating ~/.ssh/config...</i>`;
+        setTimeout(() => {
+          setEmotion('happy');
+          lastCopyText = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINtchikoTaLoHetznerKey2026 hetzner@ubuntu";
+          bubbleText.innerHTML =
+            `<b>🔑 OpenSSH Keypair Created &amp; Auto-Copied!</b><br/>` +
+            `<code>ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINtchikoTaLoHetznerKey2026 hetzner@ubuntu</code><br/>` +
+            `• Set <code>chmod 600</code> + appended <code>Host hetzner</code> stanza to <code>~/.ssh/config</code>.`;
+        }, 380);
+      } else if (kind === 'port_reaper') {
+        bubbleTier.textContent = 'Tier 3 • Port & Socket Doctor';
+        bubbleText.innerHTML = `<i>Inspecting lsof -t -i:8000 and freeing bound process...</i>`;
+        setTimeout(() => {
+          setEmotion('happy');
+          lastCopyText = "Terminated PID 41892 (uvicorn) listening on TCP port 8000.";
+          bubbleText.innerHTML =
+            `<b>🔌 Port 8000 Freed</b><br/>` +
+            `• Detected <code>PID 41892 (python3 -m uvicorn)</code> bound to <code>127.0.0.1:8000</code>.<br/>` +
+            `• Executed graceful termination &amp; verified socket release.`;
+        }, 360);
+      } else if (kind === 'react_patch') {
+        bubbleTier.textContent = 'Tier 5 • 8-Step ReAct Loop';
+        setEmotion('thinking');
+        bubbleText.innerHTML = `<i>&lt;think&gt; stripped • Running &lt;grep&gt; &amp; &lt;patch_file&gt; with automatic .bak backup...</i>`;
+        setTimeout(() => {
+          setEmotion('happy');
+          lastCopyText = "Patched config/nginx.conf (backup saved to config/nginx.conf.bak)";
+          bubbleText.innerHTML =
+            `<b>🧠 8-Step Multi-Tool ReAct Complete</b><br/>` +
+            `• Inspected lines <code>L1-L90</code> via <code>view_file_lines()</code> &amp; matched config via <code>grep_files()</code>.<br/>` +
+            `• Applied atomic patch via <code>patch_file_content()</code> with <code>.bak</code> rollback file.`;
+        }, 440);
+      } else if (kind === 'memory_ctx') {
+        bubbleTier.textContent = 'Tier 2 • Contextual Memory';
+        setEmotion('love');
+        bubbleText.innerHTML =
+          `<b>📋 Copied Last Artifact from <code>agent_memory.json</code>!</b><br/>` +
+          `• Resolved anaphoric follow-up <code>"copy it"</code> → copied <code>${lastCopyText.slice(0, 64)}...</code> to X11/Wayland clipboard.`;
+      }
+    }
 
     function sendQuickPrompt() {
       const val = quickEntry.value.trim();
       if (!val) return;
       quickEntry.value = '';
       toggleQuickPill(false);
-      if (val.toLowerCase().includes('ssh') || val.toLowerCase().includes('hetzner')) {
-        simulatePrompt('ssh');
-      } else if (val.toLowerCase().includes('sys') || val.toLowerCase().includes('cpu')) {
-        simulatePrompt('sysinfo');
+      const low = val.toLowerCase();
+      if (low.includes('crash') || low.includes('ide') || low.includes('fix')) {
+        runScenario('crash_doctor');
+      } else if (low.includes('doctor') || low.includes('sys') || low.includes('health')) {
+        runScenario('system_doctor');
+      } else if (low.includes('ssh') || low.includes('hetzner') || low.includes('key')) {
+        runScenario('ssh_key');
+      } else if (low.includes('port') || low.includes('8000') || low.includes('kill')) {
+        runScenario('port_reaper');
+      } else if (low.includes('copy') || low.includes('memory')) {
+        runScenario('memory_ctx');
       } else {
+        bubbleTier.textContent = 'Tier 4B • agy Stream-JSON';
         setEmotion('executing');
-        bubbleText.innerHTML = `<i>Thinking...</i>`;
+        bubbleText.innerHTML = `<i>Streaming via agy -p --output-format stream-json...</i>`;
         setTimeout(() => {
           setEmotion('happy');
           lastCopyText = val;
-          bubbleText.innerHTML = `<b>🐾 Done!</b> Executed <code>${val.replace(/</g, '&lt;')}</code> on Ubuntu with full Antigravity SDK permissions!`;
-        }, 420);
+          bubbleText.innerHTML =
+            `<b>🐾 Executed on Ubuntu Host</b><br/>` +
+            `Dispatched <code>${val.replace(/</g, '&lt;')}</code> with active working directory <code>~/Desktop</code> and recorded output in <code>agent_memory.json</code>.`;
+        }, 380);
       }
-    }
-
-    function simulatePrompt(kind) {
-      setEmotion('executing');
-      bubbleText.innerHTML = `<i>🐾 Tchiko is running command on Ubuntu...</i>`;
-      setTimeout(() => {
-        setEmotion('happy');
-        if (kind === 'ssh') {
-          lastCopyText = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINtchikoTaLoHetznerKey2026 level-78@ubuntu";
-          bubbleText.innerHTML =
-            `<b>🔑 OpenSSH Key Created (<code>~/.ssh/hetzner_ed25519.pub</code>)</b><br/>` +
-            `<code>ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINtchikoTaLoHetznerKey2026 level-78@ubuntu</code>`;
-        } else {
-          lastCopyText = "CPU Load: 1.42 | RAM: 32.8/60.9 GB (53.8%) | Disk: 8.4%";
-          bubbleText.innerHTML =
-            `<b>🖥️ Ubuntu Telemetry (level-78)</b><br/>` +
-            `• <b>CPU Load:</b> <code>1.42</code> • <b>RAM:</b> <code>32.8/60.9 GB</code> • <b>Disk:</b> <code>8.4%</code>`;
-        }
-      }, 380);
     }
 
     function copyBubble() {
       navigator.clipboard.writeText(lastCopyText);
       const btn = document.getElementById('copy-btn');
       btn.textContent = '✓ Copied';
-      setTimeout(() => (btn.textContent = '📋 Copy'), 1500);
+      setTimeout(() => (btn.textContent = 'Copy'), 1500);
     }
 
     function resetBubble() {
       setEmotion('idle');
+      bubbleTier.textContent = 'Tier 1–5 Ready';
       bubbleText.innerHTML =
-        `<b>*Happy chirp!* ♪</b> I’m rendered with the exact same 32-puff mochi curve &amp; spring-jelly physics as your Ubuntu desktop app! Middle-click me (or click below) to talk!`;
+        `<b>*Happy chirp!* ♪</b> I’m rendered in real time using the exact 32-puff cubic Bézier silhouette and Hooke’s law spring physics (<code>k=18.0, c=0.72</code>) from <code>tchiko/svg_ghost_renderer.py</code>. Middle-click me or trigger any sysadmin workflow below.`;
     }
 
     function copyCli(btn) {
-      navigator.clipboard.writeText(`python3 main.py --self-test\n./run_tchiko.sh`);
-      btn.textContent = '✓ Copied!';
-      setTimeout(() => (btn.textContent = '📋 Copy Commands'), 1500);
+      const cmds = `git clone git@github.com:ZYNIQ-SOLUTIONS/Tchiko-Assistant-Sysadmin-companion.git\ncd Tchiko-Assistant-Sysadmin-companion\npython3 main.py --self-test\n./run_tchiko.sh`;
+      navigator.clipboard.writeText(cmds);
+      const orig = btn.textContent;
+      btn.textContent = '✓ Copied to Clipboard';
+      setTimeout(() => (btn.textContent = orig), 1600);
     }
+
+    // 5-Tier Architecture Interactive Explorer Data
+    const TIER_DATA = [
+      {
+        title: "Tier 1: Built-In Slash Router & Direct Shell Heuristic",
+        file: "tchiko/agent_engine.py :: _try_handle_slash_commands()",
+        desc: "Intercepts operator slash commands and recognized Linux CLI binaries with zero LLM round-trip overhead.",
+        items: [
+          { h: "/doctor & /sysinfo", p: "Reads /proc/loadavg, /proc/meminfo, /proc/uptime, disk usage, top CPU processes, failed systemd units, and active sockets." },
+          { h: "/procs & /files [path]", p: "Lists top CPU/RAM processes via ps -eo or formats directory contents with byte counts and file type icons." },
+          { h: "/permissions, /grant-all, /revoke-all", p: "Inspects or toggles Master Autonomous Mode and syncs config/settings.json ↔ antigravity.yaml." },
+          { h: "/run <cmd>, $ <cmd> & Smart Shell", p: "Executes ls, git, docker, systemctl, journalctl, ufw, ip, ss, nvidia-smi directly in the persistent working directory." }
+        ],
+        code: `# Direct zero-latency operator dispatch\n/doctor                  # 5-point Ubuntu system health diagnostic\n/sysinfo                 # Live /proc CPU, RAM, Disk & Uptime report\n/files ~/Desktop         # Inspect directory contents\n$ systemctl --failed     # Direct bash execution in active cwd`
+      },
+      {
+        title: "Tier 2: Contextual & Anaphoric Memory Resolver",
+        file: "tchiko/agent_engine.py :: _try_contextual_followup()",
+        desc: "Backed by config/agent_memory.json (stores 24 conversation turns, cwd, user key-value notes, last_command, and last_artifact_content).",
+        items: [
+          { h: "\"copy it\" / \"copy public key\"", p: "Copies last_artifact_content or last_output directly to the X11/Wayland clipboard via xclip, xsel, or wl-copy." },
+          { h: "\"retry\" / \"run it again\"", p: "Re-executes last_command in the active working directory with full policy enforcement." },
+          { h: "\"where did you save it?\"", p: "Reports the exact filesystem path and preview of last_artifact_path." },
+          { h: "\"cd <dir>\" & \"remember <fact>\"", p: "Updates persistent working directory across turns or stores custom infrastructure notes injected into all LLM prompts." }
+        ],
+        code: `// Persisted in config/agent_memory.json\n{\n  "cwd": "/home/level-78/Desktop",\n  "last_command": "ssh-keygen -t ed25519 -a 100 -f ~/.ssh/id_ed25519_hetzner",\n  "last_artifact_path": "/home/level-78/.ssh/id_ed25519_hetzner.pub",\n  "agy_conversation_id": "afea01d4-bb39-489e-a8b1",\n  "notes": { "staging_ip": "95.216.10.20" }\n}`
+      },
+      {
+        title: "Tier 3: Deterministic Sysadmin & DevOps Planners",
+        file: "tchiko/agent_engine.py :: _try_autonomous_linux_action()",
+        desc: "Executes multi-step natural-language infrastructure playbooks deterministically on Ubuntu.",
+        items: [
+          { h: "6-Step IDE & App Crash Doctor", p: "Locates symlinks, unlinks broken SingletonLock, scans Crashpad/*.dmp & session logs, checks .pem expiry via openssl, and patches JS bundles." },
+          { h: "OpenSSH Key & ~/.ssh/config Lifecycle", p: "Generates ed25519 (-a 100) or RSA-4096 keys, backs up existing keys, enforces 0600/0644, auto-copies .pub, and writes Host stanzas." },
+          { h: "Port Inspector & PID Reaper", p: "Maps ports via ss -tulnp / lsof -i:<port> and terminates processes holding ports on request (\"kill port 3000\")." },
+          { h: "Project Scaffolder & File Finder", p: "Creates directories, runs git init, seeds README.md, and searches trees up to depth 4." }
+        ],
+        code: `# Triggered by natural language:\n"check why antigravity code ide is crashing and fix it"\n"create an ssh key for my hetzner server in OpenSSH format"\n"add hetzner server 95.216.10.20 to ssh config user ubuntu"\n"kill process on port 8000"`
+      },
+      {
+        title: "Tier 4A & 4B: Google Antigravity SDK & agy Stream-JSON Bridge",
+        file: "tchiko/agent_engine.py :: _run_agy_cli_stream_json()",
+        desc: "Connects directly to the official Google Antigravity Python SDK or spawns agy -p --output-format stream-json over async pipes.",
+        items: [
+          { h: "Session Continuity (init event)", p: "Captures conversation_id from the NDJSON init frame and persists agy_conversation_id for multi-turn context across 48+ tools." },
+          { h: "Live Tool Telemetry (step_update: tool)", p: "Switches Tchiko into Ten-Rings Overdrive (executing state) and streams active tool names & parameters to the Activity tab." },
+          { h: "Sub-10ms Token Streaming", p: "Streams agent_response text_delta chunks live into both the GTK3 Chat Studio and Tchiko's desktop speech bubble." },
+          { h: "Permission Synchronization", p: "Automatically passes --dangerously-skip-permissions when Master Autonomous Mode is enabled in Tchiko Settings." }
+        ],
+        code: `$ agy -p "<prompt>" --output-format stream-json --add-dir "<cwd>" \\\n      --dangerously-skip-permissions --conversation "<agy_conversation_id>"\n# NDJSON Events: {"event": "init"} -> {"event": "step_update"} -> {"event": "result"}`
+      },
+      {
+        title: "Tier 5: 8-Step Multi-Tool ReAct Loop & <think> Sanitizer",
+        file: "tchiko/agent_engine.py :: _try_external_llm_with_tools()",
+        desc: "Provides full autonomous investigation and file-patching across Gemini 2.5 Flash REST and Local Ollama models (gemma4:e4b, qwen2.5-coder, llama3.2).",
+        items: [
+          { h: "<think> Block Isolation", p: "_strip_think_blocks() extracts internal reasoning before tool parsing so example tags inside thoughts never leak into execution." },
+          { h: "<view_file> & Minified-JS <grep>", p: "Reads 1-indexed line slices or searches files with an automatic byte-offset window fallback for single-line minified JS bundles." },
+          { h: "Atomic <patch_file> & <write_file>", p: "Replaces target snippets or writes files after creating an automatic .bak backup copy on disk." },
+          { h: "Closed-Loop Observation Feedback", p: "Feeds stdout/stderr, exit codes, and file diffs back into the rolling prompt for up to 8 autonomous reasoning turns." }
+        ],
+        code: `<view_file path="/etc/nginx/nginx.conf" start="1" end="120" />\n<grep pattern="ConnectError" path="~/.config/Antigravity/logs" />\n<patch_file path="/path/to/file"><search>old</search><replace>new</replace></patch_file>\n<bash>systemctl status nginx --no-pager</bash>`
+      }
+    ];
+
+    function selectTier(idx) {
+      document.querySelectorAll('.tier-tab').forEach((btn, i) => {
+        btn.classList.toggle('active', i === idx);
+      });
+      const d = TIER_DATA[idx];
+      const pane = document.getElementById('tier-detail-pane');
+      const cardsHtml = d.items.map(item => `
+        <div class="tier-cap-item">
+          <h4><span style="color:#ff6b6b;">●</span> ${item.h}</h4>
+          <p>${item.p}</p>
+        </div>
+      `).join('');
+
+      pane.innerHTML = `
+        <div>
+          <div class="tier-pane-header">
+            <div>
+              <div class="tier-pane-title">${d.title}</div>
+              <p style="font-size:0.88rem; color:var(--text-2);">${d.desc}</p>
+            </div>
+            <span class="tier-pane-file">${d.file}</span>
+          </div>
+          <div class="tier-cap-grid" style="margin-top: 18px;">
+            ${cardsHtml}
+          </div>
+        </div>
+        <pre class="tier-code-preview">${d.code.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
+      `;
+    }
+
+    // Initialize Tier 1 view on load
+    selectTier(0);
   </script>
 </body>
 </html>
