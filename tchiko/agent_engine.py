@@ -58,6 +58,49 @@ except Exception:
 
 MEMORY_FILE = PROJECT_ROOT / "config" / "agent_memory.json"
 
+# An `agy` conversation is resumed only while it is this fresh; older ones start
+# over with a full context briefing so stale topics never colour a new request.
+AGY_SESSION_MAX_IDLE_SEC = 45 * 60
+# Longest silence tolerated between two `agy` stream events (a long install emits nothing).
+AGY_EVENT_IDLE_TIMEOUT_SEC = 900.0
+# Shell timeout for commands issued by the local-LLM tool loop (installs, clones, builds).
+LLM_TOOL_BASH_TIMEOUT_SEC = 300
+LLM_MAX_TOOL_STEPS = 12
+
+OPERATING_RULES = (
+    "How to work:\n"
+    "- You are called from Tchiko, a small desktop companion. The user reads your reply in a chat "
+    "bubble and cannot answer interactive terminal prompts, so carry the task through end to end "
+    "in this turn. Only stop to ask when an action is destructive or the request is ambiguous in a "
+    "way that changes what you would do.\n"
+    "- The user types fast, often with typos or shorthand. Infer the obvious intent.\n"
+    "- Look before acting (is it already installed, which version, does the path exist) and verify "
+    "after (run it, check the exit code or version). Report only what you observed; never invent "
+    "command output.\n"
+    "- For root actions prefer `pkexec`, which shows a graphical password dialog; plain `sudo` has "
+    "no terminal to prompt on here.\n"
+    "- Start long-running services in the background and confirm they are listening instead of "
+    "blocking on them.\n"
+    "- Skip session-start routines such as inbox watchers or listeners and go straight to the request.\n"
+    "- Keep the reply short: what you did, the result, and the next step if there is one. Use only "
+    "`###` headings, `-` bullets, **bold** and fenced code blocks; that is all the UI renders."
+)
+
+# Commands safe to run instantly when the whole prompt is clearly a shell command.
+DIRECT_SHELL_COMMANDS = frozenset((
+    "ls", "pwd", "whoami", "id", "uptime", "df", "du", "free", "ps", "top",
+    "ip", "ss", "netstat", "ping", "dig", "curl", "wget", "git", "docker",
+    "systemctl", "journalctl", "ufw", "lsb_release", "uname", "cat", "head",
+    "tail", "grep", "find", "which", "whereis", "env", "lsblk", "lspci", "lsusb",
+))
+DIRECT_SHELL_SUBCOMMANDS = {
+    "git": {"status", "log", "diff", "branch", "remote", "pull", "fetch", "stash", "show"},
+    "docker": {"ps", "images", "logs", "stats", "info", "version", "compose"},
+    "systemctl": {"status", "list-units", "is-active", "is-enabled"},
+    "ip": {"a", "addr", "address", "r", "route", "link"},
+    "ufw": {"status"},
+}
+
 
 class TchikoAgentEngine:
     """Orchestrates Antigravity SDK sessions, persistent memory, and multi-step Linux actions."""
@@ -71,6 +114,106 @@ class TchikoAgentEngine:
             else None
         )
         self.memory: Dict[str, Any] = self._load_memory()
+        self._prompt_lock = threading.Lock()  # one prompt at a time: tiers share memory + agy session
+        self._machine_profile_cache: Optional[str] = None
+        self._backend_notes: List[str] = []  # why each AI backend was skipped/failed for the current prompt
+        # Warm the machine profile off-thread so the very first prompt does not pay for it.
+        threading.Thread(target=self._machine_profile, daemon=True).start()
+
+    # ── Context briefing: what every AI backend is told before the first request ──
+    def _machine_profile(self) -> str:
+        """One-line-per-fact description of this machine, gathered once per session."""
+        if self._machine_profile_cache is not None:
+            return self._machine_profile_cache
+        t = self.toolkit.get_system_telemetry()
+        lines = [
+            f"- Host `{t.get('hostname', 'localhost')}`, {t.get('distro', 'Linux')}, kernel {t.get('os', '')}",
+            f"- {t.get('cpu_cores', '?')} CPU cores, {t.get('ram_total_gb', '?')} GB RAM, "
+            f"home disk {t.get('disk_percent', '?')}% used of {t.get('disk_total_gb', '?')} GB",
+        ]
+        gpu = ""
+        if shutil.which("nvidia-smi"):
+            try:
+                gpu = subprocess.run(
+                    ["nvidia-smi", "--query-gpu=name,memory.total", "--format=csv,noheader"],
+                    capture_output=True, text=True, timeout=4,
+                ).stdout.strip().replace("\n", "; ")
+            except Exception:
+                gpu = ""
+        if gpu:
+            lines.append(f"- GPU: {gpu}")
+        shell = os.path.basename(os.environ.get("SHELL", "") or "bash")
+        desktop = os.environ.get("XDG_CURRENT_DESKTOP", "")
+        session = os.environ.get("XDG_SESSION_TYPE", "")
+        lines.append(
+            f"- User `{os.environ.get('USER', '')}`, home `{Path.home()}`, login shell `{shell}` "
+            f"(rc file `~/.{shell}rc`)" + (f", desktop {desktop} on {session}" if desktop else "")
+        )
+        present = [
+            n for n in (
+                "apt", "snap", "flatpak", "docker", "uv", "pipx", "pip3", "node", "npm",
+                "git", "ollama", "code", "pkexec",
+            ) if shutil.which(n)
+        ]
+        if present:
+            lines.append(f"- Available tools: {', '.join(present)}")
+        self._machine_profile_cache = "\n".join(lines)
+        return self._machine_profile_cache
+
+    def _build_context_brief(self, include_history: bool = True) -> str:
+        """Persona + machine facts + user memory + working rules, sent with a session's first request."""
+        persona = (self.config.data.get("agent", {}).get("system_instructions", "") or "").strip()
+        parts: List[str] = []
+        if persona:
+            parts.append(persona)
+        parts.append("This machine:\n" + self._machine_profile())
+        parts.append(f"Current working directory: `{self.memory.get('cwd', str(Path.home()))}`")
+        notes = self.memory.get("notes", {})
+        if notes:
+            parts.append(
+                "Things the user asked you to remember:\n"
+                + "\n".join(f"- {k}: {v}" for k, v in notes.items())
+            )
+        if include_history:
+            # history[-1] is the request being handled right now, so leave it out.
+            earlier = self.memory.get("history", [])[:-1][-4:]
+            if earlier:
+                parts.append(
+                    "Earlier in this chat (for continuity; may be unrelated to the new request):\n"
+                    + "\n".join(
+                        f"- {t.get('role', 'user')}: {' '.join(str(t.get('content', '')).split())[:280]}"
+                        for t in earlier
+                    )
+                )
+        parts.append(OPERATING_RULES)
+        return "\n\n".join(parts)
+
+    def reset_conversation(self) -> None:
+        """Forget the running conversation (agent session + chat turns); saved notes are kept."""
+        self.memory["agy_conversation_id"] = ""
+        self.memory["agy_conversation_ts"] = 0
+        self.memory["history"] = []
+        self._save_memory()
+
+    def _resolve_user_path(self, raw_path: str) -> str:
+        """Expand `~` and `$VARS`, and anchor relative paths to the agent's working directory."""
+        expanded = os.path.expanduser(os.path.expandvars(raw_path.strip().strip("'\"")))
+        if not os.path.isabs(expanded):
+            expanded = os.path.join(self.memory.get("cwd", str(Path.home())), expanded)
+        return os.path.normpath(expanded)
+
+    @staticmethod
+    def _looks_like_direct_shell_command(prompt: str) -> bool:
+        """True only when the prompt is unmistakably a shell command, not a sentence starting with one."""
+        tokens = prompt.strip().split()
+        if not tokens or tokens[0] not in DIRECT_SHELL_COMMANDS or prompt.strip().endswith("?"):
+            return False
+        if len(tokens) == 1:
+            return True
+        subcommands = DIRECT_SHELL_SUBCOMMANDS.get(tokens[0])
+        if subcommands is not None:
+            return tokens[1] in subcommands or tokens[1].startswith("-")
+        return any(tok[0] in "-/~." or "." in tok for tok in tokens[1:])
 
     def _load_memory(self) -> Dict[str, Any]:
         default_mem: Dict[str, Any] = {
@@ -149,23 +292,25 @@ class TchikoAgentEngine:
         def _worker() -> None:
             try:
                 user_text = prompt.strip()
-                self.record_turn("user", user_text)
 
                 def _wrapped_complete(final_text: str) -> None:
                     self.record_turn("assistant", final_text)
                     on_complete(final_text)
 
-                asyncio.run(
-                    self._handle_prompt(
-                        user_text,
-                        on_thought,
-                        on_tool_call,
-                        on_token,
-                        _wrapped_complete,
-                        on_state_change,
-                        on_approval_needed,
+                with self._prompt_lock:
+                    self.record_turn("user", user_text)
+                    self._backend_notes = []
+                    asyncio.run(
+                        self._handle_prompt(
+                            user_text,
+                            on_thought,
+                            on_tool_call,
+                            on_token,
+                            _wrapped_complete,
+                            on_state_change,
+                            on_approval_needed,
+                        )
                     )
-                )
             except Exception as exc:
                 on_state_change("alert")
                 on_token(f"\n⚠️ Error: {exc}\n")
@@ -225,6 +370,20 @@ class TchikoAgentEngine:
         if action_handled:
             return
 
+        # 3B. A prompt that is plainly a shell command ("df -h", "git status") runs instantly
+        #     instead of waiting on an AI backend to decide to run it.
+        if self._looks_like_direct_shell_command(prompt):
+            await self._execute_command_with_policy(
+                prompt,
+                on_thought,
+                on_tool_call,
+                on_token,
+                on_complete,
+                on_state_change,
+                on_approval_needed,
+            )
+            return
+
         # 4. If Google Antigravity Python SDK is installed & enabled, run via SDK!
         if HAS_ANTIGRAVITY_SDK and self.config.data.get("agent", {}).get("use_antigravity_sdk", True):
             on_thought("Initializing Google Antigravity SDK `LocalAgentConfig`...")
@@ -232,7 +391,7 @@ class TchikoAgentEngine:
             caps_enabled = all_perms or (
                 self.config.data.get("permissions", {}).get("tool_execution_policy") == "always-proceed"
             )
-            sys_instructions = self.config.data.get("agent", {}).get("system_instructions", "")
+            sys_instructions = self._build_context_brief()
 
             sdk_config = LocalAgentConfig(
                 system_instructions=sys_instructions,
@@ -296,12 +455,7 @@ class TchikoAgentEngine:
 
         # 6. Smart Shell Heuristic: if the prompt looks like a valid Linux command directly (e.g. "ls -la", "git status", "df -h", "uname -a")
         first_token = prompt.split()[0] if prompt.split() else ""
-        if first_token in (
-            "ls", "pwd", "whoami", "id", "uptime", "df", "du", "free", "ps", "top",
-            "ip", "ss", "netstat", "ping", "dig", "curl", "wget", "git", "docker",
-            "systemctl", "journalctl", "ufw", "lsb_release", "uname", "cat", "head",
-            "tail", "grep", "find", "which", "whereis", "env", "lsblk", "lspci", "lsusb",
-        ):
+        if first_token in DIRECT_SHELL_COMMANDS:
             await self._execute_command_with_policy(
                 prompt,
                 on_thought,
@@ -317,10 +471,13 @@ class TchikoAgentEngine:
         telemetry = self.toolkit.get_system_telemetry()
         cwd = self.memory.get("cwd", str(Path.home()))
         notes_count = len(self.memory.get("notes", {}))
+        why = "\n".join(f"- {n}" for n in self._backend_notes) or "- No AI backend is configured."
         reply = (
-            f"### 🐾 Tchiko Autonomous Agent (`{telemetry['hostname']}`)\n"
+            f"### ⚠️ I could not get an AI backend to answer that\n"
+            f"{why}\n\n"
+            f"### 🐾 Tchiko (`{telemetry['hostname']}`)\n"
             f"- **Working Dir:** `{cwd}` • **Memory Notes:** `{notes_count}`\n\n"
-            f"Here is what I can execute autonomously for you:\n"
+            f"These still work without an AI backend:\n"
             f"- **🔑 SSH & Remote Servers:** *\"create an ssh key for my hetzner server in OpenSSH format\"* or *\"add hetzner server 95.216.1.2 to ssh config\"*\n"
             f"- **🩺 System Doctor:** Type `/doctor` or *\"diagnose my system\"* for a 5-point Ubuntu health audit\n"
             f"- **⚙️ Ports & Processes:** *\"what is using port 8000\"*, *\"kill port 3000\"*, *\"what is eating my RAM\"*\n"
@@ -329,7 +486,7 @@ class TchikoAgentEngine:
             f"- **💻 Direct Bash:** Type `$ <command>` or `/run <command>`"
         )
         await self._stream_markdown(reply, on_token)
-        on_state_change("idle")
+        on_state_change("alert")
         on_complete(reply)
 
     async def _try_contextual_followup(
@@ -464,21 +621,47 @@ class TchikoAgentEngine:
         lower = prompt.lower()
 
         # ── A0. ANTIGRAVITY CODE IDE / VSCODE / APP CRASH DOCTOR & AUTO-HEAL ──
-        if any(k in lower for k in ("antigravity", "agy", "code ide", "vscode", "vs code")) and any(
+        if any(k in lower for k in ("antigravity", "agy", "code ide", "vscode", "vs code", "claude-desktop", "claude desktop")) and any(
             w in lower for w in ("crash", "crashing", "not working", "fix", "broken", "error", "won't start", "why")
         ):
             return await self._run_ide_crash_doctor(
                 prompt, on_thought, on_tool_call, on_token, on_complete, on_state_change
             )
 
+        # ── A1. APPLICATION & SYSTEM PACKAGE UPDATE / UPGRADE ─────────────────
+        if any(w in lower for w in ("update", "upgrade", "reinstall")):
+            if any(k in lower for k in ("claude-desktop", "claude desktop", "claude app")):
+                return await self._run_app_update(
+                    "claude-desktop", prompt, on_thought, on_tool_call, on_token, on_complete, on_state_change, on_approval_needed
+                )
+            m_pkg = re.search(
+                r"(?:update|upgrade)\s+(?:and\s+(?:update|upgrade)\s+)?(?:the\s+)?['\"]?([a-zA-Z0-9_.-]+)['\"]?(?:\s+(?:app|application|package))?$",
+                lower.strip(),
+            )
+            if m_pkg:
+                target_pkg = m_pkg.group(1).strip()
+                # Only take the apt shortcut for whole-system upgrades or a package dpkg actually
+                # knows; "update the readme" and friends belong to the AI agent.
+                is_system = target_pkg in ("system", "ubuntu", "all", "packages", "apt")
+                if is_system or (
+                    re.fullmatch(r"[a-z0-9][a-z0-9+.-]+", target_pkg)
+                    and self.toolkit.run_shell_command(
+                        f"dpkg -s {target_pkg} >/dev/null 2>&1", bypass_check=True
+                    ).ok
+                ):
+                    return await self._run_app_update(
+                        target_pkg, prompt, on_thought, on_tool_call, on_token, on_complete, on_state_change, on_approval_needed
+                    )
+
         # ── A. SYSTEM DOCTOR / COMPREHENSIVE HEALTH DIAGNOSTIC ────────────────
-        if any(
+        if len(prompt.split()) <= 8 and any(
             k in lower
             for k in (
-                "diagnose", "health check", "system doctor", "full check",
+                "diagnose my system", "diagnose system", "diagnose my pc", "diagnose this machine",
+                "health check", "system doctor", "full check",
                 "audit system", "check everything", "why is my pc slow",
             )
-        ):
+        ) or lower.strip() == "diagnose":
             return await self._run_system_doctor(
                 on_thought, on_tool_call, on_token, on_complete, on_state_change
             )
@@ -521,11 +704,18 @@ class TchikoAgentEngine:
             return True
 
         # ── C. SSH KEY CREATION & OPENSSH MANAGEMENT ──────────────────────────
-        if "ssh" in lower and any(
-            w in lower for w in ("create", "generate", "make", "new", "need", "add", "key", "openssh", "hetzner", "htzner")
+        # Generating a key rotates any existing one to `.bak`, so require an explicit ask for a key:
+        # "ssh into my hetzner box" or "why can't I ssh" must reach the AI agent instead.
+        ssh_create_words = ("create", "generate", "make", "new", "need")
+        ssh_list_words = ("list", "show", "existing", "what are")
+        if (
+            re.search(r"\b(?:open)?ssh\b", lower)
+            and re.search(r"\bkeys?\b|\bkeypair\b", lower)
+            and any(re.search(rf"\b{w}\b", lower) for w in ssh_create_words + ssh_list_words)
+            and len(prompt.split()) <= 20
         ):
-            is_list_only = any(w in lower for w in ("list", "show", "existing", "what are")) and not any(
-                w in lower for w in ("create", "generate", "make", "new", "need")
+            is_list_only = any(w in lower for w in ssh_list_words) and not any(
+                re.search(rf"\b{w}\b", lower) for w in ssh_create_words
             )
             if is_list_only:
                 cmd = "ls -la ~/.ssh && for f in ~/.ssh/*.pub; do [ -f \"$f\" ] && echo \"=== $f ===\" && cat \"$f\"; done"
@@ -771,8 +961,23 @@ class TchikoAgentEngine:
         return True
 
     def _match_common_linux_intent(self, prompt: str, lower: str) -> Optional[Tuple[str, str]]:
-        """Map natural-language Linux questions/requests to shell commands."""
-        m_port = re.search(r"port\s+(\d{2,5})", lower)
+        """Map unambiguous short diagnostic Linux queries to instant shell commands, leaving complex/multi-step requests to the AI agent."""
+        m_cmd = re.search(r"^(?:tchiko\s+)?(?:please\s+)?(?:run|execute)\s+[`'\"]?(.+?)[`'\"]?$", prompt.strip(), re.IGNORECASE)
+        if m_cmd:
+            cmd = m_cmd.group(1).strip()
+            return (f"Executing command `{cmd}`:", cmd)
+
+        # Do not intercept complex or multi-step action requests (install, configure, update, start, debug, fix, etc.)
+        complex_action_verbs = (
+            "install", "uninstall", "remove", "update", "upgrade", "configure", "config",
+            "setup", "set up", "start", "restart", "enable", "disable", "fix", "repair",
+            "debug", "why", "how to", "how do i", "deploy", "build", "compile", "clone",
+            "write", "edit", "patch", "modify", "change", "add", "connect",
+        )
+        if any(re.search(rf"\b{re.escape(v)}\b", lower) for v in complex_action_verbs) or len(prompt.split()) > 12:
+            return None
+
+        m_port = re.search(r"\bport\s+(\d{2,5})\b", lower)
         if m_port:
             port = m_port.group(1)
             return (
@@ -789,22 +994,22 @@ class TchikoAgentEngine:
         if any(k in lower for k in ("eating my ram", "eating my memory", "high memory", "top memory", "top ram")):
             return ("Checking top RAM-consuming processes:", "ps -eo pid,user,%mem,%cpu,cmd --sort=-%mem | head -n 12")
 
-        if any(k in lower for k in ("public ip", "external ip", "my ip", "ip address", "network", "interfaces")):
+        if any(k in lower for k in ("public ip", "external ip", "my ip", "ip address", "network interfaces")):
             return (
                 "Checking your local network interfaces and IP addresses:",
                 "ip -br addr && echo '' && (curl -s --max-time 4 https://ifconfig.me && echo ' (Public IP)' || true)",
             )
 
-        if any(k in lower for k in ("disk", "storage", "free space", "df -h")):
+        if any(k in lower for k in ("disk usage", "disk space", "free space", "df -h", "check disk", "check storage")):
             return ("Checking mounted filesystem disk usage (`df -h`):", "df -h -x tmpfs -x squashfs")
 
         if any(k in lower for k in ("big files", "largest files", "heavy files", "disk hog")):
             return ("Finding the 15 largest files/folders in your home directory:", "du -ah ~ 2>/dev/null | sort -rh | head -n 15")
 
-        if any(k in lower for k in ("memory", "ram", "swap", "free -h")):
+        if any(k in lower for k in ("memory usage", "ram usage", "swap usage", "free -h", "check ram", "check memory")):
             return ("Checking system RAM and Swap allocation (`free -h`):", "free -h")
 
-        if any(k in lower for k in ("docker", "containers", "docker ps")):
+        if any(k in lower for k in ("docker ps", "running containers", "docker containers", "check docker", "list containers")):
             return (
                 "Checking running Docker containers:",
                 "docker ps -a --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}' 2>&1",
@@ -813,41 +1018,43 @@ class TchikoAgentEngine:
         if any(k in lower for k in ("git status", "git branch", "git log")):
             return ("Checking Git repository status:", "git status -sb && echo '' && git log -n 5 --oneline")
 
-        if any(k in lower for k in ("desktop", "files on desktop")):
+        if (
+            any(k in lower for k in ("files on desktop", "list desktop", "show desktop", "~/desktop"))
+            or (
+                "desktop" in lower
+                and any(w in lower for w in ("list", "show", "files", "folders", "what is on", "what's on"))
+                and not any(w in lower for w in ("claude", "app"))
+            )
+        ):
             return ("Listing files on your Ubuntu Desktop (`~/Desktop`):", "ls -la ~/Desktop")
 
-        if any(k in lower for k in ("gpu", "graphics", "nvidia", "display card")):
+        if any(k in lower for k in ("check gpu", "gpu status", "nvidia-smi", "graphics card", "display card", "what gpu")):
             return (
                 "Checking GPU & display hardware:",
                 "lspci | grep -iE 'vga|3d|display' && (nvidia-smi --query-gpu=name,memory.used,memory.total,utilization.gpu --format=csv 2>/dev/null || true)",
             )
 
-        if any(k in lower for k in ("cpu", "processor", "lscpu", "cores")):
+        if any(k in lower for k in ("check cpu", "cpu info", "lscpu", "cpu cores", "what cpu")):
             return ("Checking CPU architecture and load:", "lscpu | grep -E 'Model name|Socket|Thread|NUMA|CPU\\(s\\)' && uptime")
 
-        if any(k in lower for k in ("uptime", "kernel", "uname", "os version", "ubuntu version")):
+        if any(k in lower for k in ("uptime", "kernel version", "uname", "os version", "ubuntu version")):
             return ("Checking Ubuntu OS version, kernel, and uptime:", "lsb_release -a 2>/dev/null || cat /etc/os-release; echo ''; uname -a; uptime -p")
 
-        if any(k in lower for k in ("firewall", "ufw")):
+        if any(k in lower for k in ("firewall status", "check firewall", "ufw status")):
             return ("Checking firewall status:", "ufw status verbose 2>&1 || iptables -L -n 2>&1 | head -n 20")
 
-        if any(k in lower for k in ("systemd", "services", "failed service", "systemctl")):
+        if any(k in lower for k in ("failed service", "failed systemd", "check services", "running services", "systemctl status")):
             return (
                 "Checking active and failed systemd services:",
                 "systemctl --failed --no-pager && echo '' && systemctl list-units --type=service --state=running --no-pager | head -n 20",
             )
 
-        if any(k in lower for k in ("versions", "installed tools", "dev tools", "check tools")):
+        if any(k in lower for k in ("installed tools", "dev tools", "check tools", "tool versions")):
             return (
                 "Checking installed developer tool versions on Ubuntu:",
                 "for cmd in python3 node npm git docker ssh go rustc gcc; do "
                 "if command -v $cmd >/dev/null 2>&1; then printf '%-10s: ' $cmd && $cmd --version 2>&1 | head -n 1; fi; done",
             )
-
-        m_cmd = re.search(r"^(?:tchiko\s+)?(?:please\s+)?(?:run|execute)\s+[`'\"]?(.+?)[`'\"]?$", prompt.strip(), re.IGNORECASE)
-        if m_cmd:
-            cmd = m_cmd.group(1).strip()
-            return (f"Executing command `{cmd}`:", cmd)
 
         return None
 
@@ -900,6 +1107,155 @@ class TchikoAgentEngine:
         on_complete(res.output)
         return True
 
+    async def _run_app_update(
+        self,
+        app_target: str,
+        prompt: str,
+        on_thought: Callable[[str], None],
+        on_tool_call: Callable[[str, str], None],
+        on_token: Callable[[str], None],
+        on_complete: Callable[[str], None],
+        on_state_change: Callable[[str], None],
+        on_approval_needed: Optional[Callable[[str, Callable[[], None], Callable[[], None]], None]],
+    ) -> bool:
+        """Inspect installed version vs upstream repo and upgrade the requested application/package."""
+        on_state_change("executing")
+        slug = app_target.lower().strip()
+
+        if "claude" in slug:
+            on_thought("Step 1/3: Checking installed `claude-desktop-unofficial` version and upstream APT repository...")
+            on_tool_call("check_package_version", "{'package': 'claude-desktop-unofficial'}")
+            check_cmd = (
+                "dpkg-query -W -f='${Version}' claude-desktop-unofficial 2>/dev/null || echo 'not-installed'"
+            )
+            cur_ver = self.toolkit.run_shell_command(check_cmd, bypass_check=True).output.strip()
+
+            repo_cmd = (
+                "curl -fsSL --max-time 8 https://pkg.claude-desktop-debian.dev/dists/stable/main/binary-amd64/Packages "
+                "| awk '/^Package: claude-desktop-unofficial$/,/^$/' "
+                "| awk '/^Version:/ {v=$2} /^Filename:/ {f=$2} END {print v \"|\" f}'"
+            )
+            repo_info = self.toolkit.run_shell_command(repo_cmd, bypass_check=True).output.strip()
+            latest_ver, deb_rel_path = (repo_info.split("|", 1) + [""])[:2] if "|" in repo_info else ("", "")
+
+            disabled_list = Path("/etc/apt/sources.list.d/claude-desktop.list.disabled")
+            active_list = Path("/etc/apt/sources.list.d/claude-desktop.list")
+            repo_note = ""
+            if disabled_list.exists() and not active_list.exists():
+                repo_note = (
+                    "- ⚠️ **APT Source Note:** `/etc/apt/sources.list.d/claude-desktop.list.disabled` was disabled during a previous Ubuntu upgrade, preventing standard `apt upgrade` from seeing new releases.\n"
+                )
+
+            if latest_ver and deb_rel_path:
+                deb_url = f"https://pkg.claude-desktop-debian.dev/{deb_rel_path.lstrip('/')}"
+                deb_file = f"/tmp/claude-desktop-unofficial_{latest_ver}_amd64.deb"
+
+                if cur_ver == latest_ver:
+                    report = (
+                        f"### ✅ Claude Desktop is Already Up to Date!\n"
+                        f"- **Installed Version:** `{cur_ver}` (`claude-desktop-unofficial`)\n"
+                        f"- **Latest Upstream Version:** `{latest_ver}`\n"
+                    )
+                    await self._stream_markdown(report, on_token)
+                    on_state_change("happy")
+                    on_complete(report)
+                    return True
+
+                on_thought(f"Step 2/3: Ensuring `claude-desktop-unofficial` `{latest_ver}` `.deb` package is downloaded...")
+                on_tool_call("download_deb", f"{{'url': {deb_url!r}, 'dest': {deb_file!r}}}")
+                dl_res = await asyncio.to_thread(
+                    self.toolkit.run_shell_command,
+                    f"if [ ! -s '{deb_file}' ]; then curl -fL --max-time 60 -o '{deb_file}' '{deb_url}'; fi && ls -lh '{deb_file}'",
+                    timeout=70,
+                )
+
+                on_thought("Step 3/3: Installing `.deb` package and re-enabling APT repository via `pkexec` / `sudo`...")
+                upgrade_cmd = (
+                    f"pkexec sh -c \""
+                    f"if [ -f /etc/apt/sources.list.d/claude-desktop.list.disabled ]; then "
+                    f"sed 's/^# deb /deb /' /etc/apt/sources.list.d/claude-desktop.list.disabled > /etc/apt/sources.list.d/claude-desktop.list && "
+                    f"rm -f /etc/apt/sources.list.d/claude-desktop.list.disabled; fi && "
+                    f"apt-get install -y '{deb_file}' || dpkg -i '{deb_file}'\""
+                )
+                on_tool_call("install_package", f"{{'package': 'claude-desktop-unofficial', 'version': {latest_ver!r}}}")
+                inst_res = await asyncio.to_thread(
+                    self.toolkit.run_shell_command,
+                    upgrade_cmd,
+                    timeout=120,
+                )
+
+                new_ver = self.toolkit.run_shell_command(check_cmd, bypass_check=True).output.strip()
+                if inst_res.ok and new_ver == latest_ver:
+                    report = (
+                        f"### 🚀 Claude Desktop Upgraded Successfully!\n"
+                        f"- **Previous Version:** `{cur_ver}`\n"
+                        f"- **New Installed Version:** `{new_ver}`\n"
+                        f"{repo_note}"
+                        f"- **APT Repository:** Re-enabled `/etc/apt/sources.list.d/claude-desktop.list` for future automatic updates.\n\n"
+                        f"**Installation Output:**\n```text\n{inst_res.output[-1200:]}\n```"
+                    )
+                    await self._stream_markdown(report, on_token)
+                    on_state_change("happy")
+                    on_complete(report)
+                    return True
+                else:
+                    manual_cmd = (
+                        f"sudo sed 's/^# deb /deb /' /etc/apt/sources.list.d/claude-desktop.list.disabled "
+                        f"| sudo tee /etc/apt/sources.list.d/claude-desktop.list >/dev/null && "
+                        f"sudo rm -f /etc/apt/sources.list.d/claude-desktop.list.disabled && "
+                        f"sudo apt install -y {deb_file}"
+                    )
+                    self.memory["last_artifact_path"] = deb_file
+                    self.memory["last_artifact_content"] = manual_cmd
+                    self._save_memory()
+                    report = (
+                        f"### 📦 Claude Desktop Update Ready (`{cur_ver}` → `{latest_ver}`)\n"
+                        f"- **Installed Version:** `{cur_ver}` (`claude-desktop-unofficial`)\n"
+                        f"- **Latest Available Version:** `{latest_ver}`\n"
+                        f"- **Downloaded Package:** `{deb_file}` ({'✅ Ready' if dl_res.ok else '⚠️ Download failed'})\n"
+                        f"{repo_note}\n"
+                        f"**Complete Installation (requires `sudo` password in terminal):**\n"
+                        f"```bash\nsudo apt install -y {deb_file}\n```\n"
+                        f"*(Or to also re-enable automatic APT updates:)*\n"
+                        f"```bash\n{manual_cmd}\n```"
+                    )
+                    await self._stream_markdown(report, on_token)
+                    on_state_change("happy" if dl_res.ok else "alert")
+                    on_complete(report)
+                    return True
+
+        # Generic Linux package / system update
+        if slug in ("system", "ubuntu", "all", "packages", "apt"):
+            cmd = "pkexec sh -c 'apt-get update && apt-get upgrade -y' || (apt list --upgradable 2>/dev/null | head -n 30)"
+            await self._run_and_report(
+                "Checking and upgrading Ubuntu system packages:",
+                cmd,
+                on_thought,
+                on_tool_call,
+                on_token,
+                on_complete,
+                on_state_change,
+                on_approval_needed,
+            )
+            return True
+
+        cmd = (
+            f"dpkg -l | grep -i {slug!r} || true; "
+            f"apt-cache policy {slug!r} 2>/dev/null || true; "
+            f"pkexec apt-get install --only-upgrade -y {slug!r} 2>&1 || echo 'Run: sudo apt update && sudo apt install --only-upgrade {slug}'"
+        )
+        await self._run_and_report(
+            f"Updating package `{app_target}`:",
+            cmd,
+            on_thought,
+            on_tool_call,
+            on_token,
+            on_complete,
+            on_state_change,
+            on_approval_needed,
+        )
+        return True
+
     async def _run_agy_cli_stream_json(
         self,
         prompt: str,
@@ -909,49 +1265,106 @@ class TchikoAgentEngine:
         on_complete: Callable[[str], None],
         on_state_change: Callable[[str], None],
     ) -> bool:
-        """Execute prompt via the official Antigravity CLI (`agy -p --output-format stream-json`) with real-time tool and token streaming."""
+        """Answer via the Antigravity CLI (`agy -p --output-format stream-json`).
+
+        A recent conversation is resumed; otherwise (or if resuming fails) a fresh one is started
+        with the full context briefing. Returns False only when nothing was said or done, so a
+        weaker backend never repeats work the agent already performed.
+        """
         if not self.agy_bin or not os.path.exists(self.agy_bin):
             return False
 
+        prev_conv_id = str(self.memory.get("agy_conversation_id", "") or "")
+        last_used = float(self.memory.get("agy_conversation_ts", 0) or 0)
+        resumable = bool(prev_conv_id) and (time.time() - last_used) < AGY_SESSION_MAX_IDLE_SEC
+        attempts = [prev_conv_id, ""] if resumable else [""]
+
+        last_error = "no response"
+        for conv_id in attempts:
+            status, text, error = await self._agy_turn(
+                prompt, conv_id, on_thought, on_tool_call, on_token, on_state_change
+            )
+            if status == "ok":
+                on_state_change("happy")
+                on_complete(text)
+                return True
+            if status == "partial":
+                note = f"\n\n⚠️ **The agent stopped before finishing:** {error}\n"
+                on_token(note)
+                on_state_change("alert")
+                on_complete((text + note).strip())
+                return True
+            last_error = error
+            self.memory["agy_conversation_id"] = ""
+            self.memory["agy_conversation_ts"] = 0
+            self._save_memory()
+            if conv_id:
+                on_thought("Could not resume the previous agent session; starting a fresh one...")
+
+        self._backend_notes.append(f"**Antigravity CLI (`agy`):** {last_error}")
+        on_thought(f"Antigravity CLI unavailable ({last_error[:120]}); trying the next backend...")
+        return False
+
+    async def _agy_turn(
+        self,
+        prompt: str,
+        conv_id: str,
+        on_thought: Callable[[str], None],
+        on_tool_call: Callable[[str, str], None],
+        on_token: Callable[[str], None],
+        on_state_change: Callable[[str], None],
+    ) -> Tuple[str, str, str]:
+        """Run one `agy` turn. Returns (status, text, error) with status ok | partial | failed.
+
+        `partial` means the agent already streamed text or ran tools before failing.
+        """
         active_cwd = self.memory.get("cwd", str(Path.home()))
         if not os.path.isdir(active_cwd):
             active_cwd = str(Path.home())
 
+        # A resumed conversation already holds the briefing; a new one gets it up front so the
+        # first request lands with the machine, memory and working rules already known.
+        agent_prompt = prompt if conv_id else f"{self._build_context_brief()}\n\nUser request:\n{prompt}"
         cmd_args = [
-            self.agy_bin,
-            "-p",
-            prompt,
-            "--output-format",
-            "stream-json",
-            "--add-dir",
-            active_cwd,
+            str(self.agy_bin), "-p", agent_prompt,
+            "--output-format", "stream-json",
+            "--add-dir", active_cwd,
         ]
         if self.config.is_all_permissions_approved() or not self.config.requires_manual_review():
             cmd_args.append("--dangerously-skip-permissions")
+        if conv_id:
+            cmd_args.extend(["--conversation", conv_id])
 
-        prev_conv_id = self.memory.get("agy_conversation_id", "")
-        if prev_conv_id:
-            cmd_args.extend(["--conversation", str(prev_conv_id)])
-
-        on_thought("Launching Antigravity CLI (`agy --output-format stream-json`)...")
-        full_tokens: List[str] = []
+        on_thought("Continuing with the Antigravity agent..." if conv_id else "Briefing the Antigravity agent...")
+        tokens: List[str] = []
         final_response_text = ""
+        tools_ran = 0
+        last_text_step: Any = None
+        error = ""
+        denied: List[str] = []
+        proc = None
+        stderr_task: Optional["asyncio.Task[bytes]"] = None
 
         try:
             proc = await asyncio.create_subprocess_exec(
                 *cmd_args,
+                stdin=asyncio.subprocess.DEVNULL,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
                 cwd=active_cwd,
+                limit=32 * 1024 * 1024,  # tool-output events can be far larger than the 64 KB default
             )
-            assert proc.stdout is not None
+            assert proc.stdout is not None and proc.stderr is not None
+            stderr_task = asyncio.create_task(proc.stderr.read())
 
             while True:
-                line_bytes = await asyncio.wait_for(proc.stdout.readline(), timeout=120.0)
+                line_bytes = await asyncio.wait_for(
+                    proc.stdout.readline(), timeout=AGY_EVENT_IDLE_TIMEOUT_SEC
+                )
                 if not line_bytes:
                     break
                 line = line_bytes.decode("utf-8", errors="replace").strip()
-                if not line or not line.startswith("{"):
+                if not line.startswith("{"):
                     continue
                 try:
                     ev = json.loads(line)
@@ -960,12 +1373,11 @@ class TchikoAgentEngine:
 
                 ev_type = ev.get("event")
                 if ev_type == "init":
-                    conv_id = ev.get("conversation_id", "")
-                    if conv_id:
-                        self.memory["agy_conversation_id"] = conv_id
+                    new_id = ev.get("conversation_id", "")
+                    if new_id:
+                        self.memory["agy_conversation_id"] = new_id
+                        self.memory["agy_conversation_ts"] = int(time.time())
                         self._save_memory()
-                    tools_count = len(ev.get("init", {}).get("tools", []))
-                    on_thought(f"Antigravity agent initialized ({tools_count} tools ready)...")
 
                 elif ev_type == "step_update":
                     su = ev.get("step_update", {})
@@ -974,10 +1386,10 @@ class TchikoAgentEngine:
                     if step_type == "tool":
                         t_info = su.get("tool_info", {})
                         t_name = su.get("tool_name") or t_info.get("name", "tool")
-                        t_params = t_info.get("parameters", {})
+                        param_str = json.dumps(t_info.get("parameters", {}))[:160]
                         t_out = t_info.get("output", "")
-                        param_str = json.dumps(t_params)[:160]
                         if state == "ACTIVE":
+                            tools_ran += 1
                             on_state_change("executing")
                             on_tool_call(t_name, param_str)
                             on_thought(f"Executing `{t_name}`: {param_str}")
@@ -986,45 +1398,86 @@ class TchikoAgentEngine:
                     elif step_type == "agent_response":
                         delta = su.get("text_delta", "")
                         if delta:
-                            full_tokens.append(delta)
+                            # Separate the text of distinct agent steps so they don't run together.
+                            step_idx = su.get("step_index")
+                            if tokens and step_idx != last_text_step and not tokens[-1].endswith("\n"):
+                                tokens.append("\n\n")
+                                on_token("\n\n")
+                            last_text_step = step_idx
+                            tokens.append(delta)
                             on_token(delta)
 
                 elif ev_type == "result":
                     res_obj = ev.get("result", {})
-                    final_response_text = res_obj.get("response", "")
+                    final_response_text = res_obj.get("response", "") or ""
+                    denied = [
+                        str(d.get("display_name") or d.get("action") or "tool")
+                        for d in res_obj.get("denied_actions", []) or []
+                    ]
 
-            await asyncio.wait_for(proc.wait(), timeout=10.0)
-            combined = "".join(full_tokens).strip() or final_response_text.strip()
-            if proc.returncode == 0 and combined:
-                if not full_tokens and final_response_text:
-                    await self._stream_markdown(final_response_text, on_token)
-                on_state_change("happy")
-                on_complete(combined)
-                return True
+            await asyncio.wait_for(proc.wait(), timeout=15.0)
+        except asyncio.TimeoutError:
+            error = f"no activity from `agy` for {int(AGY_EVENT_IDLE_TIMEOUT_SEC // 60)} minutes, so it was stopped"
+        except Exception as exc:
+            error = f"{type(exc).__name__}: {exc}"
+        finally:
+            if proc is not None and proc.returncode is None:
+                try:
+                    proc.kill()
+                    await proc.wait()
+                except Exception:
+                    pass
 
-            # If resuming an old conversation_id failed, clear it so next call starts fresh
-            if prev_conv_id:
-                self.memory["agy_conversation_id"] = ""
-                self._save_memory()
-            return False
-        except Exception:
-            return False
+        stderr_text = ""
+        if stderr_task is not None:
+            try:
+                stderr_text = (await asyncio.wait_for(stderr_task, timeout=5.0)).decode("utf-8", errors="replace")
+            except Exception:
+                stderr_task.cancel()
+        stderr_tail = next((l.strip() for l in reversed(stderr_text.splitlines()) if l.strip()), "")[:400]
+
+        if not error and proc is not None and proc.returncode not in (0, None):
+            error = stderr_tail or f"`agy` exited with code {proc.returncode}"
+        if not error and denied:
+            error = (
+                f"permission denied for {', '.join(sorted(set(denied)))} — Tchiko is in review mode; "
+                "enable 'Grant All System Permissions' in Settings (or `/grant-all`) to let the agent act"
+            )
+
+        combined = "".join(tokens).strip() or final_response_text.strip()
+        if combined and not error:
+            if not tokens:
+                await self._stream_markdown(final_response_text, on_token)
+            self.memory["agy_conversation_ts"] = int(time.time())
+            self._save_memory()
+            return "ok", combined, ""
+        if combined or tools_ran:
+            return "partial", combined, error or stderr_tail or "it returned no final answer"
+        return "failed", "", error or stderr_tail or "it returned an empty response"
 
     @staticmethod
     def _strip_think_blocks(raw_text: str) -> Tuple[str, List[str]]:
-        """Extract <think>...</think> blocks cleanly so internal reasoning never leaks into <bash> parsing or chat output."""
+        """Extract <think>...</think> and <channel|> blocks cleanly so internal reasoning or hallucinated <output> tags never leak into chat output."""
         thoughts: List[str] = []
-        for m in re.finditer(r"<think>(.*?)</think>", raw_text, flags=re.DOTALL | re.IGNORECASE):
+        text = raw_text
+        if "<channel|>" in text:
+            parts = text.split("<channel|>", 1)
+            if parts[0].strip():
+                thoughts.append(parts[0].strip())
+            text = parts[1]
+        for m in re.finditer(r"<think>(.*?)</think>", text, flags=re.DOTALL | re.IGNORECASE):
             t_body = m.group(1).strip()
             if t_body:
                 thoughts.append(t_body)
-        cleaned = re.sub(r"<think>.*?</think>", "", raw_text, flags=re.DOTALL | re.IGNORECASE)
+        cleaned = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL | re.IGNORECASE)
         if "<think>" in cleaned.lower():
             idx = cleaned.lower().find("<think>")
             tail_thought = cleaned[idx + 7 :].strip()
             if tail_thought:
                 thoughts.append(tail_thought)
             cleaned = cleaned[:idx]
+        # Strip hallucinated <output>...</output> blocks that some local models emit instead of waiting for real tool execution
+        cleaned = re.sub(r"<output>.*?</output>", "", cleaned, flags=re.DOTALL | re.IGNORECASE)
         return cleaned.strip(), thoughts
 
     @staticmethod
@@ -1121,55 +1574,84 @@ class TchikoAgentEngine:
         on_state_change: Callable[[str], None],
         on_approval_needed: Optional[Callable[[str, Callable[[], None], Callable[[], None]], None]],
     ) -> bool:
-        """Run an 8-step autonomous multi-tool ReAct loop (`view_file`, `grep`, `patch_file`, `write_file`, `bash`)."""
-        telemetry = self.toolkit.get_system_telemetry()
-        cwd = self.memory.get("cwd", str(Path.home()))
-        notes = json.dumps(self.memory.get("notes", {}))
-        recent_turns = "\n".join(
-            f"{t['role'].upper()}: {t['content']}"
-            for t in self.memory.get("history", [])[-6:]
-        )
-
+        """Run an autonomous multi-tool ReAct loop (`view_file`, `grep`, `patch_file`, `write_file`, `bash`)
+        against Gemini or a local Ollama model, keeping the full step-by-step transcript in context."""
         sys_prompt = (
-            f"You are Tchiko, an advanced autonomous Ubuntu Linux desktop AI engineer on host '{telemetry['hostname']}' "
-            f"({telemetry['distro']}), working directory '{cwd}'.\n"
-            f"User saved memory notes: {notes}\n"
-            f"Recent conversation context:\n{recent_turns}\n\n"
-            "You have full autonomous tools to investigate, debug, and fix any Linux or codebase issue:\n"
-            "- Run shell commands: <bash>ls -la ~/.config</bash>\n"
+            self._build_context_brief(include_history=False) + "\n\n"
+            "Tools. To act, end your message with exactly one tool tag, then stop and wait. "
+            "The real result arrives in the next message.\n"
+            "- Run a shell command: <bash>ls -la ~/.config</bash>\n"
             "- View file lines: <view_file path=\"/path/to/file\" start=\"1\" end=\"120\" />\n"
             "- Search logs/code: <grep pattern=\"error\" path=\"/path/to/dir\" />\n"
-            "- Patch a file (auto-creates .bak backup): <patch_file path=\"/path/to/file\"><search>old</search><replace>new</replace></patch_file>\n"
+            "- Patch a file (a .bak backup is kept): <patch_file path=\"/path/to/file\"><search>old</search><replace>new</replace></patch_file>\n"
             "- Write a file: <write_file path=\"/path/to/file\">content</write_file>\n\n"
-            "Rules:\n"
-            "1. NEVER put placeholder words inside tool tags and NEVER put tool tags inside <think> blocks.\n"
-            "2. Investigate step-by-step: locate binaries/logs -> read error traces -> patch/fix the root cause -> verify and summarize."
+            "Tool rules:\n"
+            "- One tool tag per message, holding real values, never placeholders, and never inside <think> blocks.\n"
+            "- Never write a command's output yourself (no <output> blocks, no pretend logs). Only tool results are real.\n"
+            "- Use absolute paths or paths starting with `~`.\n"
+            "- When the task is finished or cannot proceed, reply with a short summary and no tool tag."
         )
 
-        gemini_key = (
-            os.getenv("GEMINI_API_KEY")
-            or self.config.data.get("agent", {}).get("gemini_api_key", "")
-        ).strip()
+        # Real multi-turn context: earlier chat turns, then the current request (history[-1]).
+        messages: List[Dict[str, str]] = []
+        for turn in self.memory.get("history", [])[:-1][-6:]:
+            role = "assistant" if turn.get("role") == "assistant" else "user"
+            content = str(turn.get("content", "")).strip()
+            if not content:
+                continue
+            if messages and messages[-1]["role"] == role:
+                messages[-1]["content"] += "\n\n" + content
+            else:
+                messages.append({"role": role, "content": content})
+        if messages and messages[-1]["role"] == "user":
+            messages[-1]["content"] += "\n\n" + prompt
+        else:
+            messages.append({"role": "user", "content": prompt})
 
-        async def _query_llm(current_prompt: str) -> Optional[str]:
-            if gemini_key and gemini_key != "your_gemini_api_key_here":
-                on_thought("Querying Gemini 2.5 Flash with multi-tool ReAct loop...")
-                res_txt = await asyncio.to_thread(self._call_gemini_rest, gemini_key, sys_prompt, current_prompt)
+        agent_cfg = self.config.data.get("agent", {})
+        gemini_key = (os.getenv("GEMINI_API_KEY") or agent_cfg.get("gemini_api_key", "")).strip()
+        has_gemini = bool(gemini_key) and gemini_key != "your_gemini_api_key_here"
+        ollama_target: List[Any] = []  # [port, model] once a local server has been found
+
+        async def _query_llm() -> Optional[str]:
+            if has_gemini:
+                on_thought("Thinking with Gemini 2.5 Flash...")
+                res_txt = await asyncio.to_thread(self._call_gemini_rest, gemini_key, sys_prompt, messages)
                 if res_txt:
                     return res_txt
-            for port in (11434, 11435):
-                res_txt = await asyncio.to_thread(self._call_local_ollama, port, sys_prompt, current_prompt)
-                if res_txt:
-                    return res_txt
-            return None
+                self._backend_notes.append("**Gemini API:** request failed or returned nothing.")
+            if not ollama_target:
+                for port in (11434, 11435):
+                    models = await asyncio.to_thread(self._list_ollama_models, port)
+                    model = self._pick_ollama_model(models, str(agent_cfg.get("ollama_model", "")))
+                    if model:
+                        ollama_target.extend([port, model])
+                        break
+            if not ollama_target:
+                self._backend_notes.append(
+                    "**Local Ollama:** no server with a chat model on ports 11434/11435 (`ollama serve`)."
+                )
+                return None
+            port, model = ollama_target
+            on_thought(f"Thinking with local model `{model}`...")
+            res_txt = await asyncio.to_thread(self._call_local_ollama, port, model, sys_prompt, messages)
+            if not res_txt:
+                self._backend_notes.append(f"**Local Ollama (`{model}`):** no reply (timed out or errored).")
+            return res_txt
 
         accumulated_markdown: List[str] = []
-        rolling_prompt = prompt
 
-        for step in range(8):
-            llm_text = await _query_llm(rolling_prompt)
+        for _step in range(LLM_MAX_TOOL_STEPS):
+            llm_text = await _query_llm()
             if not llm_text:
-                return bool(accumulated_markdown)
+                if not accumulated_markdown:
+                    return False
+                note = "⚠️ **The model stopped responding before the task was finished.**"
+                accumulated_markdown.append(note)
+                await self._stream_markdown(note, on_token)
+                on_state_change("alert")
+                on_complete("\n\n".join(accumulated_markdown).strip())
+                return True
 
             visible_text, thoughts = self._strip_think_blocks(llm_text)
             for th in thoughts:
@@ -1188,6 +1670,7 @@ class TchikoAgentEngine:
                 accumulated_markdown.append(clean_reply)
                 await self._stream_markdown(clean_reply + "\n\n", on_token)
 
+            messages.append({"role": "assistant", "content": visible_text or "(no visible reply)"})
             if not actions:
                 break
 
@@ -1197,23 +1680,23 @@ class TchikoAgentEngine:
             on_state_change("executing")
 
             if t_kind == "view_file":
-                on_tool_call("view_file", f"{{'path': {action['path']!r}, 'lines': '{action['start']}-{action['end']}'}}")
-                res = await asyncio.to_thread(
-                    self.toolkit.view_file_lines, action["path"], action["start"], action["end"]
-                )
+                path = self._resolve_user_path(action["path"])
+                on_tool_call("view_file", f"{{'path': {path!r}, 'lines': '{action['start']}-{action['end']}'}}")
+                res = await asyncio.to_thread(self.toolkit.view_file_lines, path, action["start"], action["end"])
             elif t_kind == "grep":
-                on_tool_call("grep_files", f"{{'pattern': {action['pattern']!r}, 'path': {action['path']!r}}}")
-                res = await asyncio.to_thread(self.toolkit.grep_files, action["pattern"], action["path"])
+                path = self._resolve_user_path(action["path"])
+                on_tool_call("grep_files", f"{{'pattern': {action['pattern']!r}, 'path': {path!r}}}")
+                res = await asyncio.to_thread(self.toolkit.grep_files, action["pattern"], path)
             elif t_kind == "patch_file":
-                on_tool_call("patch_file_content", f"{{'path': {action['path']!r}}}")
+                path = self._resolve_user_path(action["path"])
+                on_tool_call("patch_file_content", f"{{'path': {path!r}}}")
                 res = await asyncio.to_thread(
-                    self.toolkit.patch_file_content, action["path"], action["search"], action["replace"], True
+                    self.toolkit.patch_file_content, path, action["search"], action["replace"], True
                 )
             elif t_kind == "write_file":
-                on_tool_call("write_file_content", f"{{'path': {action['path']!r}}}")
-                res = await asyncio.to_thread(
-                    self.toolkit.write_file_content, action["path"], action["content"], True
-                )
+                path = self._resolve_user_path(action["path"])
+                on_tool_call("write_file_content", f"{{'path': {path!r}}}")
+                res = await asyncio.to_thread(self.toolkit.write_file_content, path, action["content"], True)
             else:
                 cmd = action["command"]
                 if self.config.requires_manual_review() and on_approval_needed is not None:
@@ -1228,7 +1711,9 @@ class TchikoAgentEngine:
                     )
                     return True
                 on_tool_call("run_shell_command", f"{{'command': {cmd!r}, 'cwd': {active_cwd!r}}}")
-                res = await asyncio.to_thread(self.toolkit.run_shell_command, cmd, active_cwd)
+                res = await asyncio.to_thread(
+                    self.toolkit.run_shell_command, cmd, active_cwd, LLM_TOOL_BASH_TIMEOUT_SEC
+                )
                 self.memory["last_command"] = cmd
                 self.memory["last_output"] = res.output
                 self._save_memory()
@@ -1241,12 +1726,15 @@ class TchikoAgentEngine:
             accumulated_markdown.append(cmd_card.strip())
             await self._stream_markdown(cmd_card, on_token)
 
-            rolling_prompt = (
-                f"Original user request: {prompt}\n\n"
-                f"Step {step + 1} tool `{t_kind}` result (ok={res.ok}):\n"
-                f"{res.output[:3000]}\n\n"
-                "If further investigation or repair steps are needed, output the next tool tag (<view_file>, <grep>, <patch_file>, <write_file>, or <bash>). "
-                "Otherwise, provide a clear final summary of the root cause and fix without any tool tags."
+            messages.append(
+                {
+                    "role": "user",
+                    "content": (
+                        f"Tool `{t_kind}` result (ok={res.ok}):\n{res.output[:4000]}\n\n"
+                        "Continue with the next tool tag, or, if the request is fully handled, give the "
+                        "final summary with no tool tag."
+                    ),
+                }
             )
 
         final_summary = "\n\n".join(accumulated_markdown).strip() or "Completed."
@@ -1255,11 +1743,14 @@ class TchikoAgentEngine:
         return True
 
     @staticmethod
-    def _call_gemini_rest(api_key: str, sys_prompt: str, user_prompt: str) -> Optional[str]:
+    def _call_gemini_rest(api_key: str, sys_prompt: str, messages: List[Dict[str, str]]) -> Optional[str]:
         url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
         payload = {
             "system_instruction": {"parts": [{"text": sys_prompt}]},
-            "contents": [{"parts": [{"text": user_prompt}]}],
+            "contents": [
+                {"role": "model" if m["role"] == "assistant" else "user", "parts": [{"text": m["content"]}]}
+                for m in messages
+            ],
         }
         try:
             req = urllib.request.Request(
@@ -1268,48 +1759,67 @@ class TchikoAgentEngine:
                 headers={"Content-Type": "application/json"},
                 method="POST",
             )
-            with urllib.request.urlopen(req, timeout=15) as resp:
+            with urllib.request.urlopen(req, timeout=60) as resp:
                 data = json.loads(resp.read().decode("utf-8"))
                 return data["candidates"][0]["content"]["parts"][0]["text"]
         except Exception:
             return None
 
     @staticmethod
-    def _call_local_ollama(port: int, sys_prompt: str, user_prompt: str) -> Optional[str]:
-        url = f"http://127.0.0.1:{port}/api/tags"
+    def _list_ollama_models(port: int) -> List[Dict[str, Any]]:
         try:
-            with urllib.request.urlopen(url, timeout=0.8) as resp:
-                tags = json.loads(resp.read().decode("utf-8")).get("models", [])
-                if not tags:
-                    return None
-                available = [m.get("name", "") for m in tags if m.get("name")]
-                preferred_order = (
-                    "gemma4:e4b",
-                    "qwen2.5-coder:1.5b",
-                    "llama3.2:latest",
-                    "lfm2.5:8b",
-                )
-                model_name = available[0]
-                for pref in preferred_order:
-                    if pref in available:
-                        model_name = pref
-                        break
-            chat_url = f"http://127.0.0.1:{port}/api/chat"
-            payload = {
-                "model": model_name,
-                "stream": False,
-                "messages": [
-                    {"role": "system", "content": sys_prompt},
-                    {"role": "user", "content": user_prompt},
-                ],
-            }
+            with urllib.request.urlopen(f"http://127.0.0.1:{port}/api/tags", timeout=0.8) as resp:
+                return list(json.loads(resp.read().decode("utf-8")).get("models", []))
+        except Exception:
+            return []
+
+    @staticmethod
+    def _pick_ollama_model(models: List[Dict[str, Any]], override: str = "") -> Optional[str]:
+        """Choose the local chat model: explicit `agent.ollama_model`, then the known-good list,
+        then the largest tool-capable model that fits comfortably in memory (never an embedding
+        or speech model just because it happens to be listed first)."""
+        chat = []
+        for m in models:
+            name = m.get("name", "")
+            caps = m.get("capabilities") or []
+            if not name or "embed" in name or (caps and "completion" not in caps):
+                continue
+            chat.append(m)
+        names = [m["name"] for m in chat]
+        if override and override in names:
+            return override
+        for pref in ("gemma4:e4b", "qwen2.5:14b", "lfm2.5:8b", "llama3.2:latest", "qwen2.5-coder:1.5b"):
+            if pref in names:
+                return pref
+        if not chat:
+            return None
+        max_bytes = 12 * 1024**3
+        fits = [m for m in chat if 0 < int(m.get("size", 0) or 0) <= max_bytes]
+        if fits:
+            best = max(fits, key=lambda m: ("tools" in (m.get("capabilities") or []), int(m.get("size", 0))))
+            return str(best["name"])
+        return str(min(chat, key=lambda m: int(m.get("size", 0) or 0))["name"])
+
+    @staticmethod
+    def _call_local_ollama(
+        port: int, model_name: str, sys_prompt: str, messages: List[Dict[str, str]]
+    ) -> Optional[str]:
+        payload = {
+            "model": model_name,
+            "stream": False,
+            # Ollama's default context window silently truncates the briefing plus tool results.
+            "options": {"num_ctx": 16384},
+            "messages": [{"role": "system", "content": sys_prompt}] + messages,
+        }
+        try:
             req = urllib.request.Request(
-                chat_url,
+                f"http://127.0.0.1:{port}/api/chat",
                 data=json.dumps(payload).encode("utf-8"),
                 headers={"Content-Type": "application/json"},
                 method="POST",
             )
-            with urllib.request.urlopen(req, timeout=25) as c_resp:
+            # Generous: the first call may have to load the model into memory.
+            with urllib.request.urlopen(req, timeout=240) as c_resp:
                 c_data = json.loads(c_resp.read().decode("utf-8"))
                 return c_data.get("message", {}).get("content")
         except Exception:
@@ -1341,6 +1851,7 @@ class TchikoAgentEngine:
                 "- **Slash Commands:**\n"
                 "  - `/doctor` — Run 5-point Ubuntu System Doctor diagnostic\n"
                 "  - `/memory` — Inspect or clear Tchiko's persistent memory & notes\n"
+                "  - `/new` — Start a fresh conversation (keeps saved notes)\n"
                 "  - `/sysinfo` — Live Ubuntu CPU, RAM, Disk & Uptime report\n"
                 "  - `/run <command>` or `$ <command>` — Execute any Linux bash command\n"
                 "  - `/procs` — List top CPU/Memory processes\n"
@@ -1352,6 +1863,14 @@ class TchikoAgentEngine:
             await self._stream_markdown(help_text, on_token)
             on_state_change("idle")
             on_complete(help_text)
+            return True
+
+        if lower in ("/new", "/reset", "new chat", "start over"):
+            self.reset_conversation()
+            msg = "🧼 **Fresh start.** Previous conversation context cleared; saved notes are kept."
+            await self._stream_markdown(msg, on_token)
+            on_state_change("idle")
+            on_complete(msg)
             return True
 
         if lower in ("/doctor", "doctor"):

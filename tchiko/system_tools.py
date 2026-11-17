@@ -222,7 +222,7 @@ class LinuxSystemToolkit:
                 title="Filesystem Access Disabled",
                 output="🔒 Enable 'Filesystem Read/Write' or 'Grant All System Permissions' in Tchiko Settings.",
             )
-        target = Path(os.path.expanduser(path_str)).resolve()
+        target = Path(os.path.expanduser(os.path.expandvars(path_str))).resolve()
         if not target.exists():
             return ToolResult(ok=False, title="Path Not Found", output=f"Path does not exist: {target}")
         try:
@@ -290,7 +290,7 @@ class LinuxSystemToolkit:
                 title="Filesystem Access Disabled",
                 output="🔒 Enable 'Filesystem Read/Write' or 'Grant All System Permissions' in Tchiko Settings.",
             )
-        target = Path(os.path.expanduser(path_str.strip())).resolve()
+        target = Path(os.path.expanduser(os.path.expandvars(path_str.strip()))).resolve()
         if not target.exists():
             return ToolResult(ok=False, title="File Not Found", output=f"File does not exist: {target}")
         if target.is_dir():
@@ -321,7 +321,7 @@ class LinuxSystemToolkit:
                 title="Filesystem Access Disabled",
                 output="🔒 Enable 'Filesystem Read/Write' in Tchiko Settings.",
             )
-        target = os.path.expanduser(path_str.strip())
+        target = os.path.expanduser(os.path.expandvars(path_str.strip()))
         cmd = f"grep -rnI -- {pattern!r} {target!r} 2>/dev/null | head -n {int(max_matches)}"
         res = self.run_shell_command(cmd, bypass_check=True)
         if (res.output.startswith("(Command completed") or pattern not in res.output[:4000]) and os.path.exists(target):
@@ -364,7 +364,7 @@ class LinuxSystemToolkit:
                 title="Filesystem Access Disabled",
                 output="🔒 Enable 'Filesystem Read/Write' in Tchiko Settings.",
             )
-        target = Path(os.path.expanduser(path_str.strip())).resolve()
+        target = Path(os.path.expanduser(os.path.expandvars(path_str.strip()))).resolve()
         if not target.exists() or not target.is_file():
             return ToolResult(ok=False, title="Patch Failed", output=f"File not found: {target}")
         try:
@@ -406,7 +406,7 @@ class LinuxSystemToolkit:
                 title="Filesystem Access Disabled",
                 output="🔒 Enable 'Filesystem Read/Write' in Tchiko Settings.",
             )
-        target = Path(os.path.expanduser(path_str.strip())).resolve()
+        target = Path(os.path.expanduser(os.path.expandvars(path_str.strip()))).resolve()
         try:
             target.parent.mkdir(parents=True, exist_ok=True)
             if create_backup and target.exists() and target.is_file():

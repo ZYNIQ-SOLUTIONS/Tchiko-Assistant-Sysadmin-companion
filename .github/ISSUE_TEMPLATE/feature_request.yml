@@ -1,0 +1,42 @@
+name: Feature Request
+description: Propose a new Linux sysadmin tool, procedural emotion/coat, UI improvement, or documentation update.
+title: "[Feat]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have an idea to make Tchiko Assistant better? Tell us about it!
+  - type: dropdown
+    id: area
+    attributes:
+      label: Feature Area
+      options:
+        - Autonomous Linux Tool (`tchiko/system_tools.py`)
+        - Agent Engine / ReAct / `agy` Bridge (`tchiko/agent_engine.py`)
+        - Cairo Vector Renderer / Emotion / Coat (`tchiko/svg_ghost_renderer.py`)
+        - Desktop UI / Design System (`tchiko/ui_theme.py`, `assistant_window.py`, `ghost_widget.py`)
+        - Documentation / Developer Experience
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or Use Case
+      description: What workflow or pain point does this feature solve?
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe how you envision this working (CLI flags, slash commands, RBAC capability domain, UI interaction).
+    validations:
+      required: true
+  - type: checkboxes
+    id: contribute
+    attributes:
+      label: Contribution Interest
+      options:
+        - label: I would like to submit a Pull Request for this feature

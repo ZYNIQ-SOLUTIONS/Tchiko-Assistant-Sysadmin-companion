@@ -1,0 +1,60 @@
+name: Bug Report
+description: Report a crash, rendering glitch, or unexpected agent behavior in Tchiko Assistant.
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! Please fill out the details below so we can reproduce and fix it quickly.
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: A clear, concise description of the bug.
+      placeholder: Describe what went wrong...
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: How can we trigger this issue?
+      placeholder: |
+        1. Launch Tchiko via `./run_tchiko.sh`
+        2. Middle-click and type '...'
+        3. Observe error in terminal / Activity tab
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen instead?
+    validations:
+      required: true
+  - type: dropdown
+    id: display_server
+    attributes:
+      label: Display Server
+      options:
+        - Ubuntu Wayland (XWayland)
+        - Ubuntu X11
+        - Headless / CI (Xvfb)
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment Details
+      description: Ubuntu version, Python version, and LLM/Antigravity backend (`agy` CLI, Ollama, Gemini REST).
+      placeholder: "Ubuntu 24.04 LTS, Python 3.12, agy CLI"
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant Logs / Output
+      description: Paste any terminal output, stack traces, or `python3 main.py --self-test` output (redact any secrets).
+      render: shell

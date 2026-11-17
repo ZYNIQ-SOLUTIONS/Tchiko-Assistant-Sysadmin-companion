@@ -1,0 +1,8 @@
+# Rename this file to `CNAME` (inside `landing/CNAME`) or set your custom
+# subdomain in GitHub Repository -> Settings -> Pages -> Custom domain:
+#
+#   tchiko.yourdomain.com
+#
+# Then add a DNS CNAME record at your domain registrar:
+#   Host/Name: tchiko
+#   Target:    <your-github-org-or-username>.github.io

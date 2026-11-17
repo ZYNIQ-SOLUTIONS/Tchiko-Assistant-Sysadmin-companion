@@ -4,7 +4,7 @@
 
 PYTHON ?= python3
 
-.PHONY: help run chat settings self-test test doctor export-svg clean
+.PHONY: help run chat settings self-test test doctor export-svg lint typecheck install-desktop clean
 
 help: ## Display available engineering targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-16s\033[0m %s\n", $$1, $$2}'
@@ -29,6 +29,20 @@ doctor: ## Run the 6-step autonomous IDE/Application Crash Doctor from CLI
 
 export-svg: ## Re-export all procedural Cairo vector poses to assets/ and landing/assets/
 	$(PYTHON) main.py --self-test
+
+lint: ## Run Python syntax check and ruff linter (if installed)
+	$(PYTHON) -m compileall -q main.py tchiko tests
+	@if command -v ruff >/dev/null 2>&1; then ruff check main.py tchiko tests; fi
+
+typecheck: ## Run mypy type checker (if installed)
+	@if command -v mypy >/dev/null 2>&1; then mypy main.py tchiko; fi
+
+install-desktop: ## Install Tchiko-Assistant.desktop into ~/.local/share/applications/
+	@mkdir -p ~/.local/share/applications
+	@sed -e "s|^Exec=.*|Exec=$(CURDIR)/run_tchiko.sh|" \
+	     -e "s|^Icon=.*|Icon=$(CURDIR)/assets/tchiko-logo.svg|" \
+	     Tchiko-Assistant.desktop > ~/.local/share/applications/Tchiko-Assistant.desktop
+	@echo "Installed ~/.local/share/applications/Tchiko-Assistant.desktop"
 
 clean: ## Remove Python bytecode caches
 	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true

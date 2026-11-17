@@ -1,22 +1,19 @@
-"""Floating Always-on-Top Interactive Tchiko (Dijiang) Desktop Companion for Ubuntu Linux.
+"""Floating always-on-top Tchiko companion (`tchiko/ghost_widget.py`).
 
-Features:
-- Fluffy, squishy White, Crimson Red, and Velvet Black Tchiko pet visual
-- **Quick Input Bar directly below the Tchiko SVG**:
-  - Type any question or Linux command and press `Enter` (`↵`) to send automatically!
-- **Talking Speech Bubble directly above Tchiko**:
-  - Streams Tchiko's response live above the pet like Tchiko is talking back to you!
-  - Includes 1-click `📋 Copy`, `💬 Full Chat`, and `✖` dismiss buttons.
-- **Full Chat Window Option Preserved**:
-  - Click the pet (or click the `💬` button next to the quick input) anytime to open/toggle
-    the full Chat & System Studio window!
+Three stacked pieces in one frameless, transparent window:
+
+- **Speech bubble** above the pet: replies stream in live, with reply / copy / open-chat /
+  dismiss controls. It stays open while hovered and fades out on its own otherwise.
+- **The pet** itself: drag to move, click to open the chat window, middle-click for the quick
+  input, scroll to cycle moods, right-click for the menu, double-click for settings.
+- **Quick input** below the pet: type a request and press Enter.
+
+Styling comes from `tchiko/ui_theme.py`.
 """
 
 from __future__ import annotations
 
-import html
 import math
-import re
 from typing import Any, Callable, Dict, Optional
 
 import gi
@@ -25,75 +22,18 @@ gi.require_version("Gtk", "3.0")
 gi.require_version("Gdk", "3.0")
 from gi.repository import Gdk, GLib, Gtk, Pango
 
+from . import ui_theme as ui
 from .config_manager import ConfigManager
 from .svg_ghost_renderer import EMOTION_LIST, SvgGhostRenderer, THEMES
 
-
-GHOST_WIDGET_CSS = b"""
-window.tchiko-ghost-win,
-.tchiko-ghost-transparent,
-.tchiko-ghost-box {
-    background-color: rgba(0, 0, 0, 0);
-    background-image: none;
-    border: none;
-    box-shadow: none;
-}
-
-.tchiko-talk-bubble {
-    background-color: rgba(13, 18, 28, 0.95);
-    border: 1.5px solid #ef4444;
-    border-radius: 14px;
-    padding: 10px 12px;
-    color: #f8fafc;
-}
-
-.tchiko-bubble-btn {
-    background-image: none;
-    background-color: rgba(30, 41, 59, 0.85);
-    color: #cbd5e1;
-    border: 1px solid #334155;
-    border-radius: 7px;
-    padding: 2px 7px;
-    font-size: 8pt;
-}
-.tchiko-bubble-btn:hover {
-    background-color: #ef4444;
-    color: #ffffff;
-    border-color: #f87171;
-}
-
-.tchiko-quick-pill {
-    background-color: rgba(13, 18, 28, 0.92);
-    border: 1.5px solid rgba(239, 68, 68, 0.65);
-    border-radius: 18px;
-    padding: 4px 8px;
-}
-
-entry.tchiko-quick-entry {
-    background-color: transparent;
-    background-image: none;
-    color: #f8fafc;
-    border: none;
-    box-shadow: none;
-    padding: 3px 6px;
-    font-size: 9.5pt;
-    min-height: 22px;
-}
-
-.tchiko-mini-chat-btn {
-    background-image: none;
-    background-color: rgba(239, 68, 68, 0.18);
-    color: #f8fafc;
-    border: 1px solid rgba(239, 68, 68, 0.45);
-    border-radius: 12px;
-    padding: 2px 8px;
-    font-size: 9pt;
-}
-.tchiko-mini-chat-btn:hover {
-    background-color: #ef4444;
-    color: #ffffff;
-}
-"""
+QUICK_ACTIONS = (
+    ("System doctor", "/doctor"),
+    ("System report", "/sysinfo"),
+    ("Top processes", "/procs"),
+    ("Listening ports", "check listening ports"),
+    ("Desktop files", "/files ~/Desktop"),
+    ("Memory and notes", "/memory"),
+)
 
 
 class FloatingGhostWidget(Gtk.Window):
@@ -141,16 +81,10 @@ class FloatingGhostWidget(Gtk.Window):
         self.config.subscribe(self._on_config_updated)
 
         self._render_frame()
-        self._anim_source_id = GLib.timeout_add(36, self._on_tick)
+        self._anim_source_id = GLib.timeout_add(40, self._on_tick)
 
     def _apply_transparent_css(self) -> None:
-        provider = Gtk.CssProvider()
-        provider.load_from_data(GHOST_WIDGET_CSS)
-        screen = Gdk.Screen.get_default()
-        if screen is not None:
-            Gtk.StyleContext.add_provider_for_screen(
-                screen, provider, Gtk.STYLE_PROVIDER_PRIORITY_USER
-            )
+        ui.apply_theme()
         self.get_style_context().add_class("tchiko-ghost-win")
 
     def _setup_window_properties(self) -> None:
@@ -195,44 +129,50 @@ class FloatingGhostWidget(Gtk.Window):
         self.bubble_eb.connect("enter-notify-event", self._on_bubble_enter)
         self.bubble_eb.connect("leave-notify-event", self._on_bubble_leave)
 
-        self.bubble_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
-        self.bubble_card.get_style_context().add_class("tchiko-talk-bubble")
-        self.bubble_card.set_size_request(255, -1)
+        self.bubble_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
+        self.bubble_card.get_style_context().add_class("tchiko-bubble")
+        self.bubble_card.set_size_request(330, -1)
 
-        # Header inside talking bubble
-        b_hdr = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        b_title = Gtk.Label(xalign=0.0)
-        b_title.set_markup("<span size='small' weight='bold' foreground='#ef4444'>🐾 Tchiko</span>")
-        b_hdr.pack_start(b_title, True, True, 0)
+        # Header: status dot, name, then compact icon actions.
+        b_hdr = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=2)
+        dot = Gtk.Box()
+        dot.set_valign(Gtk.Align.CENTER)
+        dot.set_margin_end(5)
+        dot.get_style_context().add_class("tchiko-status-dot")
+        b_hdr.pack_start(dot, False, False, 0)
+        b_hdr.pack_start(ui.label("Tchiko", "bubble-name"), True, True, 0)
 
-        self.bubble_copy_btn = Gtk.Button(label="📋 Copy")
-        self.bubble_copy_btn.get_style_context().add_class("tchiko-bubble-btn")
-        self.bubble_copy_btn.connect("clicked", self._on_copy_bubble)
-        b_hdr.pack_end(self.bubble_copy_btn, False, False, 0)
-
-        b_chat_btn = Gtk.Button(label="💬 Chat")
-        b_chat_btn.set_tooltip_text("Open Full Chat Window")
-        b_chat_btn.get_style_context().add_class("tchiko-bubble-btn")
-        b_chat_btn.connect("clicked", lambda *_: self.on_toggle_chat())
-        b_hdr.pack_end(b_chat_btn, False, False, 0)
-
-        b_close_btn = Gtk.Button(label="✖")
-        b_close_btn.get_style_context().add_class("tchiko-bubble-btn")
+        b_close_btn = ui.icon_button("window-close-symbolic", "Dismiss", pixel_size=13)
         b_close_btn.connect("clicked", lambda *_: self.hide_speech_bubble())
         b_hdr.pack_end(b_close_btn, False, False, 0)
 
+        b_chat_btn = ui.icon_button("view-reveal-symbolic", "Open in the chat window", pixel_size=13)
+        b_chat_btn.connect("clicked", lambda *_: self.on_toggle_chat())
+        b_hdr.pack_end(b_chat_btn, False, False, 0)
+
+        self.bubble_copy_btn = ui.icon_button("edit-copy-symbolic", "Copy (the code block, if there is one)", pixel_size=13)
+        self.bubble_copy_btn.connect("clicked", self._on_copy_bubble)
+        b_hdr.pack_end(self.bubble_copy_btn, False, False, 0)
+
+        self.bubble_reply_btn = ui.icon_button("mail-reply-sender-symbolic", "Reply", pixel_size=13)
+        self.bubble_reply_btn.connect("clicked", lambda *_: self.show_quick_input())
+        b_hdr.pack_end(self.bubble_reply_btn, False, False, 0)
+
         self.bubble_card.pack_start(b_hdr, False, False, 0)
 
-        # Scrollable reply label inside bubble (handles short answers & multi-line SSH keys)
+        # Scrollable reply body (short answers stay compact, long ones scroll).
         self.bubble_scroll = Gtk.ScrolledWindow()
         self.bubble_scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
-        self.bubble_scroll.set_max_content_height(150)
+        self.bubble_scroll.set_max_content_height(220)
         self.bubble_scroll.set_propagate_natural_height(True)
+        self.bubble_scroll.get_style_context().add_class("tchiko-scroll")
 
         self.bubble_label = Gtk.Label(xalign=0.0)
+        self.bubble_label.get_style_context().add_class("bubble-body")
         self.bubble_label.set_line_wrap(True)
         self.bubble_label.set_line_wrap_mode(Pango.WrapMode.WORD_CHAR)
-        self.bubble_label.set_max_width_chars(34)
+        self.bubble_label.set_max_width_chars(42)
+        self.bubble_label.set_margin_end(6)
         self.bubble_label.set_selectable(True)
         self.bubble_scroll.add(self.bubble_label)
         self.bubble_card.pack_start(self.bubble_scroll, False, False, 0)
@@ -269,33 +209,36 @@ class FloatingGhostWidget(Gtk.Window):
         self.main_vbox.pack_start(self.event_box, False, False, 0)
 
         # ── 3. BOTTOM: FAST INTERACTION QUICK-INPUT BAR (Hidden until Middle-Click) ─
-        self.quick_pill = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        self.quick_pill = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=2)
         self.quick_pill.get_style_context().add_class("tchiko-quick-pill")
         self.quick_pill.set_halign(Gtk.Align.CENTER)
 
         self.quick_entry = Gtk.Entry()
-        self.quick_entry.get_style_context().add_class("tchiko-quick-entry")
-        self.quick_entry.set_width_chars(20)
-        self.quick_entry.set_placeholder_text("Ask Tchiko... ↵")
+        self.quick_entry.set_has_frame(False)
+        self.quick_entry.get_style_context().add_class("tchiko-entry")
+        self.quick_entry.set_width_chars(26)
+        self.quick_entry.set_placeholder_text("Ask Tchiko…")
         self.quick_entry.connect("activate", self._on_quick_entry_activate)
         self.quick_entry.connect("key-press-event", self._on_quick_entry_key_press)
         self.quick_pill.pack_start(self.quick_entry, True, True, 0)
 
-        open_chat_btn = Gtk.Button(label="💬")
-        open_chat_btn.set_tooltip_text("Open / Toggle Full Tchiko Chat Window")
-        open_chat_btn.get_style_context().add_class("tchiko-mini-chat-btn")
+        open_chat_btn = ui.icon_button("view-reveal-symbolic", "Open the chat window", pixel_size=14)
         open_chat_btn.connect("clicked", lambda *_: self.on_toggle_chat())
         self.quick_pill.pack_start(open_chat_btn, False, False, 0)
 
-        close_quick_btn = Gtk.Button(label="✖")
-        close_quick_btn.set_tooltip_text("Hide Quick Input (or Middle-Click Tchiko / press Esc)")
-        close_quick_btn.get_style_context().add_class("tchiko-bubble-btn")
-        close_quick_btn.connect("clicked", lambda *_: self.hide_quick_input())
-        self.quick_pill.pack_end(close_quick_btn, False, False, 0)
+        send_quick_btn = Gtk.Button()
+        send_quick_btn.set_image(ui.icon("go-up-symbolic", 14))
+        send_quick_btn.set_always_show_image(True)
+        send_quick_btn.set_tooltip_text("Send (Enter) · Esc to close")
+        send_quick_btn.set_valign(Gtk.Align.CENTER)
+        send_quick_btn.set_margin_start(2)
+        send_quick_btn.get_style_context().add_class("tchiko-send")
+        send_quick_btn.connect("clicked", lambda *_: self._on_quick_entry_activate(self.quick_entry))
+        self.quick_pill.pack_end(send_quick_btn, False, False, 0)
 
         self.quick_entry.show()
         open_chat_btn.show()
-        close_quick_btn.show()
+        send_quick_btn.show()
         self.quick_pill.set_no_show_all(True)
         self.quick_pill.hide()
         self.main_vbox.pack_start(self.quick_pill, False, False, 0)
@@ -337,7 +280,9 @@ class FloatingGhostWidget(Gtk.Window):
         self.hide_quick_input()
         self.renderer.trigger_boop_squish()
         self.renderer.set_emotion("thinking", duration=6.0)
-        self.show_speech_bubble("<i>Thinking...</i>", is_markup=True, auto_hide_sec=0)
+        self.show_speech_bubble(
+            f"<span foreground='{ui.TEXT_SECONDARY}'><i>Thinking…</i></span>", is_markup=True, auto_hide_sec=0
+        )
         self.on_inline_prompt(text)
 
     def show_speech_bubble(
@@ -347,11 +292,13 @@ class FloatingGhostWidget(Gtk.Window):
         GLib.idle_add(self._apply_speech_bubble, text, is_markup, auto_hide_sec)
 
     def _apply_speech_bubble(self, text: str, is_markup: bool, auto_hide_sec: int) -> bool:
+        if not self.config.data.get("ghost_widget", {}).get("show_speech_bubble", True):
+            return False
         self._last_bubble_raw = text
-        if is_markup:
-            self.bubble_label.set_markup(text)
-        else:
-            self.bubble_label.set_markup(self._format_bubble_pango(text))
+        self.bubble_label.set_markup(text if is_markup else self._format_bubble_pango(text))
+        # Keep the newest text in view while a reply streams in.
+        adj = self.bubble_scroll.get_vadjustment()
+        GLib.idle_add(lambda: (adj.set_value(max(0.0, adj.get_upper() - adj.get_page_size())), False)[1])
 
         self.bubble_eb.set_no_show_all(False)
         self.bubble_eb.show_all()
@@ -392,43 +339,27 @@ class FloatingGhostWidget(Gtk.Window):
         return False
 
     def _on_copy_bubble(self, btn: Gtk.Button) -> None:
-        clip = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
-        # If there is a fenced code block inside the reply (e.g., an SSH key), copy the code block content!
-        m_code = re.search(r"```(?:[a-zA-Z0-9_-]*\n)?(.*?)```", self._last_bubble_raw, re.DOTALL)
-        to_copy = m_code.group(1).strip() if m_code else self._last_bubble_raw.strip()
-        clip.set_text(to_copy, -1)
-        self.bubble_copy_btn.set_label("✓ Copied")
-        GLib.timeout_add(1500, lambda: (self.bubble_copy_btn.set_label("📋 Copy"), False)[1])
+        # A fenced code block (an SSH key, a command) is what people want on the clipboard.
+        to_copy = ui.first_code_block(self._last_bubble_raw) or ui.strip_hidden_blocks(self._last_bubble_raw).strip()
+        Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD).set_text(to_copy, -1)
+        ui.flash_button_icon(btn)
 
     @staticmethod
     def _format_bubble_pango(raw_text: str) -> str:
-        """Convert markdown response into compact, readable Pango markup for the talking bubble."""
-        cleaned = re.sub(r"```[a-zA-Z0-9_-]*\n?", "", raw_text)
-        lines = []
-        for raw_line in cleaned.strip().splitlines():
-            line = html.escape(raw_line)
-            if line.startswith("### "):
-                line = f"<b><span foreground='#f87171'>{line[4:].strip()}</span></b>"
-            elif line.startswith("- "):
-                line = "• " + line[2:]
-            line = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", line)
-            line = re.sub(
-                r"`([^`]+)`",
-                r"<span font_family='monospace' foreground='#fca5a5'>\1</span>",
-                line,
-            )
-            lines.append(line)
-        return "<span size='small'>" + "\n".join(lines) + "</span>"
+        """Render a Markdown reply as compact Pango markup for the speech bubble."""
+        return ui.streaming_markup(raw_text, compact=True) or " "
 
     def _render_frame(self) -> None:
         ghost_cfg = self.config.data.get("ghost_widget", {})
+        # Render at device resolution so the pet stays sharp on HiDPI displays.
+        scale = max(1, self.get_scale_factor())
         pixbuf = self.renderer.render_to_pixbuf(
-            width=self._width,
-            height=self._height,
+            width=self._width * scale,
+            height=self._height * scale,
             theme_name=ghost_cfg.get("theme", "phantom_cyan"),
             opacity=float(ghost_cfg.get("opacity", 0.98)),
         )
-        self.image.set_from_pixbuf(pixbuf)
+        ui.set_hidpi_pixbuf(self.image, pixbuf, self._width)
 
     def set_agent_state(self, state: str, _speech: Optional[str] = None) -> None:
         """Update Tchiko pet animation state."""
@@ -455,7 +386,7 @@ class FloatingGhostWidget(Gtk.Window):
     def _on_tick(self) -> bool:
         speed = float(self.config.data.get("ghost_widget", {}).get("animation_speed", 1.0))
         self._shake_energy = max(0.0, self._shake_energy - 1.5)
-        self.renderer.step(0.036, speed=speed)
+        self.renderer.step(0.040, speed=speed)
         self._render_frame()
         return True
 
@@ -567,89 +498,48 @@ class FloatingGhostWidget(Gtk.Window):
     def _show_context_menu(self, event: Gdk.EventButton) -> None:
         menu = Gtk.Menu()
 
-        quick_item = Gtk.MenuItem(label="⌨️ Toggle Quick Input Bar (Middle-Click)")
-        quick_item.connect("activate", lambda *_: self.toggle_quick_input())
-        menu.append(quick_item)
+        def _item(parent: Gtk.Menu, text: str, handler: Callable[[], None]) -> None:
+            entry = Gtk.MenuItem(label=text)
+            entry.connect("activate", lambda *_: handler())
+            parent.append(entry)
 
-        chat_item = Gtk.MenuItem(label="💬 Open / Toggle Full Tchiko Chat Window")
-        chat_item.connect("activate", lambda *_: self.on_toggle_chat())
-        menu.append(chat_item)
+        def _submenu(text: str) -> Gtk.Menu:
+            holder = Gtk.MenuItem(label=text)
+            sub = Gtk.Menu()
+            holder.set_submenu(sub)
+            menu.append(holder)
+            return sub
 
-        settings_item = Gtk.MenuItem(label="⚙️ Open Tchiko Settings & Permissions...")
-        settings_item.connect("activate", lambda *_: self.on_open_settings())
-        menu.append(settings_item)
-
+        _item(menu, "Ask Tchiko…", self.toggle_quick_input)
+        _item(menu, "Open chat window", self.on_toggle_chat)
         menu.append(Gtk.SeparatorMenuItem())
 
-        emo_menu_item = Gtk.MenuItem(label="🐾 Tchiko Pet Moods & Tricks")
-        emo_sub = Gtk.Menu()
-        for emo_key, emo_label in (
-            ("love", "🎶 Squishy Happy Petting (Chirps & Sparkles)"),
-            ("happy", "🐾 Bouncy 6-Leg Tippy-Tap Dance"),
-            ("roar", "☁️ Big Fluffy Marshmallow Puff-Up"),
-            ("wing_slash", "🌀 Playful Roly-Poly Tumble Spin (Fast Flick)"),
-            ("excited", "✨ Happy Zoomies & Wing Flutter"),
-            ("thinking", "🤔 Cute Curious Head-Tilt"),
-            ("executing", "⭕ Red & White Ring Juggle"),
-            ("idle", "🐾 Fluffy Hover (Default)"),
-            ("sleepy", "😴 Cozy Curled-Up Mochi Loaf (Zzz)"),
-            ("dizzy", "💫 Wobbly Jelly Spin"),
-        ):
-            e_item = Gtk.MenuItem(label=emo_label)
-            e_item.connect(
-                "activate",
-                lambda _w, ek=emo_key: self.renderer.set_emotion(ek, duration=7.0),
-            )
-            emo_sub.append(e_item)
-        emo_menu_item.set_submenu(emo_sub)
-        menu.append(emo_menu_item)
+        actions = _submenu("Quick actions")
+        for text, cmd in QUICK_ACTIONS:
+            _item(actions, text, lambda c=cmd: self.on_quick_command(c))
 
-        theme_menu_item = Gtk.MenuItem(label="🎨 Tchiko White / Red / Black Coats")
-        theme_sub = Gtk.Menu()
-        for theme_key, display_name in (
-            ("phantom_cyan", "Crimson Cloud Tchiko (Snowy White, Velvet Black & Crimson)"),
-            ("astral_violet", "Velvet Panda Hundun (Charcoal, Snowy Belly & Red Tips)"),
-            ("emerald_matrix", "Pure Marshmallow Mochi (Bright White & Scarlet)"),
-            ("solar_gold", "Crimson Fox Hundun (Warm Cream-White & Deep Crimson)"),
-        ):
-            t_item = Gtk.MenuItem(label=display_name)
-            t_item.connect("activate", lambda _w, tk=theme_key: self._set_theme(tk))
-            theme_sub.append(t_item)
-        theme_menu_item.set_submenu(theme_sub)
-        menu.append(theme_menu_item)
+        moods = _submenu("Moods")
+        for mood_key, mood_label in ui.MOOD_NAMES:
+            _item(moods, mood_label, lambda mk=mood_key: self.renderer.set_emotion(mk, duration=7.0))
+
+        coats = _submenu("Coat")
+        current = self.config.data.get("ghost_widget", {}).get("theme", "phantom_cyan")
+        for theme_key, coat_name in ui.COAT_NAMES:
+            coat_item = Gtk.CheckMenuItem(label=coat_name)
+            coat_item.set_draw_as_radio(True)
+            coat_item.set_active(theme_key == current)
+            coat_item.connect("activate", lambda _w, tk=theme_key: self._set_theme(tk))
+            coats.append(coat_item)
 
         menu.append(Gtk.SeparatorMenuItem())
-
-        perm_item = Gtk.CheckMenuItem(label="🛡️ Approve All Linux System Permissions")
+        perm_item = Gtk.CheckMenuItem(label="Full system access")
         perm_item.set_active(self.config.is_all_permissions_approved())
-        perm_item.connect(
-            "toggled",
-            lambda item: self.config.set_all_permissions(item.get_active()),
-        )
+        perm_item.connect("toggled", lambda item: self.config.set_all_permissions(item.get_active()))
         menu.append(perm_item)
-
-        sys_menu_item = Gtk.MenuItem(label="⚡ Quick Ubuntu System Actions")
-        sys_sub = Gtk.Menu()
-        for label, cmd in (
-            ("🩺 Run 5-Point System Doctor (/doctor)", "/doctor"),
-            ("🧠 Inspect Agent Memory & Notes (/memory)", "/memory"),
-            ("🔑 Create OpenSSH Key for Hetzner", "tchiko create an ssh key for my remote hetzner server in OpenSSH format"),
-            ("🖥️ System Telemetry Report (/sysinfo)", "/sysinfo"),
-            ("⚙️ Top Running Processes (/procs)", "/procs"),
-            ("📂 List Desktop Files (/files ~/Desktop)", "/files ~/Desktop"),
-            ("🌐 Check Listening Ports", "check listening ports"),
-        ):
-            sub_item = Gtk.MenuItem(label=label)
-            sub_item.connect("activate", lambda _w, c=cmd: self.on_quick_command(c))
-            sys_sub.append(sub_item)
-        sys_menu_item.set_submenu(sys_sub)
-        menu.append(sys_menu_item)
+        _item(menu, "Settings…", self.on_open_settings)
 
         menu.append(Gtk.SeparatorMenuItem())
-
-        quit_item = Gtk.MenuItem(label="❌ Quit Tchiko Assistant")
-        quit_item.connect("activate", lambda *_: self.on_quit())
-        menu.append(quit_item)
+        _item(menu, "Quit Tchiko", self.on_quit)
 
         menu.show_all()
         menu.popup_at_pointer(event)

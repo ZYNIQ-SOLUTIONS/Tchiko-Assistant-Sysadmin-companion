@@ -28,10 +28,10 @@ Handles explicit operator commands (`/doctor`, `/sysinfo`, `/procs`, `/files [pa
 Reads and updates `config/agent_memory.json`:
 ```json
 {
-  "cwd": "/home/level-78",
+  "cwd": "/home/<user>",
   "last_command": "ss -tulnp | head -n 30",
   "last_output": "...",
-  "last_artifact_path": "/home/level-78/.ssh/id_ed25519_hetzner.pub",
+  "last_artifact_path": "/home/<user>/.ssh/id_ed25519_hetzner.pub",
   "last_artifact_content": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAA...",
   "agy_conversation_id": "5a6241b1-bdf8-4126-ba6c-0813df6bdded",
   "notes": {
@@ -52,7 +52,7 @@ Maps structured natural-language sysadmin intents to multi-step host pipelines:
 
 ### Tier 4A & 4B: Google Antigravity SDK & `agy` CLI Stream-JSON Bridge
 - **Tier 4A (`google.antigravity` Python SDK):** Streams `response.thoughts`, `response.tool_calls`, and `response` tokens using `LocalAgentConfig` and `CapabilitiesConfig`.
-- **Tier 4B (`_run_agy_cli_stream_json`):** Spawns `/home/level-78/.local/bin/agy -p <prompt> --output-format stream-json --add-dir <cwd>` (passing `--dangerously-skip-permissions` when autonomous mode is active and `--conversation <agy_conversation_id>` to preserve multi-turn state). Parses real-time NDJSON events:
+- **Tier 4B (`_run_agy_cli_stream_json`):** Spawns `~/.local/bin/agy -p <prompt> --output-format stream-json --add-dir <cwd>` (passing `--dangerously-skip-permissions` when autonomous mode is active and `--conversation <agy_conversation_id>` to preserve multi-turn state). Parses real-time NDJSON events:
   - `event == "init"` → stores `conversation_id`
   - `event == "step_update"` (`step_type == "tool"`) → emits live tool name & parameters to the UI
   - `event == "step_update"` (`step_type == "agent_response"`) → streams `text_delta` tokens immediately
@@ -97,3 +97,13 @@ To ensure reliable frameless window positioning (`Gtk.Window.move(x, y)`) and al
 os.environ.setdefault("GDK_BACKEND", "x11,wayland")
 ```
 `FloatingGhostWidget` requests an RGBA visual (`screen.get_rgba_visual()`) with `set_app_paintable(True)` so the background around Tchiko's silhouette is 100% transparent, while the interactive event boxes capture middle-click, left-click, drag, hover-petting, and scroll-wheel events.
+
+---
+
+## 5. Unified Design System & Markdown-to-Pango Renderer (`tchiko/ui_theme.py`)
+
+All three desktop surfaces (`FloatingGhostWidget`, `TchikoAssistantWindow`, and `TchikoSettingsWindow`) share a single design-token and stylesheet module (`tchiko/ui_theme.py`):
+- **Design Tokens & CSS (`apply_theme`)**: Graphite surfaces (`#0d0e11`, `#14161a`, `#1a1d23`) paired with a crimson accent (`#e5484d`) and semantic status colors (`SUCCESS`, `WARNING`), installed once per process via `Gtk.CssProvider`.
+- **Coat & Mood Registries (`COAT_NAMES`, `MOOD_NAMES`)**: Maps internal renderer keys (`phantom_cyan`, `astral_violet`, etc.) and emotion IDs to user-facing labels.
+- **Resilient Markdown-to-Pango Renderer (`render_markdown_pango`)**: Converts headings, bold/italic spans, inline code, fenced code blocks, and links into strictly valid Pango markup, gracefully handling partial/streaming LLM chunks without XML parse errors.
+- **Telemetry Widgets (`RingGauge`)**: Cairo-drawn circular gauges for CPU, RAM, and Disk utilization in the System Studio tab.

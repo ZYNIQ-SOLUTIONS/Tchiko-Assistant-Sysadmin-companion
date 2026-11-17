@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security Vulnerability
+    url: https://github.com/ZYNIQ-SOLUTIONS/Tchiko-Assistant-Sysadmin-companion/blob/main/SECURITY.md
+    about: Please read SECURITY.md and report security vulnerabilities privately — do not open a public issue.
+  - name: Architecture & Docs
+    url: https://github.com/ZYNIQ-SOLUTIONS/Tchiko-Assistant-Sysadmin-companion/blob/main/docs/ARCHITECTURE.md
+    about: Read the technical architecture specification before asking design questions.

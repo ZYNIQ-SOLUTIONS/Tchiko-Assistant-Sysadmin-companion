@@ -12,8 +12,22 @@
   [![Platform](https://img.shields.io/badge/Ubuntu_Linux-X11_%26_XWayland-0f172a?style=for-the-badge)](main.py)
   [![License: MIT](https://img.shields.io/badge/License-MIT-ffffff?style=for-the-badge)](#license)
 
-  **[📐 Architecture Deep-Dive (`docs/ARCHITECTURE.md`)](docs/ARCHITECTURE.md)** • **[🛠️ Contributing Guide (`CONTRIBUTING.md`)](CONTRIBUTING.md)** • **[🌐 Interactive Web Showcase (`landing/index.html`)](landing/index.html)**
+  **[📐 Architecture Deep-Dive (`docs/ARCHITECTURE.md`)](docs/ARCHITECTURE.md)** • **[🛠️ Contributing Guide (`CONTRIBUTING.md`)](CONTRIBUTING.md)** • **[🔒 Security (`SECURITY.md`)](SECURITY.md)** • **[🌐 Interactive Web Showcase (`landing/index.html`)](landing/index.html)**
 </div>
+
+---
+
+## Table of Contents
+
+1. [Executive Summary](#1-executive-summary)
+2. [System Architecture & Execution Pipeline](#2-system-architecture--execution-pipeline)
+3. [Repository Structure](#3-repository-structure)
+4. [Deep-Dive: Core Engineering Subsystems](#4-deep-dive-core-engineering-subsystems)
+5. [Desktop Interaction Matrix](#5-desktop-interaction-matrix)
+6. [Installation, Self-Test & Usage](#6-installation-self-test--usage)
+7. [Built-In Slash Commands & Natural-Language Sysadmin Playbook](#7-built-in-slash-commands--natural-language-sysadmin-playbook)
+8. [Security & Permission Governance (`ConfigManager`)](#8-security--permission-governance-configmanager)
+9. [Contributing, Governance & License](#9-contributing-governance--license)
 
 ---
 
@@ -125,7 +139,8 @@ Tchiko-Assistant-Sysadmin-companion/
 │   ├── svg_ghost_renderer.py      # Parametric Cairo Bézier renderer, spring-jelly physics & SVG exporter
 │   ├── ghost_widget.py            # Frameless RGBA GTK3 overlay, middle-click quick pill & speech bubble
 │   ├── assistant_window.py        # Antigravity 2.0-styled Chat, System Studio & real-time Activity feed
-│   └── settings_window.py         # RBAC permission control panel & visual physics customizer
+│   ├── settings_window.py         # RBAC permission control panel & visual physics customizer
+│   └── ui_theme.py                # Unified graphite/crimson GTK3 design system, tokens & Markdown->Pango renderer
 │
 ├── config/
 │   ├── settings.json              # Persisted runtime settings, RBAC capabilities & window coordinates
@@ -152,7 +167,7 @@ Tchiko-Assistant-Sysadmin-companion/
 ## 4. Deep-Dive: Core Engineering Subsystems
 
 ### 4.1. Antigravity CLI (`agy`) Real-Time NDJSON Stream Bridge
-When `/home/level-78/.local/bin/agy` (or `agy` in `PATH`) is available, [`TchikoAgentEngine._run_agy_cli_stream_json()`](tchiko/agent_engine.py) spawns a non-blocking subprocess:
+When `~/.local/bin/agy` (or `agy` in `PATH`) is available, [`TchikoAgentEngine._run_agy_cli_stream_json()`](tchiko/agent_engine.py) spawns a non-blocking subprocess:
 
 ```bash
 agy -p "<prompt>" --output-format stream-json --add-dir "<cwd>" --dangerously-skip-permissions --conversation "<id>"
@@ -264,6 +279,13 @@ All host interactions in [`LinuxSystemToolkit`](tchiko/system_tools.py) are gate
 
 ---
 
-## 9. License
+## 9. Contributing, Governance & License
 
-Released under the **MIT License**. Crafted by **ZYNIQ SOLUTIONS** for Linux systems engineers, SREs, and AI agent developers.
+Contributions are warmly welcomed! Please review our community & engineering guides before opening a Pull Request:
+
+- **[Contributing Guide (`CONTRIBUTING.md`)](CONTRIBUTING.md)** — Setup, Git workflow, Conventional Commits, and guides for adding tools, emotions, and UI components.
+- **[Code of Conduct (`CODE_OF_CONDUCT.md`)](CODE_OF_CONDUCT.md)** — Community standards and enforcement.
+- **[Security Policy (`SECURITY.md`)](SECURITY.md)** — RBAC safety model and private vulnerability reporting.
+- **[Changelog (`CHANGELOG.md`)](CHANGELOG.md)** — Release history and notable changes.
+
+Released under the **[MIT License](LICENSE)**. Crafted by **ZYNIQ SOLUTIONS** for Linux systems engineers, SREs, and AI agent developers.

@@ -6,6 +6,7 @@ Run with:
 
 from __future__ import annotations
 
+import re
 import tempfile
 import unittest
 from pathlib import Path
@@ -103,6 +104,105 @@ class TestTchikoEngineAndTools(unittest.TestCase):
         actions = self.engine._extract_tool_actions(clean)
         self.assertEqual([a["tool"] for a in actions], ["view_file", "grep", "patch_file", "bash"])
         self.assertEqual(actions[-1]["command"], "uname -s")
+
+    def test_first_turn_briefing_and_path_resolution(self) -> None:
+        """The first request carries persona, machine facts, notes, rules; paths expand $HOME and anchor to cwd."""
+        import os
+
+        self.config.data.setdefault("agent", {})["system_instructions"] = "You are Tchiko."
+        self.engine.memory["notes"] = {"hetzner ip": "95.216.10.20"}
+        self.engine.memory["cwd"] = self.tmp_dir.name
+        self.engine.memory["history"] = [
+            {"role": "user", "content": "earlier question"},
+            {"role": "user", "content": "current request"},
+        ]
+        brief = self.engine._build_context_brief()
+        self.assertIn("You are Tchiko.", brief)
+        self.assertIn("This machine:", brief)
+        self.assertIn("95.216.10.20", brief)
+        self.assertIn("earlier question", brief)
+        self.assertNotIn("current request", brief)
+        self.assertIn("never invent", brief)
+
+        self.assertEqual(self.engine._resolve_user_path("$HOME/.zshrc"), os.path.expanduser("~/.zshrc"))
+        self.assertEqual(self.engine._resolve_user_path("notes.txt"), os.path.join(self.tmp_dir.name, "notes.txt"))
+
+    def test_direct_shell_detection_and_model_choice(self) -> None:
+        """Only unmistakable commands skip the AI; model choice ignores embedding/speech-first listings."""
+        looks = TchikoAgentEngine._looks_like_direct_shell_command
+        for cmd in ("df -h", "git status", "ls", "docker ps -a", "ping 1.1.1.1", "cat /etc/os-release"):
+            self.assertTrue(looks(cmd), cmd)
+        for text in (
+            "find me a good text editor",
+            "which python version should I use?",
+            "git is broken please help",
+            "free up some disk space",
+            "install vllm",
+        ):
+            self.assertFalse(looks(text), text)
+
+        gb = 1024**3
+        models = [
+            {"name": "tiny-audio:2b", "size": 2 * gb, "capabilities": ["completion", "audio"]},
+            {"name": "nomic-embed-text:latest", "size": gb // 4, "capabilities": ["embedding"]},
+            {"name": "huge:70b", "size": 45 * gb, "capabilities": ["completion", "tools"]},
+            {"name": "mid:14b", "size": 9 * gb, "capabilities": ["completion", "tools"]},
+        ]
+        pick = TchikoAgentEngine._pick_ollama_model
+        self.assertEqual(pick(models), "mid:14b")
+        self.assertEqual(pick(models, "huge:70b"), "huge:70b")
+        self.assertEqual(pick(models + [{"name": "gemma4:e4b", "size": 8 * gb}]), "gemma4:e4b")
+        self.assertIsNone(pick([models[1]]))
+
+    def test_keyword_routes_do_not_hijack_agent_requests(self) -> None:
+        """Requests that merely mention ssh/claude/diagnose must fall through to the AI agent untouched."""
+        import asyncio
+
+        calls = []
+        noop = lambda *a, **k: None  # noqa: E731
+        self.engine.toolkit.run_shell_command = lambda cmd, *a, **k: calls.append(cmd) or type(  # type: ignore
+            "R", (), {"ok": False, "output": "", "title": "", "exit_code": 1, "duration_ms": 0}
+        )()
+        for text in (
+            "why can't I ssh into my new hetzner server",
+            "update my claude code config to use the new model",
+            "diagnose why nginx keeps returning 502 on the staging box after deploys today",
+            "update the readme",
+        ):
+            handled = asyncio.run(
+                self.engine._try_autonomous_linux_action(text, noop, noop, noop, noop, noop, None)
+            )
+            self.assertFalse(handled, text)
+        self.assertFalse(any("ssh-keygen" in c or "apt-get" in c for c in calls))
+
+    def test_markdown_rendering_is_always_valid_pango(self) -> None:
+        """Replies (even half-streamed or hostile ones) must render to parseable Pango markup."""
+        import gi
+
+        gi.require_version("Pango", "1.0")
+        from gi.repository import Pango
+
+        from tchiko import ui_theme as ui
+
+        reply = (
+            "<think>secret plan</think>## Done & dusted\n- **bold** and `code <tag>` and *soft*\n"
+            "1. [docs](https://example.com/a?b=1&c=2)\n> note\n\n```bash\necho \"<hi>\" && ls\n```\ntail **unclosed"
+        )
+        blocks = ui.split_markdown_blocks(reply)
+        self.assertEqual([kind for kind, _c, _l in blocks], ["text", "code", "text"])
+        self.assertEqual(blocks[1][1], 'echo "<hi>" && ls')
+        self.assertEqual(blocks[1][2], "bash")
+        self.assertEqual(ui.first_code_block(reply), 'echo "<hi>" && ls')
+
+        for partial in (reply, reply[:40], reply[:95], "```python\nprint(1", "plain <b>not markup</b> & more"):
+            for markup in (ui.streaming_markup(partial), ui.streaming_markup(partial, compact=True)):
+                # <a href> is a GtkLabel extension on top of Pango markup; check the rest strictly.
+                pango_only = re.sub(r"</?a\b[^>]*>", "", markup)
+                ok, _attrs, text, _accel = Pango.parse_markup(pango_only, -1, "\x00")
+                self.assertTrue(ok)
+                self.assertNotIn("secret plan", text)
+        self.assertIn("<b>bold</b>", ui.markdown_to_pango(reply))
+        self.assertIn('href="https://example.com/a?b=1&amp;c=2"', ui.markdown_to_pango(reply))
 
     def test_svg_ghost_renderer_physics_and_svg_export(self) -> None:
         """Verify procedural Cairo rendering across emotions and themes."""
