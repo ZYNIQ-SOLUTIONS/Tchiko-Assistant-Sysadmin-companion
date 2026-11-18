@@ -1436,7 +1436,7 @@ class TchikoAgentEngine:
                 stderr_text = (await asyncio.wait_for(stderr_task, timeout=5.0)).decode("utf-8", errors="replace")
             except Exception:
                 stderr_task.cancel()
-        stderr_tail = next((l.strip() for l in reversed(stderr_text.splitlines()) if l.strip()), "")[:400]
+        stderr_tail = next((ln.strip() for ln in reversed(stderr_text.splitlines()) if ln.strip()), "")[:400]
 
         if not error and proc is not None and proc.returncode not in (0, None):
             error = stderr_tail or f"`agy` exited with code {proc.returncode}"
@@ -1721,7 +1721,7 @@ class TchikoAgentEngine:
 
             visible_text, thoughts = self._strip_think_blocks(llm_text)
             for th in thoughts:
-                first_line = next((l.strip() for l in th.splitlines() if l.strip()), "Reasoning...")
+                first_line = next((ln.strip() for ln in th.splitlines() if ln.strip()), "Reasoning...")
                 on_thought(first_line[:140])
 
             actions = self._extract_tool_actions(visible_text)
@@ -1747,7 +1747,9 @@ class TchikoAgentEngine:
                 "view_file", "grep", "containers", "systemd", "network_audit", "disk", "gpu", "tls", "git"
             }
 
-            async def _run_single_action(act: Dict[str, Any]) -> Tuple[str, ToolResult]:
+            async def _run_single_action(
+                act: Dict[str, Any], cwd_snap: str = active_cwd
+            ) -> Tuple[str, ToolResult]:
                 tk = act["tool"]
                 if tk == "view_file":
                     path = self._resolve_user_path(act["path"])
@@ -1816,12 +1818,12 @@ class TchikoAgentEngine:
                         )
                     on_state_change("executing")
                     res_cmd = await asyncio.to_thread(
-                        self.toolkit.run_shell_command, cmd, active_cwd, LLM_TOOL_BASH_TIMEOUT_SEC, True
+                        self.toolkit.run_shell_command, cmd, cwd_snap, LLM_TOOL_BASH_TIMEOUT_SEC, True
                     )
                 else:
-                    on_tool_call("run_shell_command", f"{{'command': {cmd!r}, 'cwd': {active_cwd!r}}}")
+                    on_tool_call("run_shell_command", f"{{'command': {cmd!r}, 'cwd': {cwd_snap!r}}}")
                     res_cmd = await asyncio.to_thread(
-                        self.toolkit.run_shell_command, cmd, active_cwd, LLM_TOOL_BASH_TIMEOUT_SEC
+                        self.toolkit.run_shell_command, cmd, cwd_snap, LLM_TOOL_BASH_TIMEOUT_SEC
                     )
                 self.memory["last_command"] = cmd
                 self.memory["last_output"] = res_cmd.output

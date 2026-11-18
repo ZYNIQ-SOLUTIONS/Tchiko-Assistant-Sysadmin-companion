@@ -785,7 +785,7 @@ class TchikoAssistantWindow(Gtk.Window):
             self._stream_flush_id = None
         full_raw = "".join(self._stream_tokens).strip()
         if self._stream_content is not None:
-            setattr(self._stream_content, "_raw_text", full_raw)
+            self._stream_content._raw_text = full_raw
             self._render_reply(self._stream_content, full_raw or "*(no reply)*")
         if self._stream_chip is not None:
             # Destroy rather than hide: the window is re-shown with show_all() on every toggle.

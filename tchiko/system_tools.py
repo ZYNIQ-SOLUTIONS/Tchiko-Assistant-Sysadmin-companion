@@ -555,7 +555,6 @@ class LinuxSystemToolkit:
             str([str(s) for s in share_dirs]),
         )
         cert_reports: List[str] = []
-        expired_cert_found = False
         for sdir in share_dirs:
             if not sdir.exists():
                 continue
@@ -567,7 +566,6 @@ class LinuxSystemToolkit:
                 out_c = res_cert.output.strip()
                 cert_reports.append(f"`{cert_file}`:\n{out_c}")
                 if "Certificate will expire" in out_c or not res_cert.ok or "2026" in out_c:
-                    expired_cert_found = True
                     findings.append(
                         f"Bundled localhost TLS certificate `{cert_file.name}` has expired (`{out_c.splitlines()[-2] if len(out_c.splitlines()) >= 2 else out_c}`), causing `ConnectError: [internal] certificate has expired` and `TLS handshake error`."
                     )

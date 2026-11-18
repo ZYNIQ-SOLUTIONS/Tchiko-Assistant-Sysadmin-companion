@@ -159,7 +159,9 @@ class TestTchikoEngineAndTools(unittest.TestCase):
         import asyncio
 
         calls = []
-        noop = lambda *a, **k: None  # noqa: E731
+
+        def noop(*_a: object, **_k: object) -> None:
+            return None
         self.engine.toolkit.run_shell_command = lambda cmd, *a, **k: calls.append(cmd) or type(  # type: ignore
             "R", (), {"ok": False, "output": "", "title": "", "exit_code": 1, "duration_ms": 0}
         )()
