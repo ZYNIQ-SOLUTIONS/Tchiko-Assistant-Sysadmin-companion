@@ -7,6 +7,8 @@ notifications — strictly enforcing the user's Tchiko Settings permission state
 
 from __future__ import annotations
 
+import hashlib
+import json
 import os
 import platform
 import re
@@ -389,10 +391,11 @@ class LinuxSystemToolkit:
                 bak_note = f" (backup saved to `{bak_path}`)"
             updated = txt.replace(target_content, replacement_content, 1)
             target.write_text(updated, encoding="utf-8")
+            tx_id = self._record_file_tx("patch", target, txt, updated)
             return ToolResult(
                 ok=True,
                 title=f"Patched: {target.name}",
-                output=f"✅ Patched `{target}`{bak_note}.",
+                output=f"✅ Patched `{target}`{bak_note} [`{tx_id}`].",
             )
         except Exception as exc:
             return ToolResult(ok=False, title="Patch Error", output=str(exc))
@@ -410,13 +413,20 @@ class LinuxSystemToolkit:
         target = Path(os.path.expanduser(os.path.expandvars(path_str.strip()))).resolve()
         try:
             target.parent.mkdir(parents=True, exist_ok=True)
-            if create_backup and target.exists() and target.is_file():
-                shutil.copy2(target, str(target) + ".bak")
+            before_text: Optional[str] = None
+            if target.exists() and target.is_file():
+                try:
+                    before_text = target.read_text(encoding="utf-8")
+                except Exception:
+                    before_text = None
+                if create_backup:
+                    shutil.copy2(target, str(target) + ".bak")
             target.write_text(content, encoding="utf-8")
+            tx_id = self._record_file_tx("write", target, before_text, content)
             return ToolResult(
                 ok=True,
                 title=f"Wrote: {target.name}",
-                output=f"✅ Wrote {len(content):,} bytes to `{target}`.",
+                output=f"✅ Wrote {len(content):,} bytes to `{target}` [`{tx_id}`].",
             )
         except Exception as exc:
             return ToolResult(ok=False, title="Write File Error", output=str(exc))
@@ -764,5 +774,290 @@ class LinuxSystemToolkit:
             ),
             command="ss -tulnp",
         )
+
+    # ── Action Snapshot & Rollback Ledger ────────────────────────────────────
+
+    def _ledger_paths(self) -> tuple[Path, Path]:
+        base = self.config.config_path.parent
+        return base / "action_ledger.json", base / "snapshots"
+
+    def _load_ledger(self) -> List[Dict[str, Any]]:
+        ledger_path, _ = self._ledger_paths()
+        if not ledger_path.exists():
+            return []
+        try:
+            data = json.loads(ledger_path.read_text(encoding="utf-8"))
+            return data if isinstance(data, list) else []
+        except Exception:
+            return []
+
+    def _save_ledger(self, entries: List[Dict[str, Any]]) -> None:
+        ledger_path, _ = self._ledger_paths()
+        try:
+            ledger_path.parent.mkdir(parents=True, exist_ok=True)
+            ledger_path.write_text(json.dumps(entries[-100:], indent=2), encoding="utf-8")
+        except Exception:
+            pass
+
+    def _record_file_tx(
+        self,
+        operation: str,
+        target: Path,
+        before_text: Optional[str],
+        after_text: str,
+    ) -> str:
+        """Record an immutable file mutation entry + snapshot for /undo and /rollback."""
+        _, snap_dir = self._ledger_paths()
+        tx_id = f"tx-{int(time.time() * 1000)}"
+        snap_path_str = ""
+        try:
+            snap_dir.mkdir(parents=True, exist_ok=True)
+            if before_text is not None:
+                snap_file = snap_dir / f"{tx_id}_{target.name}.before"
+                snap_file.write_text(before_text, encoding="utf-8")
+                snap_path_str = str(snap_file)
+        except Exception:
+            snap_path_str = ""
+
+        entries = self._load_ledger()
+        entries.append(
+            {
+                "tx_id": tx_id,
+                "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S"),
+                "operation": operation,
+                "target_path": str(target),
+                "existed_before": before_text is not None,
+                "snapshot_path": snap_path_str,
+                "sha256_before": hashlib.sha256(before_text.encode("utf-8")).hexdigest()[:12]
+                if before_text is not None
+                else None,
+                "sha256_after": hashlib.sha256(after_text.encode("utf-8")).hexdigest()[:12],
+                "rolled_back": False,
+            }
+        )
+        self._save_ledger(entries)
+        return tx_id
+
+    def list_transactions(self, limit: int = 10) -> ToolResult:
+        """List recent file mutation transactions in the action ledger."""
+        entries = self._load_ledger()
+        if not entries:
+            return ToolResult(ok=True, title="Action Ledger Empty", output="No file mutations recorded yet.")
+        lines = []
+        for item in reversed(entries[-max(1, limit) :]):
+            status = "↩️ rolled back" if item.get("rolled_back") else "✅ active"
+            lines.append(
+                f"- `{item['tx_id']}` ({item['timestamp']}) — **{item['operation']}** `{item['target_path']}` [{status}]"
+            )
+        return ToolResult(
+            ok=True,
+            title="Action Ledger",
+            output="### 🧾 Recent File Transactions\n" + "\n".join(lines),
+        )
+
+    def rollback_transaction(self, tx_id: str = "") -> ToolResult:
+        """Rollback a specific transaction ID or the most recent active file mutation."""
+        if not self.config.can_execute_capability("filesystem_read_write"):
+            return ToolResult(
+                ok=False,
+                title="Rollback Blocked",
+                output="Permission denied: `filesystem_read_write` is disabled in Tchiko Settings.",
+                exit_code=126,
+            )
+
+        entries = self._load_ledger()
+        if not entries:
+            return ToolResult(ok=False, title="Nothing to Undo", output="Action ledger is empty.")
+
+        target_entry: Optional[Dict[str, Any]] = None
+        req_id = tx_id.strip()
+        if req_id:
+            for item in reversed(entries):
+                if item.get("tx_id") == req_id:
+                    target_entry = item
+                    break
+        else:
+            for item in reversed(entries):
+                if not item.get("rolled_back"):
+                    target_entry = item
+                    break
+
+        if not target_entry:
+            return ToolResult(
+                ok=False,
+                title="Transaction Not Found",
+                output=f"No active transaction matching `{req_id or 'latest'}`.",
+            )
+        if target_entry.get("rolled_back"):
+            return ToolResult(
+                ok=False,
+                title="Already Rolled Back",
+                output=f"Transaction `{target_entry['tx_id']}` was already rolled back.",
+            )
+
+        target_path = Path(target_entry["target_path"])
+        try:
+            if target_entry.get("existed_before"):
+                snap_path = Path(target_entry.get("snapshot_path", ""))
+                if not snap_path.exists():
+                    return ToolResult(
+                        ok=False,
+                        title="Snapshot Missing",
+                        output=f"Snapshot file missing for `{target_entry['tx_id']}`.",
+                    )
+                target_path.parent.mkdir(parents=True, exist_ok=True)
+                target_path.write_text(snap_path.read_text(encoding="utf-8"), encoding="utf-8")
+                action_msg = f"Restored `{target_path}` to pre-transaction snapshot"
+            else:
+                if target_path.exists():
+                    target_path.unlink()
+                action_msg = f"Removed newly created file `{target_path}`"
+
+            target_entry["rolled_back"] = True
+            self._save_ledger(entries)
+            return ToolResult(
+                ok=True,
+                title=f"Rolled Back {target_entry['tx_id']}",
+                output=f"↩️ **{action_msg}** (`{target_entry['tx_id']}`).",
+            )
+        except Exception as exc:
+            return ToolResult(ok=False, title="Rollback Error", output=str(exc))
+
+    # ── Phase 2 Sysadmin Toolkit: Disk, GPU/AI, DNS+TLS, Git ─────────────────
+
+    def audit_disk_and_inodes(self) -> ToolResult:
+        """Audit filesystem space, inode usage, journald disk usage, and top home directories."""
+        if not self.config.can_execute_capability("bash_execution"):
+            return ToolResult(
+                ok=False,
+                title="Disk Audit Blocked",
+                output="Permission denied: `bash_execution` is disabled in Tchiko Settings.",
+                exit_code=126,
+            )
+
+        df_h = self.run_shell_command("df -h -x tmpfs -x devtmpfs -x squashfs", timeout=8)
+        df_i = self.run_shell_command("df -i -x tmpfs -x devtmpfs -x squashfs | head -n 12", timeout=8)
+        j_du = self.run_shell_command("journalctl --disk-usage 2>&1 || true", timeout=8)
+        du_home = self.run_shell_command("du -xhd1 ~ 2>/dev/null | sort -hr | head -n 10", timeout=12)
+
+        return ToolResult(
+            ok=True,
+            title="Disk & Inode Audit",
+            output=(
+                "### 💾 Disk & Inode Audit\n"
+                f"**Filesystems (`df -h`):**\n```text\n{df_h.output}\n```\n\n"
+                f"**Inodes (`df -i`):**\n```text\n{df_i.output}\n```\n\n"
+                f"**Systemd Journal:** `{j_du.output.strip()}`\n\n"
+                f"**Top Directories in `~`:**\n```text\n{du_home.output}\n```"
+            ),
+            command="df -h",
+        )
+
+    def diagnose_gpu_and_ai(self) -> ToolResult:
+        """Inspect NVIDIA/AMD GPU telemetry and local Ollama / vLLM AI endpoints."""
+        if not self.config.can_execute_capability("bash_execution"):
+            return ToolResult(
+                ok=False,
+                title="GPU/AI Doctor Blocked",
+                output="Permission denied: `bash_execution` is disabled in Tchiko Settings.",
+                exit_code=126,
+            )
+
+        gpu_section = "No `nvidia-smi` or `rocm-smi` found."
+        if shutil.which("nvidia-smi"):
+            nv = self.run_shell_command(
+                "nvidia-smi --query-gpu=name,temperature.gpu,utilization.gpu,memory.used,memory.total --format=csv,noheader",
+                timeout=8,
+            )
+            gpu_section = nv.output
+        elif shutil.which("rocm-smi"):
+            gpu_section = self.run_shell_command("rocm-smi --showuse --showtemp 2>&1", timeout=8).output
+
+        ollama_out = self.run_shell_command(
+            "curl -s --max-time 2 http://127.0.0.1:11434/api/tags | head -c 600 || echo 'Not running'",
+            timeout=6,
+        ).output
+        vllm_out = self.run_shell_command(
+            "curl -s --max-time 2 http://127.0.0.1:8000/v1/models | head -c 600 || echo 'Not running'",
+            timeout=6,
+        ).output
+
+        return ToolResult(
+            ok=True,
+            title="GPU & Local AI Doctor",
+            output=(
+                "### 🎮 GPU & Local AI Health\n"
+                f"**GPU:**\n```text\n{gpu_section}\n```\n\n"
+                f"**Ollama (`:11434`):**\n```text\n{ollama_out or 'No response'}\n```\n\n"
+                f"**vLLM / OpenAI Router (`:8000`):**\n```text\n{vllm_out or 'No response'}\n```"
+            ),
+            command="nvidia-smi",
+        )
+
+    def diagnose_dns_and_tls(self, host: str) -> ToolResult:
+        """Audit DNS resolution and inspect TLS certificate subject, issuer, and expiry."""
+        if not self.config.can_execute_capability("network_requests"):
+            return ToolResult(
+                ok=False,
+                title="DNS/TLS Audit Blocked",
+                output="Permission denied: `network_requests` is disabled in Tchiko Settings.",
+                exit_code=126,
+            )
+
+        clean_host = re.sub(r"[^A-Za-z0-9.:-]", "", host.strip().replace("https://", "").replace("http://", "").split("/")[0])
+        if not clean_host:
+            return ToolResult(ok=False, title="Invalid Host", output="Provide a hostname (e.g. `/tls github.com`).")
+
+        dns_cmd = f"dig +short {clean_host} 2>&1 || getent hosts {clean_host}"
+        dns_res = self.run_shell_command(dns_cmd, timeout=8)
+        tls_cmd = (
+            f"echo | openssl s_client -servername {clean_host} -connect {clean_host}:443 2>/dev/null "
+            f"| openssl x509 -noout -subject -issuer -dates -checkend 0 2>&1"
+        )
+        tls_res = self.run_shell_command(tls_cmd, timeout=10)
+
+        return ToolResult(
+            ok=True,
+            title=f"DNS & TLS Audit: {clean_host}",
+            output=(
+                f"### 🔐 DNS & TLS Audit (`{clean_host}`)\n"
+                f"**DNS Resolution:**\n```text\n{dns_res.output}\n```\n\n"
+                f"**TLS Certificate (`:443`):**\n```text\n{tls_res.output}\n```"
+            ),
+            command=f"openssl s_client -connect {clean_host}:443",
+        )
+
+    def inspect_git_repo(self, path_str: str = ".") -> ToolResult:
+        """Inspect a Git repository's branch, working tree status, remotes, and recent commits."""
+        if not self.config.can_execute_capability("bash_execution"):
+            return ToolResult(
+                ok=False,
+                title="Git Inspector Blocked",
+                output="Permission denied: `bash_execution` is disabled in Tchiko Settings.",
+                exit_code=126,
+            )
+
+        repo_dir = Path(os.path.expanduser(os.path.expandvars(path_str.strip()))).resolve()
+        if not repo_dir.exists():
+            return ToolResult(ok=False, title="Path Not Found", output=f"Directory not found: `{repo_dir}`")
+
+        st = self.run_shell_command("git status -sb", cwd=str(repo_dir), timeout=8)
+        if not st.ok:
+            return ToolResult(ok=False, title="Not a Git Repo", output=st.output, exit_code=st.exit_code)
+        lg = self.run_shell_command("git log -n 8 --oneline", cwd=str(repo_dir), timeout=8)
+        rem = self.run_shell_command("git remote -v", cwd=str(repo_dir), timeout=8)
+
+        return ToolResult(
+            ok=True,
+            title=f"Git Repo: {repo_dir.name}",
+            output=(
+                f"### 🌿 Git Inspector (`{repo_dir}`)\n"
+                f"**Status:**\n```text\n{st.output}\n```\n\n"
+                f"**Recent Commits:**\n```text\n{lg.output}\n```\n\n"
+                f"**Remotes:**\n```text\n{rem.output}\n```"
+            ),
+            command="git status -sb",
+        )
+
 
 

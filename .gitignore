@@ -24,6 +24,8 @@ htmlcov/
 .env.*
 *.bak
 config/agent_memory.json
+config/action_ledger.json
+config/snapshots/
 .concord/
 
 # Editors & OS

@@ -140,7 +140,15 @@ Tchiko-Assistant-Sysadmin-companion/
 │   ├── ghost_widget.py            # Frameless RGBA GTK3 overlay, middle-click quick pill & speech bubble
 │   ├── assistant_window.py        # Antigravity 2.0-styled Chat, System Studio & real-time Activity feed
 │   ├── settings_window.py         # RBAC permission control panel & visual physics customizer
-│   └── ui_theme.py                # Unified graphite/crimson GTK3 design system, tokens & Markdown->Pango renderer
+│   ├── ui_theme.py                # Unified graphite/crimson GTK3 design system, tokens & Markdown->Pango renderer
+│   ├── skills_loader.py           # Pluggable Markdown/YAML-frontmatter skills & runbooks loader
+│   └── watchdog.py                # Proactive background anomaly detector (RAM/Disk/systemd)
+│
+├── skills/                        # Domain-specific sysadmin runbooks (auto-matched & /skills)
+│   ├── nginx-tls-audit.md         # Nginx reverse-proxy, TLS 1.3 & HSTS audit runbook
+│   ├── postgres-doctor.md         # PostgreSQL locks, connections & WAL health runbook
+│   ├── gpu-cuda-doctor.md         # NVIDIA/AMD GPU VRAM & Ollama/vLLM diagnostics
+│   └── git-recovery.md            # Detached HEAD, merge conflict & reflog recovery
 │
 ├── config/
 │   ├── settings.json              # Persisted runtime settings, RBAC capabilities & window coordinates
@@ -209,8 +217,9 @@ Unlike sprite-based desktop pets that rely on static PNG frames, [`SvgGhostRende
 | **Single Left-Click** | Floating Tchiko Avatar | Toggles the full **Tchiko Chat & System Studio** window (`💬 Chat`, `⚡ System Studio`, `🧠 Activity`), plus triggers a squishy boop impulse (`squish_x = 1.24, squish_y = 0.78`). |
 | **Left-Click + Drag** | Floating Tchiko Avatar | Repositions Tchiko across the X11/XWayland root window with velocity-coupled leg-dangle physics and persists `(position_x, position_y)` to `config/settings.json`. |
 | **Cursor Hover / Rubbing** | Floating Tchiko Avatar | Accumulates `_pet_rub_energy`; transitions Tchiko into the `love` state with musical chirp particles (`♪`) once rub threshold is reached. |
-| **Scroll Wheel Up / Down** | Floating Tchiko Avatar | Cycles deterministically through all **10 procedural states**: `idle`, `love`, `happy`, `roar`, `wing_slash`, `excited`, `thinking`, `executing`, `sleepy`, `dizzy`. |
-| **Double Left-Click / Right-Click** | Floating Tchiko Avatar | Opens **Tchiko Settings & System Permissions** (`⚙️`) or the quick sysadmin context menu. |
+| **Scroll Wheel Up / Down** | Floating Tchiko Avatar | Cycles deterministically through all procedural emotion states. |
+| **Double Left-Click / Right-Click** | Floating Tchiko Avatar | Opens **Tchiko Settings & System Permissions** (`⚙️`), **Diagnose Clipboard**, or the quick sysadmin context menu. |
+| **Drag & Drop (File / Dir / Text)** | Floating Tchiko Avatar | Dropping a `.log`/`.dmp` analyzes crash traces; dropping a script audits it; dropping a directory switches `cwd`. |
 
 ---
 
@@ -265,6 +274,10 @@ python3 main.py --help
 | *"remember my staging ip is 10.10.0.42"* / `/memory` | Tier 2 (Context Store) | Persists key-value facts into `config/agent_memory.json` and injects them into all subsequent LLM/Antigravity prompts. |
 | *"copy it"* / *"retry"* / *"where did you save it?"* | Tier 2 (Follow-Up Resolver) | Copies `last_artifact_content` to clipboard, re-executes `last_command`, or displays `last_artifact_path`. |
 | `/sysinfo`, `/procs`, `/files [path]`, `/permissions` | Tier 1 (Slash Router) | Direct zero-latency inspection of `/proc` telemetry, top processes, directory listings, and RBAC state. |
+| `/containers [name]`, `/systemd [unit]`, `/net` | Tier 1 (Toolkit) | Inspect Docker/Podman containers & crash logs, failed systemd units & journald logs, listening sockets & UFW/nftables. |
+| `/disk`, `/gpu`, `/tls <host>`, `/git [path]` | Tier 1 (Toolkit) | Audit disk/inode usage, NVIDIA/AMD GPU & Ollama/vLLM health, DNS + TLS cert expiry, and Git repo status. |
+| `/skills [name]` | Tier 1 (Skills) | List loaded `skills/*.md` runbooks or inspect a specific runbook (auto-matched into ReAct prompts). |
+| `/undo`, `/rollback [tx_id\|list]` | Tier 1 (Ledger) | Roll back file patches/writes using pre-edit snapshots stored in `action_ledger.json`. |
 | `$ <cmd>` or `/run <cmd>` | Tier 1 (Direct Shell) | Executes `<cmd>` in the agent's persistent working directory (`cwd`) governed by `ConfigManager` policy. |
 
 ---
@@ -274,7 +287,8 @@ python3 main.py --help
 All host interactions in [`LinuxSystemToolkit`](tchiko/system_tools.py) are gated by [`ConfigManager`](tchiko/config_manager.py), which maintains bi-directional synchronization between [`config/settings.json`](config/settings.json) and [`antigravity.yaml`](antigravity.yaml):
 
 - **Master Autonomous Mode (`approve_all_system_permissions: true`)**: Grants full passwordless execution across all 6 capability domains (`bash_execution`, `filesystem_read_write`, `process_management`, `desktop_automation`, `package_management`, `network_requests`) and passes `--dangerously-skip-permissions` to the `agy` CLI bridge.
-- **Supervised Review Mode (`tool_execution_policy: "request-review"`)**: Queues any shell mutation or file patch and presents an inline approval banner (`✅ Run Command` | `🛡️ Always Allow All` | `✖ Cancel`) inside the Chat window before execution.
+- **Supervised Review Mode (`tool_execution_policy: "request-review"`)**: Uses `ConfigManager.classify_command()` (`SAFE_READONLY` | `MUTATING_LOCAL` | `PRIVILEGED_DESTRUCTIVE`) so `SAFE_READONLY` diagnostics run smoothly while mutating or privileged commands pause for inline approval (`✅ Run Command` | `🛡️ Always Allow All` | `✖ Cancel`).
+- **Snapshot & Rollback Ledger (`/undo`)**: Every `patch_file_content()` and `write_file_content()` records a pre-edit snapshot in `config/snapshots/` and `config/action_ledger.json` for instant `/undo` or `/rollback <tx_id>`.
 - **Command Denylist (`command_denylist`)**: Enforces substring & pattern blocking prior to subprocess creation even when autonomous mode is active.
 
 ---

@@ -42,7 +42,8 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from .config_manager import ConfigManager, PROJECT_ROOT
-from .system_tools import LinuxSystemToolkit
+from .skills_loader import SkillsLoader
+from .system_tools import LinuxSystemToolkit, ToolResult
 
 # Attempt to import the official Google Antigravity Python SDK
 try:
@@ -108,6 +109,7 @@ class TchikoAgentEngine:
     def __init__(self, config: ConfigManager, toolkit: LinuxSystemToolkit) -> None:
         self.config = config
         self.toolkit = toolkit
+        self.skills = SkillsLoader()
         self.agy_bin = shutil.which("agy") or (
             "/home/level-78/.local/bin/agy"
             if os.path.exists("/home/level-78/.local/bin/agy")
@@ -764,7 +766,7 @@ class TchikoAgentEngine:
             )
 
             on_thought(f"Generating OpenSSH keypair `{key_file}` for `{key_label}`...")
-            if self.config.requires_manual_review() and on_approval_needed is not None:
+            if self.config.requires_manual_review(cmd) and on_approval_needed is not None:
                 await self._execute_command_with_policy(
                     gen_cmd,
                     on_thought,
@@ -1584,7 +1586,31 @@ class TchikoAgentEngine:
         if re.search(r'<network_audit\s*/?>', clean_text, flags=re.IGNORECASE):
             actions.append({"tool": "network_audit"})
 
-        # 8. <bash>...</bash>
+        # 8. <disk />
+        if re.search(r'<disk\s*/?>', clean_text, flags=re.IGNORECASE):
+            actions.append({"tool": "disk"})
+
+        # 9. <gpu />
+        if re.search(r'<gpu\s*/?>', clean_text, flags=re.IGNORECASE):
+            actions.append({"tool": "gpu"})
+
+        # 10. <tls host="..." />
+        for m in re.finditer(
+            r'<tls\s+host=["\']([^"\']+)["\']\s*/?>',
+            clean_text,
+            flags=re.IGNORECASE,
+        ):
+            actions.append({"tool": "tls", "host": m.group(1).strip()})
+
+        # 11. <git path="..." />
+        for m in re.finditer(
+            r'<git(?:\s+path=["\']([^"\']*)["\'])?\s*/?>',
+            clean_text,
+            flags=re.IGNORECASE,
+        ):
+            actions.append({"tool": "git", "path": (m.group(1) or ".").strip()})
+
+        # 12. <bash>...</bash>
         for cmd in cls._extract_valid_bash_commands(clean_text):
             actions.append({"tool": "bash", "command": cmd})
 
@@ -1602,17 +1628,31 @@ class TchikoAgentEngine:
     ) -> bool:
         """Run an autonomous multi-tool ReAct loop (`view_file`, `grep`, `patch_file`, `write_file`, `bash`)
         against Gemini or a local Ollama model, keeping the full step-by-step transcript in context."""
+        matched_skills = self.skills.match_skills(prompt)
+        skills_block = ""
+        if matched_skills:
+            skills_block = "\n\nRelevant Runbooks:\n" + "\n\n".join(
+                f"### Skill: {s.name}\n{s.body}" for s in matched_skills
+            )
+
         sys_prompt = (
-            self._build_context_brief(include_history=False) + "\n\n"
-            "Tools. To act, end your message with exactly one tool tag, then stop and wait. "
-            "The real result arrives in the next message.\n"
+            self._build_context_brief(include_history=False) + skills_block + "\n\n"
+            "Tools. To act, end your message with tool tags, then stop and wait. "
+            "Read-only tools can be batched together; mutating tools run one at a time.\n"
             "- Run a shell command: <bash>ls -la ~/.config</bash>\n"
             "- View file lines: <view_file path=\"/path/to/file\" start=\"1\" end=\"120\" />\n"
             "- Search logs/code: <grep pattern=\"error\" path=\"/path/to/dir\" />\n"
-            "- Patch a file (a .bak backup is kept): <patch_file path=\"/path/to/file\"><search>old</search><replace>new</replace></patch_file>\n"
-            "- Write a file: <write_file path=\"/path/to/file\">content</write_file>\n\n"
+            "- Patch a file (snapshot saved for /undo): <patch_file path=\"/path/to/file\"><search>old</search><replace>new</replace></patch_file>\n"
+            "- Write a file: <write_file path=\"/path/to/file\">content</write_file>\n"
+            "- Inspect containers: <containers target=\"\" />\n"
+            "- Inspect systemd unit: <systemd unit=\"\" lines=\"40\" />\n"
+            "- Network & firewall audit: <network_audit />\n"
+            "- Disk & inode audit: <disk />\n"
+            "- GPU & Ollama/vLLM health: <gpu />\n"
+            "- DNS & TLS cert check: <tls host=\"example.com\" />\n"
+            "- Git repo status: <git path=\".\" />\n\n"
             "Tool rules:\n"
-            "- One tool tag per message, holding real values, never placeholders, and never inside <think> blocks.\n"
+            "- Use real values, never placeholders, and never place tool tags inside <think> blocks.\n"
             "- Never write a command's output yourself (no <output> blocks, no pretend logs). Only tool results are real.\n"
             "- Use absolute paths or paths starting with `~`.\n"
             "- When the task is finished or cannot proceed, reply with a short summary and no tool tag."
@@ -1686,7 +1726,7 @@ class TchikoAgentEngine:
 
             actions = self._extract_tool_actions(visible_text)
             clean_reply = re.sub(
-                r"(<bash>.*?</bash>|<view_file[^>]*/?>|<grep[^>]*/?>|<patch_file.*?</patch_file>|<write_file.*?</write_file>|<containers[^>]*/?>|<systemd[^>]*/?>|<network_audit[^>]*/?>)",
+                r"(<bash>.*?</bash>|<view_file[^>]*/?>|<grep[^>]*/?>|<patch_file.*?</patch_file>|<write_file.*?</write_file>|<containers[^>]*/?>|<systemd[^>]*/?>|<network_audit[^>]*/?>|<disk\s*/?>|<gpu\s*/?>|<tls[^>]*/?>|<git[^>]*/?>)",
                 "",
                 visible_text,
                 flags=re.DOTALL | re.IGNORECASE,
@@ -1700,72 +1740,117 @@ class TchikoAgentEngine:
             if not actions:
                 break
 
-            action = actions[0]
-            t_kind = action["tool"]
             active_cwd = self.memory.get("cwd", str(Path.home()))
             on_state_change("executing")
 
-            if t_kind == "view_file":
-                path = self._resolve_user_path(action["path"])
-                on_tool_call("view_file", f"{{'path': {path!r}, 'lines': '{action['start']}-{action['end']}'}}")
-                res = await asyncio.to_thread(self.toolkit.view_file_lines, path, action["start"], action["end"])
-            elif t_kind == "grep":
-                path = self._resolve_user_path(action["path"])
-                on_tool_call("grep_files", f"{{'pattern': {action['pattern']!r}, 'path': {path!r}}}")
-                res = await asyncio.to_thread(self.toolkit.grep_files, action["pattern"], path)
-            elif t_kind == "patch_file":
-                path = self._resolve_user_path(action["path"])
-                on_tool_call("patch_file_content", f"{{'path': {path!r}}}")
-                res = await asyncio.to_thread(
-                    self.toolkit.patch_file_content, path, action["search"], action["replace"], True
-                )
-            elif t_kind == "write_file":
-                path = self._resolve_user_path(action["path"])
-                on_tool_call("write_file_content", f"{{'path': {path!r}}}")
-                res = await asyncio.to_thread(self.toolkit.write_file_content, path, action["content"], True)
-            elif t_kind == "containers":
-                on_tool_call("diagnose_containers", f"{{'target': {action['target']!r}}}")
-                res = await asyncio.to_thread(self.toolkit.diagnose_containers, action["target"])
-            elif t_kind == "systemd":
-                on_tool_call("inspect_systemd_unit", f"{{'unit': {action['unit']!r}, 'lines': {action['lines']}}}")
-                res = await asyncio.to_thread(self.toolkit.inspect_systemd_unit, action["unit"], action["lines"])
-            elif t_kind == "network_audit":
-                on_tool_call("audit_network_security", "{}")
-                res = await asyncio.to_thread(self.toolkit.audit_network_security)
-            else:
-                cmd = action["command"]
-                if self.config.requires_manual_review() and on_approval_needed is not None:
-                    await self._execute_command_with_policy(
-                        cmd,
-                        on_thought,
-                        on_tool_call,
-                        on_token,
-                        on_complete,
-                        on_state_change,
-                        on_approval_needed,
-                    )
-                    return True
-                on_tool_call("run_shell_command", f"{{'command': {cmd!r}, 'cwd': {active_cwd!r}}}")
-                res = await asyncio.to_thread(
-                    self.toolkit.run_shell_command, cmd, active_cwd, LLM_TOOL_BASH_TIMEOUT_SEC
-                )
-                self.memory["last_command"] = cmd
-                self.memory["last_output"] = res.output
-                self._save_memory()
+            readonly_kinds = {
+                "view_file", "grep", "containers", "systemd", "network_audit", "disk", "gpu", "tls", "git"
+            }
 
-            status_icon = "✅" if res.ok else "⚠️"
-            cmd_card = (
-                f"{status_icon} **{res.title}**\n"
-                f"```text\n{res.output[:1800]}\n```\n\n"
-            )
-            accumulated_markdown.append(cmd_card.strip())
-            await self._stream_markdown(cmd_card, on_token)
+            async def _run_single_action(act: Dict[str, Any]) -> Tuple[str, ToolResult]:
+                tk = act["tool"]
+                if tk == "view_file":
+                    path = self._resolve_user_path(act["path"])
+                    on_tool_call("view_file", f"{{'path': {path!r}, 'lines': '{act['start']}-{act['end']}'}}")
+                    return tk, await asyncio.to_thread(self.toolkit.view_file_lines, path, act["start"], act["end"])
+                if tk == "grep":
+                    path = self._resolve_user_path(act["path"])
+                    on_tool_call("grep_files", f"{{'pattern': {act['pattern']!r}, 'path': {path!r}}}")
+                    return tk, await asyncio.to_thread(self.toolkit.grep_files, act["pattern"], path)
+                if tk == "patch_file":
+                    path = self._resolve_user_path(act["path"])
+                    on_tool_call("patch_file_content", f"{{'path': {path!r}}}")
+                    return tk, await asyncio.to_thread(
+                        self.toolkit.patch_file_content, path, act["search"], act["replace"], True
+                    )
+                if tk == "write_file":
+                    path = self._resolve_user_path(act["path"])
+                    on_tool_call("write_file_content", f"{{'path': {path!r}}}")
+                    return tk, await asyncio.to_thread(self.toolkit.write_file_content, path, act["content"], True)
+                if tk == "containers":
+                    on_tool_call("diagnose_containers", f"{{'target': {act['target']!r}}}")
+                    return tk, await asyncio.to_thread(self.toolkit.diagnose_containers, act["target"])
+                if tk == "systemd":
+                    on_tool_call("inspect_systemd_unit", f"{{'unit': {act['unit']!r}, 'lines': {act['lines']}}}")
+                    return tk, await asyncio.to_thread(self.toolkit.inspect_systemd_unit, act["unit"], act["lines"])
+                if tk == "network_audit":
+                    on_tool_call("audit_network_security", "{}")
+                    return tk, await asyncio.to_thread(self.toolkit.audit_network_security)
+                if tk == "disk":
+                    on_tool_call("audit_disk_and_inodes", "{}")
+                    return tk, await asyncio.to_thread(self.toolkit.audit_disk_and_inodes)
+                if tk == "gpu":
+                    on_tool_call("diagnose_gpu_and_ai", "{}")
+                    return tk, await asyncio.to_thread(self.toolkit.diagnose_gpu_and_ai)
+                if tk == "tls":
+                    on_tool_call("diagnose_dns_and_tls", f"{{'host': {act['host']!r}}}")
+                    return tk, await asyncio.to_thread(self.toolkit.diagnose_dns_and_tls, act["host"])
+                if tk == "git":
+                    path = self._resolve_user_path(act["path"])
+                    on_tool_call("inspect_git_repo", f"{{'path': {path!r}}}")
+                    return tk, await asyncio.to_thread(self.toolkit.inspect_git_repo, path)
+
+                cmd = act["command"]
+                if self.config.requires_manual_review(cmd) and on_approval_needed is not None:
+                    loop = asyncio.get_running_loop()
+                    approval_fut: asyncio.Future[bool] = loop.create_future()
+                    on_state_change("thinking")
+                    on_token(f"🔒 **Approval Required** for `{cmd}`...\n")
+
+                    def _approve() -> None:
+                        if not approval_fut.done():
+                            loop.call_soon_threadsafe(approval_fut.set_result, True)
+
+                    def _deny() -> None:
+                        if not approval_fut.done():
+                            loop.call_soon_threadsafe(approval_fut.set_result, False)
+
+                    on_approval_needed(cmd, _approve, _deny)
+                    approved = await approval_fut
+                    if not approved:
+                        return tk, ToolResult(
+                            ok=False,
+                            title="Command Cancelled",
+                            output=f"User denied execution of `{cmd}`.",
+                            exit_code=126,
+                        )
+                    on_state_change("executing")
+                    res_cmd = await asyncio.to_thread(
+                        self.toolkit.run_shell_command, cmd, active_cwd, LLM_TOOL_BASH_TIMEOUT_SEC, True
+                    )
+                else:
+                    on_tool_call("run_shell_command", f"{{'command': {cmd!r}, 'cwd': {active_cwd!r}}}")
+                    res_cmd = await asyncio.to_thread(
+                        self.toolkit.run_shell_command, cmd, active_cwd, LLM_TOOL_BASH_TIMEOUT_SEC
+                    )
+                self.memory["last_command"] = cmd
+                self.memory["last_output"] = res_cmd.output
+                self._save_memory()
+                return tk, res_cmd
+
+            # Run consecutive leading read-only tools in parallel; otherwise run the first mutating action
+            ro_batch = [a for a in actions if a["tool"] in readonly_kinds]
+            if ro_batch and len(ro_batch) == len(actions) and len(actions) > 1:
+                results = list(await asyncio.gather(*[_run_single_action(a) for a in ro_batch]))
+            else:
+                results = [await _run_single_action(actions[0])]
+
+            obs_blocks: List[str] = []
+            for t_kind, res in results:
+                status_icon = "✅" if res.ok else "⚠️"
+                cmd_card = (
+                    f"{status_icon} **{res.title}**\n"
+                    f"```text\n{res.output[:1800]}\n```\n\n"
+                )
+                accumulated_markdown.append(cmd_card.strip())
+                await self._stream_markdown(cmd_card, on_token)
+                obs_blocks.append(f"Tool `{t_kind}` result (ok={res.ok}):\n{res.output[:3500]}")
 
             messages.append(
                 {
                     "role": "user",
                     "content": (
-                        f"Tool `{t_kind}` result (ok={res.ok}):\n{res.output[:4000]}\n\n"
+                        "\n\n".join(obs_blocks) + "\n\n"
                         "Continue with the next tool tag, or, if the request is fully handled, give the "
                         "final summary with no tool tag."
                     ),
@@ -1837,11 +1922,15 @@ class TchikoAgentEngine:
 
     @staticmethod
     def _call_local_ollama(
-        port: int, model_name: str, sys_prompt: str, messages: List[Dict[str, str]]
+        port: int,
+        model_name: str,
+        sys_prompt: str,
+        messages: List[Dict[str, str]],
+        on_chunk: Optional[Callable[[str], None]] = None,
     ) -> Optional[str]:
         payload = {
             "model": model_name,
-            "stream": False,
+            "stream": True,
             # Ollama's default context window silently truncates the briefing plus tool results.
             "options": {"num_ctx": 16384},
             "messages": [{"role": "system", "content": sys_prompt}] + messages,
@@ -1854,9 +1943,24 @@ class TchikoAgentEngine:
                 method="POST",
             )
             # Generous: the first call may have to load the model into memory.
+            chunks: List[str] = []
             with urllib.request.urlopen(req, timeout=240) as c_resp:
-                c_data = json.loads(c_resp.read().decode("utf-8"))
-                return c_data.get("message", {}).get("content")
+                for raw_line in c_resp:
+                    line = raw_line.decode("utf-8", errors="replace").strip()
+                    if not line:
+                        continue
+                    try:
+                        c_data = json.loads(line)
+                    except Exception:
+                        continue
+                    delta = c_data.get("message", {}).get("content", "")
+                    if delta:
+                        chunks.append(delta)
+                        if on_chunk is not None:
+                            on_chunk(delta)
+                    if c_data.get("done"):
+                        break
+            return "".join(chunks) or None
         except Exception:
             return None
 
@@ -1888,6 +1992,12 @@ class TchikoAgentEngine:
                 "  - `/containers [name]` — Inspect Docker/Podman containers & crash logs\n"
                 "  - `/systemd [unit]` — Inspect failed systemd units or unit journal logs\n"
                 "  - `/net` — Audit listening sockets, established TCP & UFW/nftables firewall\n"
+                "  - `/disk` — Audit filesystem space, inodes, journald & `~` usage\n"
+                "  - `/gpu` — Check NVIDIA/AMD GPU VRAM & local Ollama/vLLM servers\n"
+                "  - `/tls <host>` — Audit DNS resolution & TLS certificate expiry\n"
+                "  - `/git [path]` — Inspect Git branch, status, commits & remotes\n"
+                "  - `/skills [name]` — List or inspect loaded `skills/*.md` runbooks\n"
+                "  - `/undo` / `/rollback [id|list]` — Roll back file patches or writes\n"
                 "  - `/memory` — Inspect or clear Tchiko's persistent memory & notes\n"
                 "  - `/new` — Start a fresh conversation (keeps saved notes)\n"
                 "  - `/sysinfo` — Live Ubuntu CPU, RAM, Disk & Uptime report\n"
@@ -1943,6 +2053,72 @@ class TchikoAgentEngine:
             on_state_change("executing")
             on_tool_call("audit_network_security", "{}")
             res = await asyncio.to_thread(self.toolkit.audit_network_security)
+            await self._stream_markdown(res.output, on_token)
+            on_state_change("happy" if res.ok else "alert")
+            on_complete(res.output)
+            return True
+
+        if lower in ("/disk", "/df"):
+            on_thought("Auditing filesystem space, inodes, and journald usage...")
+            on_state_change("executing")
+            on_tool_call("audit_disk_and_inodes", "{}")
+            res = await asyncio.to_thread(self.toolkit.audit_disk_and_inodes)
+            await self._stream_markdown(res.output, on_token)
+            on_state_change("happy" if res.ok else "alert")
+            on_complete(res.output)
+            return True
+
+        if lower in ("/gpu", "/vram"):
+            on_thought("Checking GPU VRAM, thermals, and local Ollama/vLLM endpoints...")
+            on_state_change("executing")
+            on_tool_call("diagnose_gpu_and_ai", "{}")
+            res = await asyncio.to_thread(self.toolkit.diagnose_gpu_and_ai)
+            await self._stream_markdown(res.output, on_token)
+            on_state_change("happy" if res.ok else "alert")
+            on_complete(res.output)
+            return True
+
+        if lower.startswith("/tls "):
+            host = prompt.strip().split(None, 1)[1]
+            on_thought(f"Auditing DNS & TLS certificate for `{host}`...")
+            on_state_change("executing")
+            on_tool_call("diagnose_dns_and_tls", f"{{'host': {host!r}}}")
+            res = await asyncio.to_thread(self.toolkit.diagnose_dns_and_tls, host)
+            await self._stream_markdown(res.output, on_token)
+            on_state_change("happy" if res.ok else "alert")
+            on_complete(res.output)
+            return True
+
+        if lower == "/git" or lower.startswith("/git "):
+            arg = prompt.strip().split(None, 1)[1] if len(prompt.strip().split(None, 1)) > 1 else self.memory.get("cwd", ".")
+            repo_path = self._resolve_user_path(arg)
+            on_thought(f"Inspecting Git repository at `{repo_path}`...")
+            on_state_change("executing")
+            on_tool_call("inspect_git_repo", f"{{'path': {repo_path!r}}}")
+            res = await asyncio.to_thread(self.toolkit.inspect_git_repo, repo_path)
+            await self._stream_markdown(res.output, on_token)
+            on_state_change("happy" if res.ok else "alert")
+            on_complete(res.output)
+            return True
+
+        if lower == "/skills" or lower.startswith("/skills "):
+            arg = prompt.strip().split(None, 1)[1] if len(prompt.strip().split(None, 1)) > 1 else ""
+            if arg:
+                skill = self.skills.get_skill(arg)
+                out = f"### 🧩 Skill: `{skill.name}`\n{skill.body}" if skill else f"⚠️ Skill `{arg}` not found."
+            else:
+                out = self.skills.format_skills_index()
+            await self._stream_markdown(out, on_token)
+            on_state_change("idle")
+            on_complete(out)
+            return True
+
+        if lower == "/undo" or lower.startswith("/rollback"):
+            arg = prompt.strip().split(None, 1)[1] if len(prompt.strip().split(None, 1)) > 1 else ""
+            if arg.lower() == "list":
+                res = await asyncio.to_thread(self.toolkit.list_transactions)
+            else:
+                res = await asyncio.to_thread(self.toolkit.rollback_transaction, arg)
             await self._stream_markdown(res.output, on_token)
             on_state_change("happy" if res.ok else "alert")
             on_complete(res.output)
@@ -2085,7 +2261,7 @@ class TchikoAgentEngine:
         active_cwd = self.memory.get("cwd", str(Path.home()))
         on_thought(f"Executing in `{active_cwd}`: `{cmd}`")
 
-        if self.config.requires_manual_review() and on_approval_needed is not None:
+        if self.config.requires_manual_review(cmd) and on_approval_needed is not None:
             on_state_change("thinking")
             on_token(
                 f"🔒 **Approval Required** (Tool Policy is `request-review`).\n"

@@ -206,6 +206,10 @@ class FloatingGhostWidget(Gtk.Window):
         self.event_box.connect("enter-notify-event", self._on_enter_notify)
         self.event_box.connect("leave-notify-event", self._on_leave_notify)
         self.event_box.connect("scroll-event", self._on_scroll_event)
+        self.event_box.drag_dest_set(Gtk.DestDefaults.ALL, [], Gdk.DragAction.COPY)
+        self.event_box.drag_dest_add_uri_targets()
+        self.event_box.drag_dest_add_text_targets()
+        self.event_box.connect("drag-data-received", self._on_drag_data_received)
         self.main_vbox.pack_start(self.event_box, False, False, 0)
 
         # ── 3. BOTTOM: FAST INTERACTION QUICK-INPUT BAR (Hidden until Middle-Click) ─
@@ -511,6 +515,7 @@ class FloatingGhostWidget(Gtk.Window):
             return sub
 
         _item(menu, "Ask Tchiko…", self.toggle_quick_input)
+        _item(menu, "Diagnose Clipboard", self._diagnose_clipboard)
         _item(menu, "Open chat window", self.on_toggle_chat)
         menu.append(Gtk.SeparatorMenuItem())
 
@@ -549,3 +554,47 @@ class FloatingGhostWidget(Gtk.Window):
             self.config.data.setdefault("ghost_widget", {})["theme"] = theme_key
             self.config.save(notify=True)
             self.renderer.set_emotion("roar", duration=2.5)
+
+    def _diagnose_clipboard(self) -> None:
+        """Grab text from the X11/Wayland clipboard and send it to Tchiko for instant diagnosis."""
+        for sel in (Gdk.SELECTION_CLIPBOARD, Gdk.SELECTION_PRIMARY):
+            clip = Gtk.Clipboard.get(sel)
+            txt = (clip.wait_for_text() or "").strip()
+            if txt:
+                self.renderer.set_emotion("thinking", duration=3.0)
+                self.on_inline_prompt(
+                    f"Diagnose and explain how to fix this error/output from my clipboard:\n```text\n{txt[:2500]}\n```"
+                )
+                return
+        self.show_speech_bubble("Clipboard is empty — copy an error or command output first.", auto_hide_sec=5)
+
+    def _on_drag_data_received(
+        self,
+        _widget: Gtk.Widget,
+        _drag_context: Gdk.DragContext,
+        _x: int,
+        _y: int,
+        data: Gtk.SelectionData,
+        _info: int,
+        _time: int,
+    ) -> None:
+        """Handle files, directories, or text dropped onto Tchiko."""
+        from pathlib import Path
+        from urllib.parse import unquote, urlparse
+
+        uris = data.get_uris()
+        if uris:
+            first_path = Path(unquote(urlparse(uris[0]).path))
+            self.renderer.trigger_boop_squish()
+            if first_path.is_dir():
+                self.on_inline_prompt(f"cd {first_path}")
+            elif first_path.suffix.lower() in (".log", ".dmp", ".txt", ".out", ".err"):
+                self.on_inline_prompt(f"Inspect `{first_path}` for errors or crash traces and summarize the root cause.")
+            else:
+                self.on_inline_prompt(f"Inspect `{first_path}` and summarize what it does or any issues.")
+            return
+
+        dropped_text = (data.get_text() or "").strip()
+        if dropped_text:
+            self.renderer.trigger_boop_squish()
+            self.on_inline_prompt(f"Analyze this dropped snippet:\n```text\n{dropped_text[:2500]}\n```")

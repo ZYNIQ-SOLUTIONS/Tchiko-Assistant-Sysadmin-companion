@@ -13,6 +13,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - GitHub Issue templates (`.github/ISSUE_TEMPLATE/bug_report.yml`, `feature_request.yml`, `config.yml`), Pull Request template (`.github/pull_request_template.md`), and CI workflow (`.github/workflows/ci.yml`).
 - Expanded `CONTRIBUTING.md` with fork/branch workflow, Conventional Commits, quality gates, and step-by-step guides for adding tools, emotions, coats, and UI styles.
 - `Makefile` targets for `lint`, `typecheck`, and `install-desktop`.
+- **3-Tier Shell Risk Classifier (`ConfigManager.classify_command`)**: Classifies commands into `SAFE_READONLY`, `MUTATING_LOCAL`, and `PRIVILEGED_DESTRUCTIVE`, auto-allowing `SAFE_READONLY` diagnostics in Supervised Review mode.
+- **Snapshot & Rollback Ledger (`/undo`, `/rollback`)**: Immutable pre-edit snapshots for `patch_file_content()` and `write_file_content()`.
+- **Pluggable Skills System (`tchiko/skills_loader.py`, `skills/*.md`)**: Added `/skills` and built-in runbooks (`nginx-tls-audit`, `postgres-doctor`, `gpu-cuda-doctor`, `git-recovery`).
+- **Expanded Sysadmin Toolkit**: Added `/containers`, `/systemd`, `/net`, `/disk`, `/gpu`, `/tls <host>`, and `/git [path]` tools with RBAC gating and ReAct XML tags.
+- **Next-Gen ReAct Engine**: Parallel read-only tool execution (`asyncio.gather`), mid-loop `asyncio.Future` approval resumption, and Ollama NDJSON streaming.
+- **Proactive Desktop UX**: Background `SystemWatchdog` (`tchiko/watchdog.py`), GTK3 drag-and-drop file/dir analyzer, and **Diagnose Clipboard** context menu action.
+- **BoopFace Visual Redesign & GitHub Pages / Netlify**: Replaced legacy mascot with `CX-ArtLab/BoopFace` across both the GTK3 desktop app (`SvgGhostRenderer`) and `landing/` (`<boop-face>`).
 
 ### Changed
 - Generalized hardcoded developer home paths in documentation and `Tchiko-Assistant.desktop`.

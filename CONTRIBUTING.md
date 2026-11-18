@@ -15,6 +15,7 @@ By participating in this project, you agree to abide by our [Code of Conduct](CO
    - [4.1 Adding a New Autonomous Linux Tool](#41-adding-a-new-autonomous-linux-tool)
    - [4.2 Adding a New Procedural Emotion or Coat Palette](#42-adding-a-new-procedural-emotion-or-coat-palette)
    - [4.3 Updating the Design System & GTK3 UI](#43-updating-the-design-system--gtk3-ui)
+   - [4.4 Adding a Pluggable Skill (`skills/*.md`)](#44-adding-a-pluggable-skill-skillsmd)
 5. [Code Quality & Verification Gates](#5-code-quality--verification-gates)
 6. [Opening a Pull Request](#6-opening-a-pull-request)
 
@@ -149,6 +150,26 @@ All shared GTK3 colors, typography tokens, CSS rules, and the Markdown-to-Pango 
 - Reuse existing color tokens (`BG`, `SURFACE`, `ACCENT`, `SUCCESS`, `WARNING`, etc.) rather than hardcoding hex values inside widget files.
 - Keep `render_markdown_pango()` resilient to partial/streaming Markdown chunks—always verify with `test_markdown_rendering_is_always_valid_pango` in [`tests/test_engine_and_tools.py`](tests/test_engine_and_tools.py).
 - Remember that GTK3 is strictly single-threaded: any background callback mutating UI widgets must be marshaled through `GLib.idle_add()`.
+
+---
+
+### 4.4 Adding a Pluggable Skill (`skills/*.md`)
+
+Domain-specific runbooks live in `skills/*.md` (loaded by [`SkillsLoader`](tchiko/skills_loader.py)) and require no Python changes:
+
+```markdown
+---
+name: redis-doctor
+description: Inspect Redis memory, evictions, slowlog, and persistence health.
+triggers: redis, redis-cli, evictions, rdb, aof
+---
+# Redis Doctor Runbook
+
+1. Check service & logs with `<systemd unit="redis-server" />`.
+2. Inspect memory & keyspace via `redis-cli info memory`.
+```
+
+Verify your skill loads and matches triggers cleanly with `/skills` or `SkillsLoader().match_skills("...")`.
 
 ---
 

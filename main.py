@@ -95,6 +95,7 @@ class TchikoApplication:
         from tchiko.assistant_window import TchikoAssistantWindow
         from tchiko.ghost_widget import FloatingGhostWidget
         from tchiko.settings_window import TchikoSettingsWindow
+        from tchiko.watchdog import SystemWatchdog
 
         self.Gtk = Gtk
         self.GLib = GLib
@@ -123,6 +124,13 @@ class TchikoApplication:
         # Connect live streaming from AssistantWindow -> FloatingGhostWidget's talking bubble!
         self.assistant_win.set_bubble_listener(self.ghost_win.show_speech_bubble)
 
+        # Start proactive background anomaly watchdog
+        def _on_watchdog_alert(msg: str) -> None:
+            self.GLib.idle_add(self._deliver_watchdog_alert, msg)
+
+        self.watchdog = SystemWatchdog(self.toolkit, on_anomaly=_on_watchdog_alert)
+        self.watchdog.start()
+
         self.ghost_win.show_all()
         self.ghost_win.present()
         if open_chat:
@@ -150,7 +158,14 @@ class TchikoApplication:
     def set_ghost_state(self, state: str, speech: Optional[str] = None) -> None:
         self.ghost_win.set_agent_state(state, speech)
 
+    def _deliver_watchdog_alert(self, msg: str) -> bool:
+        self.ghost_win.set_agent_state("alert")
+        self.ghost_win.show_speech_bubble(msg, is_markup=False, auto_hide_sec=14)
+        return False
+
     def quit(self) -> None:
+        if hasattr(self, "watchdog"):
+            self.watchdog.stop()
         self.Gtk.main_quit()
 
     def run(self) -> None:

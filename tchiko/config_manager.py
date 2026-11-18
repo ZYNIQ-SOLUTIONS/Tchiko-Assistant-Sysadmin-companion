@@ -9,6 +9,9 @@ from __future__ import annotations
 
 import copy
 import json
+import os
+import re
+import shlex
 from pathlib import Path
 from typing import Any, Callable, Dict, List
 
@@ -154,12 +157,85 @@ class ConfigManager:
         caps = perms.get("capabilities", {})
         return bool(caps.get(capability_name, False))
 
-    def requires_manual_review(self) -> bool:
+    def requires_manual_review(self, command: str = "") -> bool:
         """Check whether tool calls require interactive user approval before running."""
         perms = self.data.get("permissions", {})
         if perms.get("approve_all_system_permissions", False):
             return False
-        return perms.get("tool_execution_policy", "request-review") == "request-review"
+        needs_review = perms.get("tool_execution_policy", "request-review") == "request-review"
+        if needs_review and command.strip():
+            tier, _ = self.classify_command(command)
+            if tier == "SAFE_READONLY":
+                return False
+        return needs_review
+
+    @staticmethod
+    def classify_command(command: str) -> tuple[str, str]:
+        """Classify a shell command into SAFE_READONLY, MUTATING_LOCAL, or PRIVILEGED_DESTRUCTIVE."""
+        cmd = command.strip()
+        if not cmd:
+            return "SAFE_READONLY", "Empty command"
+
+        destructive_patterns = (
+            r"(?:^|[;&|\s])sudo\b",
+            r"\brm\s+-[a-zA-Z]*[rf][a-zA-Z]*\b",
+            r"\bmkfs(?:\.[a-z0-9]+)?\b",
+            r"\bdd\s+if=",
+            r"\bchmod\s+-R\b",
+            r"\bchown\b",
+            r"\bkill\s+-9\b",
+            r"\bpkill\b",
+            r"\bsystemctl\s+(?:stop|disable|mask|reboot|poweroff)\b",
+            r"\b(?:ufw|iptables|nft)\b",
+            r"\b(?:curl|wget)\b[^|]*\|\s*(?:ba)?sh\b",
+        )
+        for pat in destructive_patterns:
+            if re.search(pat, cmd, flags=re.IGNORECASE):
+                return "PRIVILEGED_DESTRUCTIVE", f"Matches privileged/destructive pattern: {pat}"
+
+        has_redirect = bool(re.search(r"(?:^|[^0-9])>{1,2}", cmd))
+        has_subshell = "$(" in cmd or "`" in cmd
+
+        safe_bins = {
+            "ls", "pwd", "whoami", "id", "uname", "hostname", "date", "df", "du",
+            "free", "ps", "uptime", "cat", "head", "tail", "wc", "grep", "rg",
+            "awk", "which", "readlink", "stat", "file", "ss", "lsof", "ip",
+            "dig", "nslookup", "resolvectl", "ping", "journalctl", "nvidia-smi",
+            "echo", "printf", "env", "printenv", "lsblk", "lscpu",
+        }
+
+        segments = [s.strip() for s in re.split(r"\s*(?:&&|\|\||;|\|)\s*", cmd) if s.strip()]
+        if not segments:
+            return "SAFE_READONLY", "No executable segments"
+
+        all_safe = not has_redirect and not has_subshell
+        for seg in segments:
+            try:
+                tokens = shlex.split(seg)
+            except ValueError:
+                return "MUTATING_LOCAL", "Unbalanced shell quotes"
+            if not tokens:
+                continue
+            head = os.path.basename(tokens[0])
+            if head in safe_bins:
+                continue
+            if head == "find":
+                if any(t in ("-delete", "-exec", "-execdir", "-ok") for t in tokens[1:]):
+                    all_safe = False
+                continue
+            if head == "git" and len(tokens) >= 2 and tokens[1] in ("status", "log", "diff", "branch", "show", "rev-parse"):
+                continue
+            if head == "systemctl" and any(t in ("status", "--failed", "list-units", "is-active") for t in tokens[1:]):
+                continue
+            if head in ("docker", "podman") and len(tokens) >= 2 and tokens[1] in ("ps", "logs", "images", "inspect", "version"):
+                continue
+            if head == "openssl" and len(tokens) >= 2 and tokens[1] in ("x509", "s_client", "version"):
+                continue
+            all_safe = False
+
+        if all_safe:
+            return "SAFE_READONLY", "All pipeline segments are read-only diagnostics"
+        return "MUTATING_LOCAL", "Command performs local state or file modifications"
 
     def is_command_allowed(self, command: str) -> tuple[bool, str]:
         """Validate a shell command against permissions and denylist."""

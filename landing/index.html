@@ -1053,6 +1053,8 @@
               </div>
               <div class="bubble-actions">
                 <button type="button" class="mini-btn" onclick="simulatePrompt('sysinfo')">/doctor</button>
+                <button type="button" class="mini-btn" onclick="simulatePrompt('containers')">/containers</button>
+                <button type="button" class="mini-btn" onclick="simulatePrompt('skills')">/skills</button>
                 <button type="button" class="mini-btn" onclick="simulatePrompt('ssh')">SSH Key</button>
                 <button type="button" class="mini-btn" onclick="simulatePrompt('blocked')">RBAC Block</button>
                 <button type="button" class="mini-btn" id="copy-btn" onclick="copyBubble()">Copy</button>
@@ -1150,36 +1152,40 @@
 
           <article class="bento-card">
             <div class="bento-icon">🛡️</div>
-            <h3>RBAC Permission Governance</h3>
+            <h3>3-Tier Risk &amp; `/undo` Ledger</h3>
             <p>
-              Every host mutation is gated across 6 capability domains (`bash_execution`, `filesystem_read_write`, `process_management`, `desktop_automation`, `package_management`, `network_requests`) with `command_denylist` enforcement.
+              Classifies every command (`SAFE_READONLY`, `MUTATING_LOCAL`, `PRIVILEGED_DESTRUCTIVE`), gates 6 RBAC domains, and saves pre-edit snapshots for instant `/undo` &amp; `/rollback`.
             </p>
             <div class="bento-tags">
-              <span class="tag-mono">settings.json ↔ antigravity.yaml</span>
+              <span class="tag-mono">/undo</span>
+              <span class="tag-mono">action_ledger.json</span>
             </div>
           </article>
 
           <article class="bento-card">
-            <div class="bento-icon">🔑</div>
-            <h3>OpenSSH &amp; Port Lifecycle</h3>
+            <div class="bento-icon">🧩</div>
+            <h3>Pluggable `skills/*.md` &amp; Sysadmin Toolkit</h3>
             <p>
-              Generates `id_ed25519` keys with `0600` permissions, updates `~/.ssh/config` stanzas, copies public keys to clipboard, and inspects or reaps occupied TCP/UDP ports via `ss` &amp; `lsof`.
+              Drop Markdown runbooks (`nginx-tls-audit`, `postgres-doctor`, `gpu-cuda-doctor`, `git-recovery`) into `skills/` and run `/containers`, `/systemd`, `/net`, `/disk`, `/gpu`, `/tls`, and `/git`.
             </p>
             <div class="bento-tags">
-              <span class="tag-mono">ssh-keygen</span>
-              <span class="tag-mono">ss -tulnp</span>
+              <span class="tag-mono">/skills</span>
+              <span class="tag-mono">/containers</span>
+              <span class="tag-mono">/systemd</span>
+              <span class="tag-mono">/net</span>
             </div>
           </article>
 
           <article class="bento-card">
             <div class="bento-icon">✨</div>
-            <h3>Interactive BoopFace SVG</h3>
+            <h3>BoopFace SVG &amp; Proactive Watchdog</h3>
             <p>
-              Powered by <strong>CX-ArtLab/BoopFace</strong>: zero-dependency native Web Component with pointer-tracking eyes, elastic jelly drag, draggable spring antenna, and 188 pure-SVG skins.
+              Powered by <strong>CX-ArtLab/BoopFace</strong> with 188 pure-SVG skins, spring antenna physics, GTK3 drag-and-drop log analysis, clipboard diagnosis, and a background RAM/Disk/systemd watchdog.
             </p>
             <div class="bento-tags">
               <span class="tag-mono">&lt;boop-face&gt;</span>
-              <span class="tag-mono">188 SVG Skins</span>
+              <span class="tag-mono">SystemWatchdog</span>
+              <span class="tag-mono">Drag &amp; Drop</span>
             </div>
           </article>
         </div>
@@ -1563,6 +1569,16 @@ make self-test &amp;&amp; make test
           bubbleText.innerHTML =
             `<b>🔑 OpenSSH Key Created (<code>~/.ssh/id_ed25519.pub</code>)</b><br/>` +
             `<code>${lastCopyText}</code>`;
+        } else if (kind === 'containers') {
+          lastCopyText = "docker ps -a: api-gateway (Up 4h) | redis-cache (Up 4h) | worker (Exited 137 OOMKilled)";
+          bubbleText.innerHTML =
+            `<b>🐳 Container Doctor (<code>docker</code>)</b><br/>` +
+            `• <code>api-gateway</code> Up 4h • <code>worker</code> Exited (137) — logs tailed`;
+        } else if (kind === 'skills') {
+          lastCopyText = "/skills: nginx-tls-audit, postgres-doctor, gpu-cuda-doctor, git-recovery";
+          bubbleText.innerHTML =
+            `<b>🧩 Loaded Skills (<code>skills/*.md</code>)</b><br/>` +
+            `<code>nginx-tls-audit</code> • <code>postgres-doctor</code> • <code>gpu-cuda-doctor</code> • <code>git-recovery</code>`;
         } else {
           lastCopyText = "CPU Load: 0.42 | RAM: 11.6/60.9 GB (19.1%) | Disk: 32.6% | Failed Units: 0";
           bubbleText.innerHTML =

@@ -33,12 +33,12 @@
     "opacity": 0.9,
     "always_on_top": true,
     "stick_all_workspaces": true,
-    "theme": "emerald_matrix",
+    "theme": "solar_gold",
     "animation_speed": 1.0,
     "show_speech_bubble": true,
     "show_permission_badge": false,
-    "position_x": 1765,
-    "position_y": 909
+    "position_x": 1767,
+    "position_y": 514
   },
   "ui": {
     "theme_mode": "dark",
