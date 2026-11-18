@@ -187,19 +187,25 @@
       border-color: #ef5a5f;
     }
 
-    /* ── HERO SPLIT ─────────────────────────────────────────────────────── */
+    /* ── HERO SECTION (LOCKED TO SHELL FRAME) ───────────────────────────── */
+    .hero-frame {
+      border-bottom: 1px solid var(--line);
+    }
+
     .hero-split {
       display: grid;
-      grid-template-columns: 1.08fr 0.92fr;
+      grid-template-columns: 7fr 5fr;
       border-bottom: 1px solid var(--line);
     }
 
     .hero-left {
-      padding: 56px 40px;
+      min-width: 0;
+      padding: 48px 40px;
       border-right: 1px solid var(--line);
       display: flex;
       flex-direction: column;
       justify-content: space-between;
+      gap: 28px;
     }
 
     .meta-line {
@@ -208,7 +214,7 @@
       color: var(--text-muted);
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      margin-bottom: 20px;
+      margin-bottom: 18px;
       display: flex;
       align-items: center;
       gap: 10px;
@@ -219,52 +225,63 @@
       height: 7px;
       background: var(--green);
       display: inline-block;
+      flex-shrink: 0;
     }
 
     .hero-left h1 {
-      font-size: clamp(2.1rem, 3.6vw, 3.1rem);
+      font-size: clamp(2.15rem, 3.5vw, 3.05rem);
       font-weight: 700;
-      line-height: 1.1;
+      line-height: 1.08;
       letter-spacing: -0.035em;
-      margin-bottom: 20px;
+      margin-bottom: 18px;
       color: var(--text);
     }
 
     .hero-left h1 span {
       color: var(--text-dim);
-      font-weight: 500;
+      font-weight: 400;
+      display: block;
     }
 
     .hero-lead {
-      font-size: 0.98rem;
+      font-size: 0.96rem;
       color: var(--text-dim);
-      max-width: 560px;
+      max-width: 580px;
       line-height: 1.65;
-      margin-bottom: 28px;
-    }
-
-    .hero-cli-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      background: #050608;
-      border: 1px solid var(--line-strong);
-      border-radius: 4px;
-      padding: 10px 14px;
-      font-family: var(--mono);
-      font-size: 0.78rem;
-      color: var(--text);
       margin-bottom: 24px;
     }
 
-    .hero-cli-bar code {
-      overflow-x: auto;
-      white-space: nowrap;
-      color: #d5d9e2;
+    .hero-cli-card {
+      background: #050608;
+      border: 1px solid var(--line-strong);
+      border-radius: 3px;
+      margin-bottom: 22px;
+      overflow: hidden;
     }
 
-    .hero-cli-bar .prompt-sign {
+    .hero-cli-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 14px;
+      border-bottom: 1px solid var(--line);
+      background: #0a0c10;
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--text-muted);
+    }
+
+    .hero-cli-body {
+      padding: 12px 14px;
+      font-family: var(--mono);
+      font-size: 0.76rem;
+      line-height: 1.65;
+      color: #d5d9e2;
+      overflow-x: auto;
+      white-space: pre;
+    }
+
+    .hero-cli-body .prompt-sign {
       color: var(--crimson);
       margin-right: 8px;
       user-select: none;
@@ -274,36 +291,45 @@
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
-      margin-bottom: 40px;
     }
 
+    /* Full-width 4-cell metrics bar locked to the architectural grid */
     .metrics-strip {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      border-top: 1px solid var(--line);
-      padding-top: 20px;
-      gap: 16px;
+      background: #0b0d12;
+    }
+
+    .metric-cell {
+      padding: 20px 32px;
+      border-right: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .metric-cell:last-child {
+      border-right: none;
     }
 
     .metric-cell small {
-      display: block;
       font-family: var(--mono);
       font-size: 0.68rem;
       color: var(--text-muted);
       text-transform: uppercase;
-      letter-spacing: 0.06em;
-      margin-bottom: 4px;
+      letter-spacing: 0.08em;
     }
 
     .metric-cell strong {
       font-family: var(--mono);
-      font-size: 1.05rem;
+      font-size: 1.15rem;
       font-weight: 600;
       color: var(--text);
     }
 
     /* ── RIGHT WORKBENCH: BOOPFACE INSTRUMENT ───────────────────────────── */
     .hero-right {
+      min-width: 0;
       background: var(--panel);
       display: flex;
       flex-direction: column;
@@ -314,7 +340,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 11px 16px;
+      padding: 12px 18px;
       border-bottom: 1px solid var(--line);
       background: #0b0d12;
       font-family: var(--mono);
@@ -326,136 +352,122 @@
       display: flex;
       align-items: center;
       gap: 10px;
+      min-width: 0;
     }
 
     .x11-tag {
-      padding: 1px 6px;
+      padding: 2px 6px;
       border: 1px solid var(--line-strong);
       color: var(--text-muted);
-      font-size: 0.66rem;
+      font-size: 0.65rem;
+      flex-shrink: 0;
     }
 
     .inst-controls-top {
       display: flex;
       gap: 6px;
+      flex-shrink: 0;
     }
 
     .inst-btn {
       font-family: var(--mono);
       font-size: 0.68rem;
-      padding: 3px 8px;
+      padding: 4px 9px;
       background: var(--panel-alt);
       border: 1px solid var(--line-strong);
       color: var(--text);
       cursor: pointer;
-      border-radius: 3px;
+      border-radius: 2px;
+      transition: border-color 0.15s ease, background 0.15s ease;
     }
 
     .inst-btn:hover {
       border-color: var(--crimson);
-    }
-
-    .workbench-body {
-      padding: 18px 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-
-    .telemetry-readout {
-      background: #060709;
-      border: 1px solid var(--line-strong);
-      border-radius: 4px;
-      padding: 12px 14px;
-      font-size: 0.8rem;
-      min-height: 76px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      gap: 10px;
-    }
-
-    .telemetry-readout b {
-      color: var(--text);
-      font-weight: 600;
-    }
-
-    .telemetry-readout code {
-      font-size: 0.74rem;
-      color: var(--crimson);
-      background: rgba(229, 72, 77, 0.1);
-      padding: 1px 5px;
-      border-radius: 2px;
-    }
-
-    .readout-toolbar {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      align-items: center;
-      gap: 6px;
-      border-top: 1px solid var(--line);
-      padding-top: 8px;
-    }
-
-    .readout-presets {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
+      background: var(--panel-hover);
     }
 
     .boop-viewport {
       position: relative;
-      height: 218px;
+      height: 236px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      border: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
       background:
-        linear-gradient(to right, rgba(255,255,255,0.02) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(255,255,255,0.02) 1px, transparent 1px),
-        #08090c;
-      background-size: 20px 20px;
-      border-radius: 4px;
+        linear-gradient(to right, rgba(255,255,255,0.022) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,255,255,0.022) 1px, transparent 1px),
+        #07080b;
+      background-size: 24px 24px;
     }
 
     .viewport-coords {
       position: absolute;
-      top: 8px;
-      left: 10px;
+      top: 10px;
+      left: 14px;
       font-family: var(--mono);
       font-size: 0.65rem;
       color: var(--text-muted);
+    }
+
+    .viewport-roundness {
+      position: absolute;
+      top: 8px;
+      right: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--text-muted);
+    }
+
+    .viewport-roundness input[type="range"] {
+      width: 68px;
+      accent-color: var(--crimson);
+      cursor: pointer;
     }
 
     .viewport-hint {
       position: absolute;
-      bottom: 7px;
-      right: 10px;
+      bottom: 9px;
+      left: 14px;
+      right: 14px;
+      display: flex;
+      justify-content: space-between;
       font-family: var(--mono);
-      font-size: 0.65rem;
+      font-size: 0.64rem;
       color: var(--text-muted);
     }
 
-    .param-bar {
-      display: grid;
-      grid-template-columns: auto 1fr auto;
-      align-items: center;
-      gap: 12px;
-      padding: 7px 12px;
-      border: 1px solid var(--line);
-      background: #0a0c10;
-      border-radius: 4px;
-      font-family: var(--mono);
-      font-size: 0.7rem;
-      color: var(--text-dim);
+    .workbench-console {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--line);
+      background: #060709;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
 
-    .param-bar input[type="range"] {
-      width: 100%;
-      accent-color: var(--crimson);
-      cursor: pointer;
+    .telemetry-readout {
+      font-size: 0.78rem;
+      line-height: 1.5;
+      color: var(--text-dim);
+      min-height: 44px;
+    }
+
+    .telemetry-readout b {
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 0.74rem;
+    }
+
+    .telemetry-readout code {
+      font-size: 0.72rem;
+      color: var(--crimson);
+      background: rgba(229, 72, 77, 0.1);
+      padding: 1px 5px;
+      border-radius: 2px;
     }
 
     .prompt-bus {
@@ -465,13 +477,14 @@
 
     .prompt-bus input {
       flex: 1;
-      background: #050608;
+      min-width: 0;
+      background: #0b0d12;
       border: 1px solid var(--line-strong);
-      border-radius: 4px;
-      padding: 8px 12px;
+      border-radius: 2px;
+      padding: 7px 10px;
       color: var(--text);
       font-family: var(--mono);
-      font-size: 0.76rem;
+      font-size: 0.74rem;
       outline: none;
     }
 
@@ -479,35 +492,52 @@
       border-color: var(--crimson);
     }
 
-    .state-matrix {
+    .preset-strip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .readout-presets {
       display: flex;
       flex-wrap: wrap;
       gap: 4px;
-      padding: 12px 16px;
-      border-top: 1px solid var(--line);
-      background: #0b0d12;
+    }
+
+    /* Locked 6x2 architectural state grid — no ragged wrapping */
+    .state-matrix {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      background: var(--line);
+      gap: 1px;
     }
 
     .emo-chip {
       font-family: var(--mono);
-      font-size: 0.68rem;
-      padding: 3px 8px;
-      border-radius: 2px;
-      background: var(--panel-alt);
-      border: 1px solid var(--line);
+      font-size: 0.67rem;
+      padding: 8px 4px;
+      text-align: center;
+      background: #0b0d12;
+      border: none;
       color: var(--text-dim);
       cursor: pointer;
+      transition: background 0.12s ease, color 0.12s ease;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .emo-chip:hover {
       color: var(--text);
-      border-color: var(--line-strong);
+      background: var(--panel-hover);
     }
 
     .emo-chip.active {
       background: var(--crimson-dim);
-      border-color: var(--crimson);
       color: #ffffff;
+      box-shadow: inset 0 -2px 0 var(--crimson);
     }
 
     /* ── SECTION HEADERS ────────────────────────────────────────────────── */
@@ -945,6 +975,19 @@
         border-right: none;
         border-bottom: 1px solid var(--line);
       }
+      .metrics-strip {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .metric-cell:nth-child(2) {
+        border-right: none;
+      }
+      .metric-cell:nth-child(1),
+      .metric-cell:nth-child(2) {
+        border-bottom: 1px solid var(--line);
+      }
+      .state-matrix {
+        grid-template-columns: repeat(4, 1fr);
+      }
       .spec-grid {
         grid-template-columns: 1fr;
       }
@@ -990,84 +1033,106 @@
   </header>
 
   <main class="shell" id="top">
-    <!-- HERO -->
-    <section class="hero-split">
-      <div class="hero-left">
-        <div>
-          <div class="meta-line">
-            <span class="status-dot"></span>
-            <span>REL 1.2.0 // UBUNTU 22.04–25.10 // X11 &amp; XWAYLAND // MIT</span>
-          </div>
+    <!-- HERO (LOCKED TO ARCHITECTURAL SHELL FRAME) -->
+    <section class="hero-frame">
+      <div class="sec-bar" style="padding: 14px 40px;">
+        <div class="sec-bar-left">
+          <span class="sec-index">00 // SYSTEM_OVERVIEW</span>
+          <span class="mono" style="font-size:0.75rem;color:var(--text-dim);">UBUNTU 22.04–25.10 // X11 &amp; XWAYLAND // GOOGLE ANTIGRAVITY SDK</span>
+        </div>
+        <p><span class="status-dot" style="margin-right:6px;"></span>REL 1.2.0 // MIT OPEN SOURCE</p>
+      </div>
 
-          <h1>
-            Autonomous Linux systems agent <span>and resident desktop overlay.</span>
-          </h1>
+      <div class="hero-split">
+        <div class="hero-left">
+          <div>
+            <h1>
+              Autonomous Linux systems agent
+              <span>and resident desktop companion.</span>
+            </h1>
 
-          <p class="hero-lead">
-            Tchiko pairs deterministic sub-15ms host inspection (<code>/proc</code>, <code>systemd</code>, <code>ss</code>, <code>docker</code>, OpenSSL X.509) with the Google Antigravity NDJSON stream bridge, a 3-tier shell risk classifier, snapshot-backed file rollbacks, and an interactive BoopFace SVG overlay.
-          </p>
+            <p class="hero-lead">
+              Tchiko combines deterministic sub-15ms host diagnostics (<code>/proc</code>, <code>systemd</code>, <code>ss</code>, <code>docker</code>, OpenSSL X.509) with the Google Antigravity NDJSON stream bridge, a 3-tier shell risk classifier, snapshot-backed file rollbacks, and an interactive BoopFace SVG overlay.
+            </p>
 
-          <div class="hero-cli-bar">
-            <code><span class="prompt-sign">$</span>git clone https://github.com/ZYNIQ-SOLUTIONS/Tchiko-Assistant-Sysadmin-companion.git &amp;&amp; cd Tchiko-Assistant-Sysadmin-companion &amp;&amp; ./run_tchiko.sh</code>
-            <button type="button" class="inst-btn" onclick="copyCli(this)">COPY</button>
+            <div class="hero-cli-card">
+              <div class="hero-cli-head">
+                <span>QUICK_INSTALL // BASH</span>
+                <button type="button" class="inst-btn" onclick="copyCli(this)">COPY</button>
+              </div>
+              <div class="hero-cli-body"><code><span class="prompt-sign">$</span>git clone https://github.com/ZYNIQ-SOLUTIONS/Tchiko-Assistant-Sysadmin-companion.git
+<span class="prompt-sign">$</span>cd Tchiko-Assistant-Sysadmin-companion &amp;&amp; ./run_tchiko.sh</code></div>
+            </div>
           </div>
 
           <div class="hero-actions">
-            <a href="#deploy" class="btn btn-accent">Build &amp; Run on Ubuntu</a>
+            <a href="#deploy" class="btn btn-accent">Build &amp; Verification Spec</a>
             <a href="https://github.com/ZYNIQ-SOLUTIONS/Tchiko-Assistant-Sysadmin-companion/blob/main/docs/ARCHITECTURE.md" target="_blank" rel="noopener noreferrer" class="btn">
               Architecture Spec
             </a>
             <a href="https://github.com/ZYNIQ-SOLUTIONS/Tchiko-Assistant-Sysadmin-companion/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener noreferrer" class="btn">
-              Contributing
+              Contributing Guide
             </a>
           </div>
         </div>
 
-        <div class="metrics-strip">
-          <div class="metric-cell">
-            <small>Local Dispatch</small>
-            <strong>&lt;15 ms</strong>
-          </div>
-          <div class="metric-cell">
-            <small>Execution Tiers</small>
-            <strong>05 Stages</strong>
-          </div>
-          <div class="metric-cell">
-            <small>RBAC Domains</small>
-            <strong>06 Policies</strong>
-          </div>
-          <div class="metric-cell">
-            <small>Vector Skins</small>
-            <strong>188 SVG</strong>
-          </div>
-        </div>
-      </div>
-
-      <!-- INTERACTIVE BOOPFACE WORKBENCH -->
-      <div class="hero-right" id="stage-board">
-        <div class="inst-header">
-          <div class="inst-header-left">
-            <span class="x11-tag">X11/RGBA</span>
-            <span id="skin-label">SKIN: 901 [METAL]</span>
-          </div>
-          <div class="inst-controls-top">
-            <button type="button" class="inst-btn" onclick="cycleSkin()">NEXT_SKIN</button>
-            <button type="button" class="inst-btn" onclick="randomSkin()">RND [188]</button>
-          </div>
-        </div>
-
-        <div class="workbench-body">
-          <div class="telemetry-readout" aria-live="polite">
-            <div id="bubble-text">
-              <b>[READY]</b> Pointer-tracking eyes, elastic head drag, center press-squeeze, and spring antenna active. Select a diagnostic preset below.
+        <!-- INTERACTIVE BOOPFACE WORKBENCH -->
+        <div class="hero-right" id="stage-board">
+          <div class="inst-header">
+            <div class="inst-header-left">
+              <span class="x11-tag">X11/RGBA</span>
+              <span id="skin-label">SKIN: 901 [METAL]</span>
             </div>
-            <div class="readout-toolbar">
+            <div class="inst-controls-top">
+              <button type="button" class="inst-btn" onclick="cycleSkin()">NEXT_SKIN</button>
+              <button type="button" class="inst-btn" onclick="randomSkin()">RND [188]</button>
+            </div>
+          </div>
+
+          <div class="boop-viewport">
+            <span class="viewport-coords">POS: 1769,488 // 28.0 FPS</span>
+            <div class="viewport-roundness">
+              <span>R:<span id="roundness-val">050</span></span>
+              <input type="range" id="roundness-slider" min="0" max="100" value="50" aria-label="Head Roundness" />
+            </div>
+            <boop-face
+              id="tchiko-boop"
+              size="178"
+              color="#131620"
+              skin="901"
+              auto-sleep="45000"
+              wake-on="activity"
+              motion="full">
+              <img src="assets/tchiko-logo.svg" alt="Tchiko BoopFace Avatar" style="width:178px;height:178px;display:block;" />
+            </boop-face>
+            <div class="viewport-hint">
+              <span>DRAG_HEAD // HOLD_SQUEEZE</span>
+              <span>PULL_SPRING_ANTENNA</span>
+            </div>
+          </div>
+
+          <div class="workbench-console">
+            <div class="telemetry-readout" aria-live="polite" id="bubble-text">
+              <b>[READY]</b> Pointer-tracking eyes, elastic head drag, squeeze, and spring antenna active. Run a command or select a preset.
+            </div>
+
+            <div class="prompt-bus" id="quick-pill">
+              <input
+                type="text"
+                id="quick-entry"
+                placeholder="Run command (e.g. /doctor, /containers, /skills, rm -rf)..."
+                aria-label="Prompt input"
+              />
+              <button type="button" class="btn btn-accent" onclick="sendQuickPrompt()">EXEC</button>
+            </div>
+
+            <div class="preset-strip">
               <div class="readout-presets">
                 <button type="button" class="inst-btn" onclick="simulatePrompt('sysinfo')">/doctor</button>
                 <button type="button" class="inst-btn" onclick="simulatePrompt('containers')">/containers</button>
                 <button type="button" class="inst-btn" onclick="simulatePrompt('skills')">/skills</button>
                 <button type="button" class="inst-btn" onclick="simulatePrompt('ssh')">ssh-keygen</button>
-                <button type="button" class="inst-btn" onclick="simulatePrompt('blocked')">rm -rf [DENY]</button>
+                <button type="button" class="inst-btn" onclick="simulatePrompt('blocked')">rm -rf</button>
               </div>
               <div class="readout-presets">
                 <button type="button" class="inst-btn" id="copy-btn" onclick="copyBubble()">COPY</button>
@@ -1076,55 +1141,39 @@
             </div>
           </div>
 
-          <div class="boop-viewport">
-            <span class="viewport-coords">POS: 1769,488 // 28.0 FPS</span>
-            <boop-face
-              id="tchiko-boop"
-              size="185"
-              color="#131620"
-              skin="901"
-              auto-sleep="45000"
-              wake-on="activity"
-              motion="full">
-              <img src="assets/tchiko-logo.svg" alt="Tchiko BoopFace Avatar" style="width:185px;height:185px;display:block;" />
-            </boop-face>
-            <span class="viewport-hint">DRAG_HEAD // HOLD_SQUEEZE // PULL_ANTENNA</span>
-          </div>
-
-          <div class="param-bar">
-            <span>HEAD_ROUNDNESS</span>
-            <input type="range" id="roundness-slider" min="0" max="100" value="50" aria-label="Head Roundness" />
-            <span id="roundness-val">050</span>
-          </div>
-
-          <div class="prompt-bus" id="quick-pill">
-            <input
-              type="text"
-              id="quick-entry"
-              placeholder="Execute slash command or prompt (e.g. /doctor, /containers, /skills)..."
-              aria-label="Prompt input"
-            />
-            <button type="button" class="btn btn-accent" onclick="sendQuickPrompt()">EXEC</button>
+          <div class="state-matrix" role="group" aria-label="BoopFace state triggers">
+            <button type="button" class="emo-chip active" data-emo="idle" onclick="setBoopAction('idle', this)">idle</button>
+            <button type="button" class="emo-chip" data-emo="waiting-wave" onclick="setBoopAction('waiting-wave', this)">waiting</button>
+            <button type="button" class="emo-chip" data-emo="input" onclick="setBoopAction('input', this)">input</button>
+            <button type="button" class="emo-chip" data-emo="inspect" onclick="setBoopAction('inspect', this)">inspect</button>
+            <button type="button" class="emo-chip" data-emo="wary" onclick="setBoopAction('wary', this)">wary</button>
+            <button type="button" class="emo-chip" data-emo="affirm" onclick="setBoopAction('affirm', this)">affirm</button>
+            <button type="button" class="emo-chip" data-emo="success" onclick="setBoopAction('success', this)">success</button>
+            <button type="button" class="emo-chip" data-emo="failure" onclick="setBoopAction('failure', this)">failure</button>
+            <button type="button" class="emo-chip" data-emo="refuse" onclick="setBoopAction('refuse', this)">refuse</button>
+            <button type="button" class="emo-chip" data-emo="angry" onclick="setBoopAction('angry', this)">angry</button>
+            <button type="button" class="emo-chip" data-emo="surprise" onclick="setBoopAction('surprise', this)">surprise</button>
+            <button type="button" class="emo-chip" data-emo="sleep" onclick="setBoopAction('sleep', this)">sleep</button>
           </div>
         </div>
+      </div>
 
-        <div class="state-matrix" role="group" aria-label="BoopFace state triggers">
-          <button type="button" class="emo-chip active" data-emo="idle" onclick="setBoopAction('idle', this)">idle</button>
-          <button type="button" class="emo-chip" data-emo="waiting-spin" onclick="setBoopAction('waiting-spin', this)">waiting-spin</button>
-          <button type="button" class="emo-chip" data-emo="waiting-wrap" onclick="setBoopAction('waiting-wrap', this)">waiting-wrap</button>
-          <button type="button" class="emo-chip" data-emo="waiting-wave" onclick="setBoopAction('waiting-wave', this)">waiting-wave</button>
-          <button type="button" class="emo-chip" data-emo="input" onclick="setBoopAction('input', this)">input</button>
-          <button type="button" class="emo-chip" data-emo="affirm" onclick="setBoopAction('affirm', this)">affirm</button>
-          <button type="button" class="emo-chip" data-emo="success" onclick="setBoopAction('success', this)">success</button>
-          <button type="button" class="emo-chip" data-emo="failure" onclick="setBoopAction('failure', this)">failure</button>
-          <button type="button" class="emo-chip" data-emo="wary" onclick="setBoopAction('wary', this)">wary</button>
-          <button type="button" class="emo-chip" data-emo="inspect" onclick="setBoopAction('inspect', this)">inspect</button>
-          <button type="button" class="emo-chip" data-emo="angry" onclick="setBoopAction('angry', this)">angry</button>
-          <button type="button" class="emo-chip" data-emo="refuse" onclick="setBoopAction('refuse', this)">refuse</button>
-          <button type="button" class="emo-chip" data-emo="surprise" onclick="setBoopAction('surprise', this)">surprise</button>
-          <button type="button" class="emo-chip" data-emo="random" onclick="setBoopAction('random', this)">random</button>
-          <button type="button" class="emo-chip" data-emo="sleep" onclick="setBoopAction('sleep', this)">sleep</button>
-          <button type="button" class="emo-chip" data-emo="wake" onclick="setBoopAction('wake', this)">wake</button>
+      <div class="metrics-strip">
+        <div class="metric-cell">
+          <small>01 // Local Dispatch</small>
+          <strong>&lt;15 ms</strong>
+        </div>
+        <div class="metric-cell">
+          <small>02 // Execution Pipeline</small>
+          <strong>05 Tiers</strong>
+        </div>
+        <div class="metric-cell">
+          <small>03 // Security Governance</small>
+          <strong>06 RBAC Domains</strong>
+        </div>
+        <div class="metric-cell">
+          <small>04 // Vector Avatar</small>
+          <strong>188 SVG Skins</strong>
         </div>
       </div>
     </section>
