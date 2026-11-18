@@ -1,42 +1,37 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tchiko Assistant — Autonomous Linux Sysadmin &amp; BoopFace SVG Companion</title>
-  <meta name="description" content="Open-source autonomous Linux systems engineering agent and interactive BoopFace SVG desktop companion for Ubuntu, powered by Google Antigravity SDK &amp; CLI." />
-  <meta property="og:title" content="Tchiko Assistant — Autonomous Linux Sysadmin Companion" />
-  <meta property="og:description" content="5-Tier Autonomous Agent Engine, 6-Step Crash Doctor, RBAC Security, and 188-skin interactive BoopFace SVG avatar." />
+  <title>Tchiko Assistant — Autonomous Linux Systems Agent &amp; Desktop Companion</title>
+  <meta name="description" content="Open-source Ubuntu systems engineering agent, 5-tier execution engine, 6-step crash doctor, and interactive BoopFace SVG desktop overlay." />
+  <meta property="og:title" content="Tchiko Assistant — Linux Systems Agent &amp; Desktop Companion" />
+  <meta property="og:description" content="5-Tier dispatch engine, AST shell risk classifier, snapshot rollback ledger, pluggable skills, and 188-skin BoopFace SVG overlay for Ubuntu Linux." />
   <meta property="og:type" content="website" />
-  <meta name="theme-color" content="#07080c" />
+  <meta name="theme-color" content="#090a0d" />
   <link rel="icon" type="image/svg+xml" href="landing/assets/tchiko-logo.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #07080c;
-      --bg-elevated: #0d0f16;
-      --surface: rgba(19, 22, 32, 0.72);
-      --surface-solid: #131620;
-      --surface-hover: rgba(28, 33, 48, 0.85);
-      --border: rgba(255, 255, 255, 0.08);
-      --border-strong: rgba(255, 255, 255, 0.16);
-      --text: #f4f6fb;
-      --text-secondary: #a1a8b8;
-      --text-muted: #6b7280;
-      --accent: #e5484d;
-      --accent-bright: #ff5c61;
-      --accent-glow: rgba(229, 72, 77, 0.35);
-      --emerald: #3ecf8e;
+      --bg: #090a0d;
+      --panel: #0e1015;
+      --panel-alt: #12151c;
+      --panel-hover: #161a23;
+      --line: #1d212b;
+      --line-strong: #2c3240;
+      --text: #eceef3;
+      --text-dim: #9ba3b2;
+      --text-muted: #616977;
+      --crimson: #e5484d;
+      --crimson-dim: rgba(229, 72, 77, 0.14);
+      --green: #3ecf8e;
+      --green-dim: rgba(62, 207, 142, 0.12);
       --amber: #f5a524;
       --blue: #38bdf8;
-      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
-      --radius-sm: 8px;
-      --radius-md: 14px;
-      --radius-lg: 20px;
-      --radius-xl: 28px;
+      --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
     }
 
     *, *::before, *::after {
@@ -49,47 +44,21 @@
       scroll-behavior: smooth;
       background: var(--bg);
       color: var(--text);
-      font-family: var(--font-sans);
+      font-family: var(--sans);
+      font-size: 16px;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
     }
 
     body {
       background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
       overflow-x: hidden;
-      line-height: 1.6;
-      position: relative;
-    }
-
-    .ambient-bg {
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-      pointer-events: none;
-      background:
-        radial-gradient(ellipse 70% 50% at 75% 10%, rgba(229, 72, 77, 0.14), transparent 60%),
-        radial-gradient(ellipse 55% 45% at 15% 40%, rgba(56, 189, 248, 0.07), transparent 60%),
-        radial-gradient(ellipse 60% 50% at 50% 95%, rgba(229, 72, 77, 0.09), transparent 60%);
-    }
-
-    .grid-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-      pointer-events: none;
       background-image:
-        linear-gradient(to right, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
-      background-size: 56px 56px;
-      mask-image: radial-gradient(ellipse 85% 70% at 50% 25%, #000 35%, transparent 100%);
-    }
-
-    .container {
-      max-width: 1240px;
-      margin: 0 auto;
-      padding: 0 24px;
-      position: relative;
-      z-index: 2;
+        linear-gradient(to right, rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+      background-size: 32px 32px;
     }
 
     a {
@@ -97,66 +66,88 @@
       text-decoration: none;
     }
 
-    /* ── NAVBAR ─────────────────────────────────────────────────────────── */
-    .navbar {
+    code, pre, .mono {
+      font-family: var(--mono);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ── ARCHITECTURAL SHELL ────────────────────────────────────────────── */
+    .shell {
+      max-width: 1280px;
+      margin: 0 auto;
+      border-left: 1px solid var(--line);
+      border-right: 1px solid var(--line);
+      background: rgba(9, 10, 13, 0.88);
+    }
+
+    /* ── TOP STATUS & NAVBAR ────────────────────────────────────────────── */
+    .topbar {
       position: sticky;
       top: 0;
       z-index: 100;
-      backdrop-filter: blur(18px) saturate(160%);
-      -webkit-backdrop-filter: blur(18px) saturate(160%);
-      background: rgba(7, 8, 12, 0.72);
-      border-bottom: 1px solid var(--border);
+      background: rgba(9, 10, 13, 0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--line);
     }
 
-    .nav-inner {
+    .topbar-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      height: 60px;
+      padding: 0 24px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      height: 68px;
-      gap: 20px;
+      border-left: 1px solid var(--line);
+      border-right: 1px solid var(--line);
     }
 
     .brand {
       display: flex;
       align-items: center;
       gap: 12px;
-      font-weight: 700;
-      font-size: 1.05rem;
+      font-weight: 600;
+      font-size: 0.95rem;
       letter-spacing: -0.02em;
     }
 
-    .brand-avatar {
-      width: 38px;
-      height: 38px;
+    .brand-boop {
+      width: 34px;
+      height: 34px;
       display: flex;
       align-items: center;
       justify-content: center;
+      border: 1px solid var(--line-strong);
+      border-radius: 6px;
+      background: var(--panel);
     }
 
-    .brand-tag {
-      font-family: var(--font-mono);
-      font-size: 0.68rem;
-      font-weight: 600;
-      padding: 2px 8px;
-      border-radius: 999px;
-      background: rgba(229, 72, 77, 0.14);
-      border: 1px solid rgba(229, 72, 77, 0.32);
-      color: var(--accent-bright);
+    .version-chip {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      border: 1px solid var(--line-strong);
+      background: var(--panel);
+      padding: 2px 7px;
+      border-radius: 3px;
     }
 
     .nav-links {
       display: flex;
       align-items: center;
       gap: 28px;
-      font-size: 0.9rem;
-      font-weight: 500;
-      color: var(--text-secondary);
+      font-family: var(--mono);
+      font-size: 0.76rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
     }
 
-    .nav-links a { transition: color 0.2s ease; }
-    .nav-links a:hover { color: var(--text); }
+    .nav-links a:hover {
+      color: var(--text);
+    }
 
-    .nav-actions {
+    .nav-cta {
       display: flex;
       align-items: center;
       gap: 10px;
@@ -167,1283 +158,1333 @@
       align-items: center;
       justify-content: center;
       gap: 8px;
-      padding: 10px 18px;
-      border-radius: 999px;
-      font-size: 0.88rem;
-      font-weight: 600;
+      padding: 8px 15px;
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 0.76rem;
+      font-weight: 500;
+      letter-spacing: 0.02em;
       cursor: pointer;
-      border: 1px solid transparent;
-      transition: all 0.22s cubic-bezier(0.22, 1, 0.36, 1);
-      white-space: nowrap;
+      border: 1px solid var(--line-strong);
+      background: var(--panel);
+      color: var(--text);
+      transition: border-color 0.15s ease, background 0.15s ease;
     }
 
-    .btn-ghost {
-      background: rgba(255, 255, 255, 0.04);
-      border-color: var(--border-strong);
+    .btn:hover {
+      background: var(--panel-hover);
+      border-color: var(--text-muted);
+    }
+
+    .btn-accent {
+      background: var(--crimson);
+      border-color: var(--crimson);
+      color: #ffffff;
+    }
+
+    .btn-accent:hover {
+      background: #d13d42;
+      border-color: #ef5a5f;
+    }
+
+    /* ── HERO SPLIT ─────────────────────────────────────────────────────── */
+    .hero-split {
+      display: grid;
+      grid-template-columns: 1.08fr 0.92fr;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .hero-left {
+      padding: 56px 40px;
+      border-right: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .meta-line {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      background: var(--green);
+      display: inline-block;
+    }
+
+    .hero-left h1 {
+      font-size: clamp(2.1rem, 3.6vw, 3.1rem);
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -0.035em;
+      margin-bottom: 20px;
       color: var(--text);
     }
 
-    .btn-ghost:hover {
-      background: rgba(255, 255, 255, 0.09);
-      transform: translateY(-1px);
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, var(--accent-bright), var(--accent));
-      color: #ffffff;
-      box-shadow: 0 8px 24px -6px var(--accent-glow), inset 0 1px 0 rgba(255, 255, 255, 0.25);
-    }
-
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 12px 32px -4px rgba(229, 72, 77, 0.52), inset 0 1px 0 rgba(255, 255, 255, 0.35);
-    }
-
-    .btn-lg {
-      padding: 13px 24px;
-      font-size: 0.95rem;
-    }
-
-    /* ── HERO ───────────────────────────────────────────────────────────── */
-    .hero {
-      padding: 64px 0 88px;
-    }
-
-    .hero-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 48px;
-      align-items: center;
-    }
-
-    .hero-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      padding: 6px 14px 6px 8px;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid var(--border-strong);
-      font-size: 0.8rem;
+    .hero-left h1 span {
+      color: var(--text-dim);
       font-weight: 500;
-      color: var(--text-secondary);
+    }
+
+    .hero-lead {
+      font-size: 0.98rem;
+      color: var(--text-dim);
+      max-width: 560px;
+      line-height: 1.65;
+      margin-bottom: 28px;
+    }
+
+    .hero-cli-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: #050608;
+      border: 1px solid var(--line-strong);
+      border-radius: 4px;
+      padding: 10px 14px;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      color: var(--text);
       margin-bottom: 24px;
     }
 
-    .hero-pill-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--emerald);
-      box-shadow: 0 0 12px var(--emerald);
-      animation: pulse 2s infinite;
+    .hero-cli-bar code {
+      overflow-x: auto;
+      white-space: nowrap;
+      color: #d5d9e2;
     }
 
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.55; transform: scale(1.25); }
+    .hero-cli-bar .prompt-sign {
+      color: var(--crimson);
+      margin-right: 8px;
+      user-select: none;
     }
 
-    .hero h1 {
-      font-size: clamp(2.45rem, 4.5vw, 3.75rem);
-      font-weight: 800;
-      line-height: 1.08;
-      letter-spacing: -0.035em;
-      margin-bottom: 20px;
-    }
-
-    .text-gradient {
-      background: linear-gradient(135deg, #ffffff 10%, #cbd5e1 45%, var(--accent-bright) 95%);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-
-    .hero-sub {
-      font-size: 1.08rem;
-      color: var(--text-secondary);
-      max-width: 560px;
-      margin-bottom: 30px;
-      line-height: 1.7;
-    }
-
-    .hero-cta-row {
+    .hero-actions {
       display: flex;
       flex-wrap: wrap;
-      align-items: center;
-      gap: 14px;
-      margin-bottom: 34px;
-    }
-
-    .hero-specs {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 12px;
-      padding-top: 24px;
-      border-top: 1px solid var(--border);
-    }
-
-    .spec-item strong {
-      display: block;
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: var(--text);
-      letter-spacing: -0.02em;
-    }
-
-    .spec-item span {
-      font-size: 0.78rem;
-      color: var(--text-muted);
-    }
-
-    /* ── BOOPFACE INTERACTIVE STAGE WINDOW ──────────────────────────────── */
-    .stage-window {
-      position: relative;
-      background: linear-gradient(180deg, rgba(22, 26, 38, 0.92), rgba(11, 13, 19, 0.96));
-      border: 1px solid var(--border-strong);
-      border-radius: var(--radius-xl);
-      box-shadow:
-        0 30px 80px -20px rgba(0, 0, 0, 0.8),
-        0 0 60px -20px var(--accent-glow),
-        inset 0 1px 0 rgba(255, 255, 255, 0.08);
-      overflow: hidden;
-    }
-
-    .stage-titlebar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
       gap: 10px;
-      padding: 12px 18px;
-      border-bottom: 1px solid var(--border);
-      background: rgba(255, 255, 255, 0.02);
+      margin-bottom: 40px;
     }
 
-    .window-dots { display: flex; gap: 7px; }
-    .window-dots i { width: 11px; height: 11px; border-radius: 50%; display: block; }
-    .dot-red { background: #ff5f57; }
-    .dot-amber { background: #febc2e; }
-    .dot-green { background: #28c840; }
-
-    .stage-title {
-      font-family: var(--font-mono);
-      font-size: 0.74rem;
-      color: var(--text-secondary);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+    .metrics-strip {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      border-top: 1px solid var(--line);
+      padding-top: 20px;
+      gap: 16px;
     }
 
-    .coat-btn {
-      font-family: var(--font-mono);
-      font-size: 0.72rem;
-      color: var(--text);
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid var(--border-strong);
-      padding: 4px 10px;
-      border-radius: 999px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      white-space: nowrap;
-    }
-
-    .coat-btn:hover {
-      border-color: var(--accent);
-      background: rgba(229, 72, 77, 0.14);
-    }
-
-    .stage-canvas-wrap {
-      position: relative;
-      padding: 18px 22px 16px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      background:
-        radial-gradient(circle at 50% 48%, rgba(229, 72, 77, 0.1), transparent 62%);
-    }
-
-    .speech-bubble {
-      width: 100%;
-      background: rgba(13, 15, 22, 0.88);
-      border: 1px solid var(--border-strong);
-      border-radius: var(--radius-md);
-      padding: 12px 14px;
-      font-size: 0.84rem;
-      color: var(--text-secondary);
-      margin-bottom: 10px;
-      min-height: 66px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      gap: 8px;
-    }
-
-    .speech-bubble b { color: var(--text); }
-    .speech-bubble code {
-      font-family: var(--font-mono);
-      font-size: 0.76rem;
-      background: rgba(255, 255, 255, 0.07);
-      padding: 1px 6px;
-      border-radius: 5px;
-      color: var(--accent-bright);
-      word-break: break-all;
-    }
-
-    .bubble-actions {
-      display: flex;
-      justify-content: flex-end;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-
-    .mini-btn {
-      font-family: var(--font-mono);
-      font-size: 0.7rem;
-      padding: 3px 9px;
-      border-radius: 6px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--border);
-      color: var(--text-secondary);
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-
-    .mini-btn:hover {
-      color: var(--text);
-      border-color: var(--border-strong);
-    }
-
-    .boop-stage-box {
-      position: relative;
-      width: 100%;
-      min-height: 225px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 6px 0;
-    }
-
-    .boop-hint {
-      font-family: var(--font-mono);
-      font-size: 0.7rem;
+    .metric-cell small {
+      display: block;
+      font-family: var(--mono);
+      font-size: 0.68rem;
       color: var(--text-muted);
-      margin-top: 4px;
-    }
-
-    .controls-row {
-      width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      margin-top: 8px;
-      margin-bottom: 10px;
-      padding: 8px 12px;
-      border-radius: var(--radius-md);
-      background: rgba(255, 255, 255, 0.025);
-      border: 1px solid var(--border);
-      font-family: var(--font-mono);
-      font-size: 0.72rem;
-      color: var(--text-secondary);
-    }
-
-    .controls-row input[type="range"] {
-      flex: 1;
-      accent-color: var(--accent);
-      cursor: pointer;
-    }
-
-    .quick-pill {
-      width: 100%;
-      display: flex;
-      gap: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
       margin-bottom: 4px;
     }
 
-    .quick-pill input {
-      flex: 1;
-      background: rgba(7, 8, 12, 0.85);
-      border: 1px solid var(--border-strong);
-      border-radius: 999px;
-      padding: 9px 14px;
+    .metric-cell strong {
+      font-family: var(--mono);
+      font-size: 1.05rem;
+      font-weight: 600;
       color: var(--text);
-      font-family: var(--font-sans);
-      font-size: 0.84rem;
+    }
+
+    /* ── RIGHT WORKBENCH: BOOPFACE INSTRUMENT ───────────────────────────── */
+    .hero-right {
+      background: var(--panel);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .inst-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 11px 16px;
+      border-bottom: 1px solid var(--line);
+      background: #0b0d12;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--text-dim);
+    }
+
+    .inst-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .x11-tag {
+      padding: 1px 6px;
+      border: 1px solid var(--line-strong);
+      color: var(--text-muted);
+      font-size: 0.66rem;
+    }
+
+    .inst-controls-top {
+      display: flex;
+      gap: 6px;
+    }
+
+    .inst-btn {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      padding: 3px 8px;
+      background: var(--panel-alt);
+      border: 1px solid var(--line-strong);
+      color: var(--text);
+      cursor: pointer;
+      border-radius: 3px;
+    }
+
+    .inst-btn:hover {
+      border-color: var(--crimson);
+    }
+
+    .workbench-body {
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .telemetry-readout {
+      background: #060709;
+      border: 1px solid var(--line-strong);
+      border-radius: 4px;
+      padding: 12px 14px;
+      font-size: 0.8rem;
+      min-height: 76px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .telemetry-readout b {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .telemetry-readout code {
+      font-size: 0.74rem;
+      color: var(--crimson);
+      background: rgba(229, 72, 77, 0.1);
+      padding: 1px 5px;
+      border-radius: 2px;
+    }
+
+    .readout-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+      border-top: 1px solid var(--line);
+      padding-top: 8px;
+    }
+
+    .readout-presets {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .boop-viewport {
+      position: relative;
+      height: 218px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--line);
+      background:
+        linear-gradient(to right, rgba(255,255,255,0.02) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,255,255,0.02) 1px, transparent 1px),
+        #08090c;
+      background-size: 20px 20px;
+      border-radius: 4px;
+    }
+
+    .viewport-coords {
+      position: absolute;
+      top: 8px;
+      left: 10px;
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--text-muted);
+    }
+
+    .viewport-hint {
+      position: absolute;
+      bottom: 7px;
+      right: 10px;
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--text-muted);
+    }
+
+    .param-bar {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 12px;
+      padding: 7px 12px;
+      border: 1px solid var(--line);
+      background: #0a0c10;
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--text-dim);
+    }
+
+    .param-bar input[type="range"] {
+      width: 100%;
+      accent-color: var(--crimson);
+      cursor: pointer;
+    }
+
+    .prompt-bus {
+      display: flex;
+      gap: 6px;
+    }
+
+    .prompt-bus input {
+      flex: 1;
+      background: #050608;
+      border: 1px solid var(--line-strong);
+      border-radius: 4px;
+      padding: 8px 12px;
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 0.76rem;
       outline: none;
     }
 
-    .quick-pill input:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(229, 72, 77, 0.18);
+    .prompt-bus input:focus {
+      border-color: var(--crimson);
     }
 
-    .emotion-dock {
-      width: 100%;
+    .state-matrix {
       display: flex;
       flex-wrap: wrap;
-      justify-content: center;
-      gap: 6px;
-      padding: 12px 14px;
-      border-top: 1px solid var(--border);
-      background: rgba(255, 255, 255, 0.015);
+      gap: 4px;
+      padding: 12px 16px;
+      border-top: 1px solid var(--line);
+      background: #0b0d12;
     }
 
     .emo-chip {
-      font-family: var(--font-mono);
-      font-size: 0.71rem;
-      padding: 4px 9px;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid var(--border);
-      color: var(--text-secondary);
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      padding: 3px 8px;
+      border-radius: 2px;
+      background: var(--panel-alt);
+      border: 1px solid var(--line);
+      color: var(--text-dim);
       cursor: pointer;
-      transition: all 0.18s ease;
     }
 
     .emo-chip:hover {
       color: var(--text);
-      border-color: var(--border-strong);
+      border-color: var(--line-strong);
     }
 
     .emo-chip.active {
-      background: rgba(229, 72, 77, 0.18);
-      border-color: var(--accent);
+      background: var(--crimson-dim);
+      border-color: var(--crimson);
       color: #ffffff;
     }
 
     /* ── SECTION HEADERS ────────────────────────────────────────────────── */
-    .section { padding: 88px 0; }
-    .section-head { max-width: 680px; margin-bottom: 48px; }
-
-    .section-eyebrow {
-      display: inline-block;
-      font-family: var(--font-mono);
-      font-size: 0.76rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: var(--accent-bright);
-      margin-bottom: 12px;
-    }
-
-    .section-head h2 {
-      font-size: clamp(1.85rem, 3.2vw, 2.65rem);
-      font-weight: 800;
-      letter-spacing: -0.03em;
-      line-height: 1.14;
-      margin-bottom: 14px;
-    }
-
-    .section-head p {
-      font-size: 1.02rem;
-      color: var(--text-secondary);
-    }
-
-    /* ── BENTO GRID ─────────────────────────────────────────────────────── */
-    .bento-grid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 18px;
-    }
-
-    .bento-card {
-      position: relative;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 28px;
-      overflow: hidden;
-      transition: border-color 0.25s ease, transform 0.25s ease;
-    }
-
-    .bento-card::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(
-        420px circle at var(--mx, 50%) var(--my, 50%),
-        rgba(229, 72, 77, 0.12),
-        transparent 45%
-      );
-      opacity: 0;
-      transition: opacity 0.3s ease;
-      pointer-events: none;
-    }
-
-    .bento-card:hover {
-      border-color: var(--border-strong);
-      transform: translateY(-3px);
-    }
-
-    .bento-card:hover::before { opacity: 1; }
-    .bento-span-2 { grid-column: span 2; }
-
-    .bento-icon {
-      width: 42px;
-      height: 42px;
-      border-radius: 12px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.25rem;
-      background: rgba(229, 72, 77, 0.12);
-      border: 1px solid rgba(229, 72, 77, 0.26);
-      margin-bottom: 18px;
-    }
-
-    .bento-card h3 {
-      font-size: 1.18rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      margin-bottom: 10px;
-    }
-
-    .bento-card p {
-      font-size: 0.92rem;
-      color: var(--text-secondary);
-      line-height: 1.65;
-    }
-
-    .bento-tags {
+    .sec-bar {
       display: flex;
+      align-items: baseline;
+      justify-content: space-between;
       flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 18px;
+      gap: 16px;
+      padding: 28px 40px;
+      border-bottom: 1px solid var(--line);
+      background: #0b0d12;
     }
 
-    .tag-mono {
-      font-family: var(--font-mono);
-      font-size: 0.72rem;
-      padding: 4px 10px;
-      border-radius: 6px;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid var(--border);
-      color: var(--text-secondary);
-    }
-
-    /* ── ARCHITECTURE & TERMINAL SIMULATOR ──────────────────────────────── */
-    .arch-split {
-      display: grid;
-      grid-template-columns: 0.95fr 1.05fr;
-      gap: 28px;
-      align-items: stretch;
-    }
-
-    .tier-list { display: flex; flex-direction: column; gap: 10px; }
-
-    .tier-btn {
-      text-align: left;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      padding: 16px 18px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      color: var(--text);
-    }
-
-    .tier-btn:hover {
-      border-color: var(--border-strong);
-      background: var(--surface-hover);
-    }
-
-    .tier-btn.active {
-      border-color: var(--accent);
-      background: linear-gradient(90deg, rgba(229, 72, 77, 0.14), rgba(19, 22, 32, 0.8));
-    }
-
-    .tier-top {
+    .sec-bar-left {
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 4px;
-    }
-
-    .tier-top strong { font-size: 0.95rem; font-weight: 700; }
-
-    .tier-badge {
-      font-family: var(--font-mono);
-      font-size: 0.7rem;
-      color: var(--emerald);
-      background: rgba(62, 207, 142, 0.12);
-      padding: 2px 8px;
-      border-radius: 999px;
-    }
-
-    .tier-btn p { font-size: 0.84rem; color: var(--text-secondary); }
-
-    .terminal-card {
-      background: #090b10;
-      border: 1px solid var(--border-strong);
-      border-radius: var(--radius-lg);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.75);
-    }
-
-    .terminal-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--border);
-      background: rgba(255, 255, 255, 0.02);
-    }
-
-    .terminal-body {
-      padding: 20px;
-      font-family: var(--font-mono);
-      font-size: 0.82rem;
-      line-height: 1.7;
-      color: #d1d5db;
-      flex: 1;
-      overflow-x: auto;
-      white-space: pre-wrap;
-    }
-
-    .t-prompt { color: var(--emerald); }
-    .t-cmd { color: #ffffff; font-weight: 600; }
-    .t-accent { color: var(--accent-bright); }
-    .t-muted { color: var(--text-muted); }
-
-    /* ── BOOPFACE LIVE EXPRESSION & SKIN GALLERY ────────────────────────── */
-    .emotion-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(185px, 1fr));
+      align-items: baseline;
       gap: 16px;
     }
 
-    .emo-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      padding: 20px 14px;
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.22s ease;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
+    .sec-index {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--crimson);
+      font-weight: 600;
     }
 
-    .emo-card:hover {
-      border-color: var(--accent);
-      transform: translateY(-4px);
-      background: var(--surface-hover);
+    .sec-bar h2 {
+      font-size: 1.35rem;
+      font-weight: 600;
+      letter-spacing: -0.025em;
     }
 
-    .emo-card strong {
-      display: block;
-      font-size: 0.92rem;
-      margin-top: 4px;
-    }
-
-    .emo-card span {
-      font-family: var(--font-mono);
-      font-size: 0.72rem;
+    .sec-bar p {
+      font-family: var(--mono);
+      font-size: 0.74rem;
       color: var(--text-muted);
     }
 
-    /* ── INSTALL CTA PANEL ──────────────────────────────────────────────── */
-    .install-panel {
-      background: linear-gradient(135deg, rgba(229, 72, 77, 0.14), rgba(19, 22, 32, 0.92) 55%);
-      border: 1px solid var(--border-strong);
-      border-radius: var(--radius-xl);
-      padding: 44px;
+    /* ── SECTION 01: 5-TIER PIPELINE & REPL ─────────────────────────────── */
+    .pipeline-grid {
       display: grid;
-      grid-template-columns: 1fr 1.15fr;
-      gap: 36px;
-      align-items: center;
+      grid-template-columns: 0.9fr 1.1fr;
+      border-bottom: 1px solid var(--line);
     }
 
-    .install-panel h2 {
-      font-size: clamp(1.7rem, 3vw, 2.3rem);
-      font-weight: 800;
-      letter-spacing: -0.03em;
-      margin-bottom: 12px;
+    .tier-selector {
+      border-right: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
     }
 
-    .install-panel p {
-      color: var(--text-secondary);
-      margin-bottom: 24px;
+    .tier-row {
+      text-align: left;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid var(--line);
+      padding: 18px 28px;
+      cursor: pointer;
+      color: var(--text);
+      transition: background 0.15s ease;
     }
 
-    .code-box {
-      background: #07080c;
-      border: 1px solid var(--border-strong);
-      border-radius: var(--radius-md);
-      overflow: hidden;
+    .tier-row:last-child {
+      border-bottom: none;
     }
 
-    .code-box-head {
+    .tier-row:hover {
+      background: var(--panel);
+    }
+
+    .tier-row.active {
+      background: var(--panel-alt);
+      box-shadow: inset 3px 0 0 var(--crimson);
+    }
+
+    .tier-row-head {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 10px 16px;
-      border-bottom: 1px solid var(--border);
-      font-family: var(--font-mono);
-      font-size: 0.75rem;
+      margin-bottom: 6px;
+    }
+
+    .tier-row-head strong {
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+
+    .latency-tag {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--green);
+      background: var(--green-dim);
+      padding: 1px 6px;
+      border-radius: 2px;
+    }
+
+    .tier-row p {
+      font-size: 0.84rem;
+      color: var(--text-dim);
+    }
+
+    .repl-pane {
+      background: #050608;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .repl-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 20px;
+      border-bottom: 1px solid var(--line);
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      background: #090b0f;
+    }
+
+    .repl-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      padding: 10px 20px;
+      border-bottom: 1px solid var(--line);
+      background: #07090c;
+    }
+
+    .repl-body {
+      padding: 22px 24px;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      line-height: 1.7;
+      color: #cfd5e2;
+      white-space: pre-wrap;
+      overflow-x: auto;
+      flex: 1;
+    }
+
+    .t-prompt { color: var(--green); }
+    .t-cmd { color: #ffffff; font-weight: 600; }
+    .t-accent { color: var(--crimson); }
+    .t-muted { color: var(--text-muted); }
+
+    /* ── SECTION 02: ARCHITECTURAL SUBSYSTEMS GRID ──────────────────────── */
+    .spec-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .spec-cell {
+      padding: 32px;
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 18px;
+    }
+
+    .spec-cell:nth-child(3n) {
+      border-right: none;
+    }
+
+    .spec-cell:nth-last-child(-n+3) {
+      border-bottom: none;
+    }
+
+    .spec-cell-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: var(--mono);
+      font-size: 0.7rem;
       color: var(--text-muted);
     }
 
-    .code-box pre {
-      padding: 18px;
-      font-family: var(--font-mono);
+    .spec-cell-top svg {
+      width: 18px;
+      height: 18px;
+      stroke: var(--crimson);
+      fill: none;
+      stroke-width: 1.6;
+    }
+
+    .spec-cell h3 {
+      font-size: 1.02rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      margin: 10px 0 8px;
+      color: var(--text);
+    }
+
+    .spec-cell p {
+      font-size: 0.86rem;
+      color: var(--text-dim);
+      line-height: 1.6;
+    }
+
+    .spec-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+    }
+
+    .code-tag {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      padding: 2px 7px;
+      background: var(--panel);
+      border: 1px solid var(--line-strong);
+      color: var(--text-dim);
+      border-radius: 2px;
+    }
+
+    /* ── SECTION 03: BOOPFACE SPECIMEN MATRIX ───────────────────────────── */
+    .specimen-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .specimen-cell {
+      padding: 24px 16px;
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      background: var(--bg);
+      transition: background 0.15s ease;
+    }
+
+    .specimen-cell:nth-child(4n) {
+      border-right: none;
+    }
+
+    .specimen-cell:nth-last-child(-n+4) {
+      border-bottom: none;
+    }
+
+    .specimen-cell:hover {
+      background: var(--panel);
+    }
+
+    .specimen-meta {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--line);
+      padding-top: 8px;
+    }
+
+    .specimen-meta strong {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    /* ── SECTION 04: GTK3 STUDIO & 6-STAGE CRASH DOCTOR ─────────────────── */
+    .studio-split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .studio-pane {
+      padding: 32px 40px;
+      border-right: 1px solid var(--line);
+    }
+
+    .studio-pane:last-child {
+      border-right: none;
+      background: #07080b;
+    }
+
+    .pane-label {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+      display: block;
+    }
+
+    .telemetry-bars {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .t-bar-row {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      padding: 12px 14px;
+      border-radius: 3px;
+    }
+
+    .t-bar-head {
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--mono);
+      font-size: 0.74rem;
+      margin-bottom: 8px;
+    }
+
+    .t-bar-track {
+      height: 5px;
+      background: #1a1e28;
+      overflow: hidden;
+    }
+
+    .t-bar-fill {
+      height: 100%;
+    }
+
+    .doctor-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--mono);
+      font-size: 0.74rem;
+    }
+
+    .doctor-table tr {
+      border-bottom: 1px solid var(--line);
+    }
+
+    .doctor-table td {
+      padding: 10px 8px;
+      vertical-align: top;
+    }
+
+    .doctor-table td:first-child {
+      color: var(--crimson);
+      width: 44px;
+    }
+
+    .doctor-table td:nth-child(2) {
+      color: var(--text);
+      font-weight: 500;
+      width: 145px;
+    }
+
+    .doctor-table td:nth-child(3) {
+      color: var(--text-dim);
+      font-family: var(--sans);
       font-size: 0.8rem;
+    }
+
+    /* ── SECTION 05: BUILD & DEPLOYMENT ─────────────────────────────────── */
+    .deploy-split {
+      display: grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .deploy-info {
+      padding: 40px;
+      border-right: 1px solid var(--line);
+    }
+
+    .deploy-info h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      margin-bottom: 12px;
+    }
+
+    .deploy-info p {
+      font-size: 0.9rem;
+      color: var(--text-dim);
+      margin-bottom: 24px;
+    }
+
+    .deploy-code {
+      background: #050608;
+      padding: 28px 32px;
+      font-family: var(--mono);
+      font-size: 0.78rem;
       line-height: 1.75;
-      color: #e2e8f0;
+      color: #d6dce8;
       overflow-x: auto;
     }
 
     /* ── FOOTER ─────────────────────────────────────────────────────────── */
     footer {
-      border-top: 1px solid var(--border);
-      padding: 40px 0 56px;
-      color: var(--text-muted);
-      font-size: 0.86rem;
-    }
-
-    .footer-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 28px 40px;
+      border-left: 1px solid var(--line);
+      border-right: 1px solid var(--line);
       display: flex;
       flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
-      gap: 20px;
-    }
-
-    .footer-links { display: flex; flex-wrap: wrap; gap: 22px; }
-    .footer-links a:hover { color: var(--text); }
-
-    .reveal {
-      opacity: 1;
-      transform: translateY(0);
-      transition: opacity 0.5s ease, transform 0.5s ease;
-    }
-
-    .reveal.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    /* ── STUDIO PREVIEW & CRASH DOCTOR ─────────────────────────────────── */
-    .studio-card {
-      background: linear-gradient(180deg, rgba(20, 22, 26, 0.96), rgba(13, 14, 17, 0.98));
-      border: 1px solid var(--border-strong);
-      border-radius: var(--radius-xl);
-      overflow: hidden;
-      box-shadow: 0 28px 70px -24px rgba(0, 0, 0, 0.85);
-    }
-
-    .studio-body {
-      display: grid;
-      grid-template-columns: 1.1fr 0.9fr;
-      gap: 24px;
-      padding: 28px;
-    }
-
-    .gauge-row {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 14px;
-      margin-bottom: 20px;
-    }
-
-    .gauge-box {
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      padding: 16px 12px;
-      text-align: center;
-    }
-
-    .gauge-box svg {
-      width: 68px;
-      height: 68px;
-      margin-bottom: 6px;
-    }
-
-    .gauge-box strong {
-      display: block;
-      font-size: 0.95rem;
-    }
-
-    .gauge-box span {
-      font-family: var(--font-mono);
-      font-size: 0.72rem;
+      gap: 16px;
+      font-family: var(--mono);
+      font-size: 0.74rem;
       color: var(--text-muted);
     }
 
-    .activity-feed {
-      background: rgba(7, 8, 12, 0.7);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      padding: 16px;
-      font-family: var(--font-mono);
-      font-size: 0.78rem;
-      line-height: 1.75;
-      color: var(--text-secondary);
-    }
-
-    .activity-item {
+    .footer-links {
       display: flex;
-      gap: 10px;
-      padding: 6px 0;
-      border-bottom: 1px dashed rgba(255, 255, 255, 0.06);
+      flex-wrap: wrap;
+      gap: 20px;
     }
 
-    .activity-item:last-child { border-bottom: none; }
-
-    .doctor-steps {
-      display: grid;
-      grid-template-columns: repeat(6, minmax(0, 1fr));
-      gap: 12px;
-      margin-top: 28px;
-    }
-
-    .doctor-step {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      padding: 16px 14px;
-    }
-
-    .doctor-num {
-      font-family: var(--font-mono);
-      font-size: 0.7rem;
-      font-weight: 700;
-      color: var(--accent-bright);
-      margin-bottom: 6px;
-      display: block;
-    }
-
-    .doctor-step strong {
-      display: block;
-      font-size: 0.88rem;
-      margin-bottom: 4px;
-    }
-
-    .doctor-step p {
-      font-size: 0.78rem;
-      color: var(--text-secondary);
-      line-height: 1.45;
+    .footer-links a:hover {
+      color: var(--text);
     }
 
     @media (max-width: 980px) {
-      .studio-body { grid-template-columns: 1fr; }
-      .doctor-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    }
-
-    @media (max-width: 980px) {
-      .hero-grid,
-      .arch-split,
-      .install-panel {
+      .hero-split,
+      .pipeline-grid,
+      .studio-split,
+      .deploy-split {
         grid-template-columns: 1fr;
       }
-      .bento-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .bento-span-2 { grid-column: span 2; }
-      .nav-links { display: none; }
-    }
-
-    @media (max-width: 640px) {
-      .bento-grid { grid-template-columns: 1fr; }
-      .bento-span-2 { grid-column: span 1; }
-      .hero-specs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .install-panel { padding: 28px 20px; }
+      .hero-left,
+      .tier-selector,
+      .studio-pane,
+      .deploy-info {
+        border-right: none;
+        border-bottom: 1px solid var(--line);
+      }
+      .spec-grid {
+        grid-template-columns: 1fr;
+      }
+      .spec-cell {
+        border-right: none;
+      }
+      .specimen-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .nav-links {
+        display: none;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="ambient-bg"></div>
-  <div class="grid-overlay"></div>
-
-  <!-- NAVBAR -->
-  <header class="navbar">
-    <div class="container nav-inner">
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="topbar-inner">
       <a href="#top" class="brand">
-        <span class="brand-avatar">
-          <boop-face size="36" color="#131620" skin="901" motion="reduce" press-squeeze="false" antenna-drag="false"></boop-face>
+        <span class="brand-boop">
+          <boop-face size="28" color="#131620" skin="901" motion="reduce" press-squeeze="false" antenna-drag="false"></boop-face>
         </span>
-        <span>Tchiko Assistant</span>
-        <span class="brand-tag">v1.2</span>
+        <span>TCHIKO</span>
+        <span class="version-chip">v1.2.0</span>
       </a>
 
       <nav class="nav-links" aria-label="Primary">
-        <a href="#features">Capabilities</a>
-        <a href="#architecture">5-Tier Engine</a>
-        <a href="#emotions">BoopFace Gallery</a>
-        <a href="#install">Quick Start</a>
+        <a href="#pipeline">01.Pipeline</a>
+        <a href="#subsystems">02.Subsystems</a>
+        <a href="#specimens">03.BoopFace_SVG</a>
+        <a href="#studio">04.Telemetry</a>
+        <a href="#deploy">05.Install</a>
       </nav>
 
-      <div class="nav-actions">
-        <a href="https://github.com/ZYNIQ-SOLUTIONS/Tchiko-Assistant-Sysadmin-companion" target="_blank" rel="noopener noreferrer" class="btn btn-ghost">
-          GitHub
+      <div class="nav-cta">
+        <a href="https://github.com/ZYNIQ-SOLUTIONS/Tchiko-Assistant-Sysadmin-companion" target="_blank" rel="noopener noreferrer" class="btn">
+          GitHub Repository
         </a>
-        <a href="#install" class="btn btn-primary">Get Started</a>
+        <a href="#deploy" class="btn btn-accent">Install CLI</a>
       </div>
     </div>
   </header>
 
-  <main id="top">
+  <main class="shell" id="top">
     <!-- HERO -->
-    <section class="hero">
-      <div class="container hero-grid">
+    <section class="hero-split">
+      <div class="hero-left">
         <div>
-          <div class="hero-pill">
-            <span class="hero-pill-dot"></span>
-            <span>Open Source MIT • Ubuntu Linux • BoopFace SVG + Antigravity SDK</span>
+          <div class="meta-line">
+            <span class="status-dot"></span>
+            <span>REL 1.2.0 // UBUNTU 22.04–25.10 // X11 &amp; XWAYLAND // MIT</span>
           </div>
 
           <h1>
-            Your Autonomous Linux Sysadmin, <span class="text-gradient">Expressive &amp; Alive.</span>
+            Autonomous Linux systems agent <span>and resident desktop overlay.</span>
           </h1>
 
-          <p class="hero-sub">
-            Meet <strong>Tchiko</strong> — an autonomous Ubuntu systems engineer and 6-step IDE crash doctor, paired with <strong>BoopFace</strong>: a zero-dependency interactive SVG avatar with 188 skins, spring antenna physics, jelly drag, and live agent state feedback.
+          <p class="hero-lead">
+            Tchiko pairs deterministic sub-15ms host inspection (<code>/proc</code>, <code>systemd</code>, <code>ss</code>, <code>docker</code>, OpenSSL X.509) with the Google Antigravity NDJSON stream bridge, a 3-tier shell risk classifier, snapshot-backed file rollbacks, and an interactive BoopFace SVG overlay.
           </p>
 
-          <div class="hero-cta-row">
-            <a href="#install" class="btn btn-primary btn-lg">Install on Ubuntu</a>
-            <a href="https://github.com/ZYNIQ-SOLUTIONS/Tchiko-Assistant-Sysadmin-companion/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener noreferrer" class="btn btn-ghost btn-lg">
-              Contribute Guide
+          <div class="hero-cli-bar">
+            <code><span class="prompt-sign">$</span>git clone https://github.com/ZYNIQ-SOLUTIONS/Tchiko-Assistant-Sysadmin-companion.git &amp;&amp; cd Tchiko-Assistant-Sysadmin-companion &amp;&amp; ./run_tchiko.sh</code>
+            <button type="button" class="inst-btn" onclick="copyCli(this)">COPY</button>
+          </div>
+
+          <div class="hero-actions">
+            <a href="#deploy" class="btn btn-accent">Build &amp; Run on Ubuntu</a>
+            <a href="https://github.com/ZYNIQ-SOLUTIONS/Tchiko-Assistant-Sysadmin-companion/blob/main/docs/ARCHITECTURE.md" target="_blank" rel="noopener noreferrer" class="btn">
+              Architecture Spec
+            </a>
+            <a href="https://github.com/ZYNIQ-SOLUTIONS/Tchiko-Assistant-Sysadmin-companion/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener noreferrer" class="btn">
+              Contributing
             </a>
           </div>
+        </div>
 
-          <div class="hero-specs">
-            <div class="spec-item">
-              <strong>&lt;15 ms</strong>
-              <span>Local determinism</span>
-            </div>
-            <div class="spec-item">
-              <strong>5 Tiers</strong>
-              <span>Agentic dispatch</span>
-            </div>
-            <div class="spec-item">
-              <strong>188 Skins</strong>
-              <span>Pure SVG BoopFace</span>
-            </div>
-            <div class="spec-item">
-              <strong>6 Domains</strong>
-              <span>RBAC permissions</span>
-            </div>
+        <div class="metrics-strip">
+          <div class="metric-cell">
+            <small>Local Dispatch</small>
+            <strong>&lt;15 ms</strong>
+          </div>
+          <div class="metric-cell">
+            <small>Execution Tiers</small>
+            <strong>05 Stages</strong>
+          </div>
+          <div class="metric-cell">
+            <small>RBAC Domains</small>
+            <strong>06 Policies</strong>
+          </div>
+          <div class="metric-cell">
+            <small>Vector Skins</small>
+            <strong>188 SVG</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- INTERACTIVE BOOPFACE WORKBENCH -->
+      <div class="hero-right" id="stage-board">
+        <div class="inst-header">
+          <div class="inst-header-left">
+            <span class="x11-tag">X11/RGBA</span>
+            <span id="skin-label">SKIN: 901 [METAL]</span>
+          </div>
+          <div class="inst-controls-top">
+            <button type="button" class="inst-btn" onclick="cycleSkin()">NEXT_SKIN</button>
+            <button type="button" class="inst-btn" onclick="randomSkin()">RND [188]</button>
           </div>
         </div>
 
-        <!-- INTERACTIVE BOOPFACE STAGE WINDOW -->
-        <div class="stage-window" id="stage-board">
-          <div class="stage-titlebar">
-            <div class="window-dots" aria-hidden="true">
-              <i class="dot-red"></i>
-              <i class="dot-amber"></i>
-              <i class="dot-green"></i>
+        <div class="workbench-body">
+          <div class="telemetry-readout" aria-live="polite">
+            <div id="bubble-text">
+              <b>[READY]</b> Pointer-tracking eyes, elastic head drag, center press-squeeze, and spring antenna active. Select a diagnostic preset below.
             </div>
-            <span class="stage-title" id="skin-label">Skin: 901 (Metal)</span>
-            <div style="display:flex; gap:6px;">
-              <button type="button" class="coat-btn" onclick="cycleSkin()">Next Skin</button>
-              <button type="button" class="coat-btn" onclick="randomSkin()">🎲 188</button>
-            </div>
-          </div>
-
-          <div class="stage-canvas-wrap">
-            <div class="speech-bubble" aria-live="polite">
-              <div id="bubble-text">
-                <b>BoopFace Ready!</b> Move your cursor, press-and-hold to squeeze, drag my head, or pull my spring antenna (careful—I get angry!).
+            <div class="readout-toolbar">
+              <div class="readout-presets">
+                <button type="button" class="inst-btn" onclick="simulatePrompt('sysinfo')">/doctor</button>
+                <button type="button" class="inst-btn" onclick="simulatePrompt('containers')">/containers</button>
+                <button type="button" class="inst-btn" onclick="simulatePrompt('skills')">/skills</button>
+                <button type="button" class="inst-btn" onclick="simulatePrompt('ssh')">ssh-keygen</button>
+                <button type="button" class="inst-btn" onclick="simulatePrompt('blocked')">rm -rf [DENY]</button>
               </div>
-              <div class="bubble-actions">
-                <button type="button" class="mini-btn" onclick="simulatePrompt('sysinfo')">/doctor</button>
-                <button type="button" class="mini-btn" onclick="simulatePrompt('containers')">/containers</button>
-                <button type="button" class="mini-btn" onclick="simulatePrompt('skills')">/skills</button>
-                <button type="button" class="mini-btn" onclick="simulatePrompt('ssh')">SSH Key</button>
-                <button type="button" class="mini-btn" onclick="simulatePrompt('blocked')">RBAC Block</button>
-                <button type="button" class="mini-btn" id="copy-btn" onclick="copyBubble()">Copy</button>
-                <button type="button" class="mini-btn" onclick="resetBubble()">Reset</button>
+              <div class="readout-presets">
+                <button type="button" class="inst-btn" id="copy-btn" onclick="copyBubble()">COPY</button>
+                <button type="button" class="inst-btn" onclick="resetBubble()">CLR</button>
               </div>
             </div>
-
-            <div class="boop-stage-box">
-              <boop-face
-                id="tchiko-boop"
-                size="195"
-                color="#131620"
-                skin="901"
-                auto-sleep="45000"
-                wake-on="activity"
-                motion="full">
-                <img src="landing/assets/tchiko-logo.svg" alt="Tchiko BoopFace Avatar" style="width:195px;height:195px;display:block;" />
-              </boop-face>
-              <span class="boop-hint">Drag head • Hold center to squeeze • Pull spring antenna</span>
-            </div>
-
-            <div class="controls-row">
-              <span>Head Roundness</span>
-              <input type="range" id="roundness-slider" min="0" max="100" value="50" aria-label="Head Roundness" />
-              <span id="roundness-val">50</span>
-            </div>
-
-            <div class="quick-pill" id="quick-pill">
-              <input
-                type="text"
-                id="quick-entry"
-                placeholder="Ask Tchiko (e.g. /doctor, ssh key, or rm -rf to test RBAC)..."
-                aria-label="Quick prompt for Tchiko"
-              />
-              <button type="button" class="btn btn-primary" onclick="sendQuickPrompt()">Run ↵</button>
-            </div>
           </div>
 
-          <div class="emotion-dock" role="group" aria-label="BoopFace expressions and agent states">
-            <button type="button" class="emo-chip active" data-emo="idle" onclick="setBoopAction('idle', this)">idle</button>
-            <button type="button" class="emo-chip" data-emo="waiting-spin" onclick="setBoopAction('waiting-spin', this)">waiting-spin</button>
-            <button type="button" class="emo-chip" data-emo="waiting-wrap" onclick="setBoopAction('waiting-wrap', this)">waiting-wrap</button>
-            <button type="button" class="emo-chip" data-emo="waiting-wave" onclick="setBoopAction('waiting-wave', this)">waiting-wave</button>
-            <button type="button" class="emo-chip" data-emo="input" onclick="setBoopAction('input', this)">input</button>
-            <button type="button" class="emo-chip" data-emo="affirm" onclick="setBoopAction('affirm', this)">affirm</button>
-            <button type="button" class="emo-chip" data-emo="success" onclick="setBoopAction('success', this)">success</button>
-            <button type="button" class="emo-chip" data-emo="failure" onclick="setBoopAction('failure', this)">failure</button>
-            <button type="button" class="emo-chip" data-emo="wary" onclick="setBoopAction('wary', this)">wary</button>
-            <button type="button" class="emo-chip" data-emo="inspect" onclick="setBoopAction('inspect', this)">inspect</button>
-            <button type="button" class="emo-chip" data-emo="angry" onclick="setBoopAction('angry', this)">angry</button>
-            <button type="button" class="emo-chip" data-emo="refuse" onclick="setBoopAction('refuse', this)">refuse</button>
-            <button type="button" class="emo-chip" data-emo="surprise" onclick="setBoopAction('surprise', this)">surprise</button>
-            <button type="button" class="emo-chip" data-emo="random" onclick="setBoopAction('random', this)">random</button>
-            <button type="button" class="emo-chip" data-emo="sleep" onclick="setBoopAction('sleep', this)">sleep</button>
-            <button type="button" class="emo-chip" data-emo="wake" onclick="setBoopAction('wake', this)">wake</button>
+          <div class="boop-viewport">
+            <span class="viewport-coords">POS: 1769,488 // 28.0 FPS</span>
+            <boop-face
+              id="tchiko-boop"
+              size="185"
+              color="#131620"
+              skin="901"
+              auto-sleep="45000"
+              wake-on="activity"
+              motion="full">
+              <img src="landing/assets/tchiko-logo.svg" alt="Tchiko BoopFace Avatar" style="width:185px;height:185px;display:block;" />
+            </boop-face>
+            <span class="viewport-hint">DRAG_HEAD // HOLD_SQUEEZE // PULL_ANTENNA</span>
           </div>
+
+          <div class="param-bar">
+            <span>HEAD_ROUNDNESS</span>
+            <input type="range" id="roundness-slider" min="0" max="100" value="50" aria-label="Head Roundness" />
+            <span id="roundness-val">050</span>
+          </div>
+
+          <div class="prompt-bus" id="quick-pill">
+            <input
+              type="text"
+              id="quick-entry"
+              placeholder="Execute slash command or prompt (e.g. /doctor, /containers, /skills)..."
+              aria-label="Prompt input"
+            />
+            <button type="button" class="btn btn-accent" onclick="sendQuickPrompt()">EXEC</button>
+          </div>
+        </div>
+
+        <div class="state-matrix" role="group" aria-label="BoopFace state triggers">
+          <button type="button" class="emo-chip active" data-emo="idle" onclick="setBoopAction('idle', this)">idle</button>
+          <button type="button" class="emo-chip" data-emo="waiting-spin" onclick="setBoopAction('waiting-spin', this)">waiting-spin</button>
+          <button type="button" class="emo-chip" data-emo="waiting-wrap" onclick="setBoopAction('waiting-wrap', this)">waiting-wrap</button>
+          <button type="button" class="emo-chip" data-emo="waiting-wave" onclick="setBoopAction('waiting-wave', this)">waiting-wave</button>
+          <button type="button" class="emo-chip" data-emo="input" onclick="setBoopAction('input', this)">input</button>
+          <button type="button" class="emo-chip" data-emo="affirm" onclick="setBoopAction('affirm', this)">affirm</button>
+          <button type="button" class="emo-chip" data-emo="success" onclick="setBoopAction('success', this)">success</button>
+          <button type="button" class="emo-chip" data-emo="failure" onclick="setBoopAction('failure', this)">failure</button>
+          <button type="button" class="emo-chip" data-emo="wary" onclick="setBoopAction('wary', this)">wary</button>
+          <button type="button" class="emo-chip" data-emo="inspect" onclick="setBoopAction('inspect', this)">inspect</button>
+          <button type="button" class="emo-chip" data-emo="angry" onclick="setBoopAction('angry', this)">angry</button>
+          <button type="button" class="emo-chip" data-emo="refuse" onclick="setBoopAction('refuse', this)">refuse</button>
+          <button type="button" class="emo-chip" data-emo="surprise" onclick="setBoopAction('surprise', this)">surprise</button>
+          <button type="button" class="emo-chip" data-emo="random" onclick="setBoopAction('random', this)">random</button>
+          <button type="button" class="emo-chip" data-emo="sleep" onclick="setBoopAction('sleep', this)">sleep</button>
+          <button type="button" class="emo-chip" data-emo="wake" onclick="setBoopAction('wake', this)">wake</button>
         </div>
       </div>
     </section>
 
-    <!-- BENTO CAPABILITIES -->
-    <section class="section reveal" id="features">
-      <div class="container">
-        <div class="section-head">
-          <span class="section-eyebrow">Engineered for Linux SREs &amp; Builders</span>
-          <h2>Zero-latency local tools meet deep agentic reasoning.</h2>
-          <p>Built to diagnose crashes, manage SSH lifecycles, inspect `/proc`, and reflect every agent state visually with BoopFace.</p>
+    <!-- SECTION 01: 5-TIER EXECUTION PIPELINE -->
+    <div class="sec-bar" id="pipeline">
+      <div class="sec-bar-left">
+        <span class="sec-index">01 // DISPATCH_ARCHITECTURE</span>
+        <h2>5-Tier Execution Pipeline</h2>
+      </div>
+      <p>tchiko/agent_engine.py • deterministic routing before LLM escalation</p>
+    </div>
+
+    <section class="pipeline-grid">
+      <div class="tier-selector" role="tablist" aria-label="Execution tiers">
+        <button type="button" class="tier-row active" onclick="selectTier(this, 'tier1')">
+          <div class="tier-row-head">
+            <strong>TIER 01 // SLASH_ROUTER</strong>
+            <span class="latency-tag">&lt;5 ms</span>
+          </div>
+          <p>Direct zero-latency dispatch for <code>/doctor</code>, <code>/containers</code>, <code>/systemd</code>, <code>/net</code>, <code>/disk</code>, <code>/gpu</code>, <code>/tls</code>, <code>/git</code>, <code>/skills</code>, and <code>/undo</code>.</p>
+        </button>
+
+        <button type="button" class="tier-row" onclick="selectTier(this, 'tier2')">
+          <div class="tier-row-head">
+            <strong>TIER 02 // CONTEXT_MEMORY</strong>
+            <span class="latency-tag">&lt;5 ms</span>
+          </div>
+          <p>Persistent <code>config/agent_memory.json</code> resolver for <code>"copy it"</code>, <code>"retry"</code>, <code>"cd ..."</code>, and key-value host facts.</p>
+        </button>
+
+        <button type="button" class="tier-row" onclick="selectTier(this, 'tier3')">
+          <div class="tier-row-head">
+            <strong>TIER 03 // DETERMINISTIC_PLANNER</strong>
+            <span class="latency-tag">&lt;15 ms</span>
+          </div>
+          <p>6-stage application crash doctor, OpenSSH <code>ed25519</code> key lifecycle + <code>~/.ssh/config</code>, and port/PID reaping.</p>
+        </button>
+
+        <button type="button" class="tier-row" onclick="selectTier(this, 'tier4')">
+          <div class="tier-row-head">
+            <strong>TIER 04 // AGY_NDJSON_BRIDGE</strong>
+            <span class="latency-tag">STREAM</span>
+          </div>
+          <p>Non-blocking subprocess bridge to <code>agy --output-format stream-json</code> with persistent <code>conversation_id</code> context.</p>
+        </button>
+
+        <button type="button" class="tier-row" onclick="selectTier(this, 'tier5')">
+          <div class="tier-row-head">
+            <strong>TIER 05 // PARALLEL_REACT_LOOP</strong>
+            <span class="latency-tag">8 TURNS</span>
+          </div>
+          <p>Strips <code>&lt;think&gt;</code> blocks, batches read-only tools via <code>asyncio.gather</code>, and pauses on <code>asyncio.Future</code> for manual review.</p>
+        </button>
+      </div>
+
+      <div class="repl-pane">
+        <div class="repl-header">
+          <span id="term-title">tier-01-slash-router.log</span>
+          <span>STDOUT // UTF-8</span>
         </div>
-
-        <div class="bento-grid">
-          <article class="bento-card bento-span-2">
-            <div class="bento-icon">🧠</div>
-            <h3>5-Tier Autonomous Dispatch &amp; `agy` NDJSON Bridge</h3>
-            <p>
-              Common tasks resolve deterministically in under 15 ms. Complex investigations stream over `agy --output-format stream-json` with persistent `conversation_id` memory or fall back to an 8-step ReAct loop for Gemini &amp; local Ollama models.
-            </p>
-            <div class="bento-tags">
-              <span class="tag-mono">Slash Router</span>
-              <span class="tag-mono">NDJSON Stream</span>
-              <span class="tag-mono">8-Step ReAct</span>
-              <span class="tag-mono">&lt;think&gt; Sanitizer</span>
-            </div>
-          </article>
-
-          <article class="bento-card">
-            <div class="bento-icon">🩺</div>
-            <h3>6-Step Crash Doctor</h3>
-            <p>
-              Resolves binaries &amp; symlinks, inspects `SingletonLock` &amp; `Crashpad` dumps, scans crash logs, audits X.509 `.pem` certificates via OpenSSL, and patches bundles with automatic `.bak` backups.
-            </p>
-            <div class="bento-tags">
-              <span class="tag-mono">diagnose_and_heal_app</span>
-            </div>
-          </article>
-
-          <article class="bento-card">
-            <div class="bento-icon">🛡️</div>
-            <h3>3-Tier Risk &amp; `/undo` Ledger</h3>
-            <p>
-              Classifies every command (`SAFE_READONLY`, `MUTATING_LOCAL`, `PRIVILEGED_DESTRUCTIVE`), gates 6 RBAC domains, and saves pre-edit snapshots for instant `/undo` &amp; `/rollback`.
-            </p>
-            <div class="bento-tags">
-              <span class="tag-mono">/undo</span>
-              <span class="tag-mono">action_ledger.json</span>
-            </div>
-          </article>
-
-          <article class="bento-card">
-            <div class="bento-icon">🧩</div>
-            <h3>Pluggable `skills/*.md` &amp; Sysadmin Toolkit</h3>
-            <p>
-              Drop Markdown runbooks (`nginx-tls-audit`, `postgres-doctor`, `gpu-cuda-doctor`, `git-recovery`) into `skills/` and run `/containers`, `/systemd`, `/net`, `/disk`, `/gpu`, `/tls`, and `/git`.
-            </p>
-            <div class="bento-tags">
-              <span class="tag-mono">/skills</span>
-              <span class="tag-mono">/containers</span>
-              <span class="tag-mono">/systemd</span>
-              <span class="tag-mono">/net</span>
-            </div>
-          </article>
-
-          <article class="bento-card">
-            <div class="bento-icon">✨</div>
-            <h3>BoopFace SVG &amp; Proactive Watchdog</h3>
-            <p>
-              Powered by <strong>CX-ArtLab/BoopFace</strong> with 188 pure-SVG skins, spring antenna physics, GTK3 drag-and-drop log analysis, clipboard diagnosis, and a background RAM/Disk/systemd watchdog.
-            </p>
-            <div class="bento-tags">
-              <span class="tag-mono">&lt;boop-face&gt;</span>
-              <span class="tag-mono">SystemWatchdog</span>
-              <span class="tag-mono">Drag &amp; Drop</span>
-            </div>
-          </article>
-        </div>
+        <div class="repl-body" id="term-output"></div>
       </div>
     </section>
 
-    <!-- 5-TIER ARCHITECTURE & INTERACTIVE TERMINAL -->
-    <section class="section reveal" id="architecture">
-      <div class="container">
-        <div class="section-head">
-          <span class="section-eyebrow">Execution Pipeline</span>
-          <h2>Inspect how Tchiko thinks &amp; acts.</h2>
-          <p>Select any tier below to preview the exact execution flow in the live terminal simulator.</p>
-        </div>
+    <!-- SECTION 02: SUBSYSTEM SPECIFICATIONS -->
+    <div class="sec-bar" id="subsystems">
+      <div class="sec-bar-left">
+        <span class="sec-index">02 // CORE_SUBSYSTEMS</span>
+        <h2>Host Engineering &amp; Safety Architecture</h2>
+      </div>
+      <p>tchiko/system_tools.py • tchiko/config_manager.py • tchiko/skills_loader.py</p>
+    </div>
 
-        <div class="arch-split">
-          <div class="tier-list" role="tablist" aria-label="Agent Execution Tiers">
-            <button type="button" class="tier-btn active" onclick="selectTier(this, 'tier1')">
-              <div class="tier-top">
-                <strong>Tier 1 — Built-in Slash Router</strong>
-                <span class="tier-badge">&lt;5 ms</span>
-              </div>
-              <p>Zero-latency `/doctor`, `/sysinfo`, `/procs`, `/files`, and `$ &lt;cmd&gt;` execution.</p>
-            </button>
-
-            <button type="button" class="tier-btn" onclick="selectTier(this, 'tier2')">
-              <div class="tier-top">
-                <strong>Tier 2 — Contextual Memory Resolver</strong>
-                <span class="tier-badge">&lt;5 ms</span>
-              </div>
-              <p>Resolves `"copy it"`, `"retry"`, `"cd ..."`, and `"remember ..."` via `agent_memory.json`.</p>
-            </button>
-
-            <button type="button" class="tier-btn" onclick="selectTier(this, 'tier3')">
-              <div class="tier-top">
-                <strong>Tier 3 — Deterministic Sysadmin Planner</strong>
-                <span class="tier-badge">&lt;15 ms</span>
-              </div>
-              <p>6-Step IDE Crash Doctor, OpenSSH keygen + `~/.ssh/config`, and port/PID reaping.</p>
-            </button>
-
-            <button type="button" class="tier-btn" onclick="selectTier(this, 'tier4')">
-              <div class="tier-top">
-                <strong>Tier 4 — Antigravity SDK &amp; `agy` NDJSON Bridge</strong>
-                <span class="tier-badge">Streaming</span>
-              </div>
-              <p>Streams `step_update` tool calls &amp; `text_delta` tokens with persistent `conversation_id`.</p>
-            </button>
-
-            <button type="button" class="tier-btn" onclick="selectTier(this, 'tier5')">
-              <div class="tier-top">
-                <strong>Tier 5 — 8-Step Multi-Tool ReAct Loop</strong>
-                <span class="tier-badge">Ollama / Gemini</span>
-              </div>
-              <p>Sanitizes `&lt;think&gt;` blocks and runs `&lt;view_file&gt;`, `&lt;grep&gt;`, `&lt;patch_file&gt;`, `&lt;bash&gt;`.</p>
-            </button>
+    <section class="spec-grid">
+      <article class="spec-cell">
+        <div>
+          <div class="spec-cell-top">
+            <span>SYS_01 // POLICY</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 4v5c0 5.25-3.4 9.74-8 11-4.6-1.26-8-5.75-8-11V7l8-4z"/></svg>
           </div>
-
-          <div class="terminal-card">
-            <div class="terminal-head">
-              <div class="window-dots" aria-hidden="true">
-                <i class="dot-red"></i>
-                <i class="dot-amber"></i>
-                <i class="dot-green"></i>
-              </div>
-              <span class="stage-title" id="term-title">tier-1-slash-router.log</span>
-              <span class="tier-badge">Ubuntu 25.10</span>
-            </div>
-            <div class="terminal-body" id="term-output"></div>
-          </div>
+          <h3>3-Tier Shell Risk Classifier</h3>
+          <p>
+            <code>ConfigManager.classify_command()</code> tokenizes chained shell pipelines (<code>;</code>, <code>&amp;&amp;</code>, <code>||</code>, <code>|</code>, subshells) into <code>SAFE_READONLY</code>, <code>MUTATING_LOCAL</code>, or <code>PRIVILEGED_DESTRUCTIVE</code>. Read-only diagnostics run unblocked in Supervised Review mode.
+          </p>
         </div>
+        <div class="spec-meta">
+          <span class="code-tag">SAFE_READONLY</span>
+          <span class="code-tag">MUTATING_LOCAL</span>
+          <span class="code-tag">command_denylist</span>
+        </div>
+      </article>
+
+      <article class="spec-cell">
+        <div>
+          <div class="spec-cell-top">
+            <span>SYS_02 // LEDGER</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7v6h6M21 17a9 9 0 00-15-6.7L3 13"/></svg>
+          </div>
+          <h3>Snapshot &amp; Rollback Ledger</h3>
+          <p>
+            Every <code>patch_file_content()</code> and <code>write_file_content()</code> call records an entry in <code>config/action_ledger.json</code> with before/after SHA-256 hashes and a full snapshot in <code>config/snapshots/</code> for instant <code>/undo</code> and <code>/rollback &lt;tx_id&gt;</code>.
+          </p>
+        </div>
+        <div class="spec-meta">
+          <span class="code-tag">/undo</span>
+          <span class="code-tag">/rollback list</span>
+          <span class="code-tag">SHA-256</span>
+        </div>
+      </article>
+
+      <article class="spec-cell">
+        <div>
+          <div class="spec-cell-top">
+            <span>SYS_03 // DOCTOR</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          </div>
+          <h3>6-Stage Application Crash Doctor</h3>
+          <p>
+            <code>diagnose_and_heal_app()</code> resolves binaries and <code>.desktop</code> targets, audits <code>SingletonLock</code> and <code>Crashpad/*.dmp</code>, greps session logs, checks X.509 <code>.pem</code> expiry via OpenSSL, and patches JS bundles with <code>.bak</code> backups.
+          </p>
+        </div>
+        <div class="spec-meta">
+          <span class="code-tag">openssl x509</span>
+          <span class="code-tag">SingletonLock</span>
+          <span class="code-tag">.bak</span>
+        </div>
+      </article>
+
+      <article class="spec-cell">
+        <div>
+          <div class="spec-cell-top">
+            <span>SYS_04 // SKILLS</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 016.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+          </div>
+          <h3>Pluggable Markdown Runbooks</h3>
+          <p>
+            <code>SkillsLoader</code> discovers <code>skills/*.md</code> YAML-frontmatter runbooks (<code>nginx-tls-audit</code>, <code>postgres-doctor</code>, <code>gpu-cuda-doctor</code>, <code>git-recovery</code>) and injects matching domain procedures directly into the ReAct system prompt.
+          </p>
+        </div>
+        <div class="spec-meta">
+          <span class="code-tag">/skills</span>
+          <span class="code-tag">skills/*.md</span>
+          <span class="code-tag">auto-inject</span>
+        </div>
+      </article>
+
+      <article class="spec-cell">
+        <div>
+          <div class="spec-cell-top">
+            <span>SYS_05 // INFRA</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="3" width="20" height="6" rx="1"/><rect x="2" y="15" width="20" height="6" rx="1"/><path d="M6 6h.01M6 18h.01"/></svg>
+          </div>
+          <h3>Container, Systemd &amp; Net Audit</h3>
+          <p>
+            Dedicated tools for Docker/Podman container inspection and automatic <code>Exited (137)</code> log tailing (<code>/containers</code>), failed unit &amp; journald inspection (<code>/systemd</code>), socket/firewall audit (<code>/net</code>), plus <code>/disk</code>, <code>/gpu</code>, <code>/tls</code>, and <code>/git</code>.
+          </p>
+        </div>
+        <div class="spec-meta">
+          <span class="code-tag">/containers</span>
+          <span class="code-tag">/systemd</span>
+          <span class="code-tag">/net</span>
+          <span class="code-tag">/gpu</span>
+        </div>
+      </article>
+
+      <article class="spec-cell">
+        <div>
+          <div class="spec-cell-top">
+            <span>SYS_06 // WATCHDOG</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+          </div>
+          <h3>Proactive Watchdog &amp; GTK3 DnD</h3>
+          <p>
+            <code>SystemWatchdog</code> polls RAM/Disk thresholds and <code>systemctl --failed</code> in a background thread with cooldown deduplication. <code>FloatingGhostWidget</code> accepts dropped <code>.log</code>/<code>.dmp</code> files, directories, and 1-click clipboard stack traces.
+          </p>
+        </div>
+        <div class="spec-meta">
+          <span class="code-tag">SystemWatchdog</span>
+          <span class="code-tag">drag_dest_set</span>
+          <span class="code-tag">X11 Clipboard</span>
+        </div>
+      </article>
+    </section>
+
+    <!-- SECTION 03: BOOPFACE SVG SPECIMEN MATRIX -->
+    <div class="sec-bar" id="specimens">
+      <div class="sec-bar-left">
+        <span class="sec-index">03 // BOOPFACE_SVG_MATRIX</span>
+        <h2>Interactive SVG Material &amp; Expression Specimens</h2>
+      </div>
+      <p>Click any live Web Component specimen to load its skin &amp; state into the primary workbench</p>
+    </div>
+
+    <section class="specimen-grid">
+      <div class="specimen-cell" onclick="applyCard('901', 'idle')">
+        <boop-face size="88" skin="901" color="#131620"></boop-face>
+        <div class="specimen-meta"><strong>901 // METAL</strong><span>STATE: IDLE</span></div>
+      </div>
+      <div class="specimen-cell" onclick="applyCard('102', 'waiting-wave')">
+        <boop-face size="88" skin="102" color="#131620"></boop-face>
+        <div class="specimen-meta"><strong>102 // GLAZE</strong><span>STATE: WAITING</span></div>
+      </div>
+      <div class="specimen-cell" onclick="applyCard('203', 'inspect')">
+        <boop-face size="88" skin="203" color="#131620"></boop-face>
+        <div class="specimen-meta"><strong>203 // ICE_GLASS</strong><span>STATE: INSPECT</span></div>
+      </div>
+      <div class="specimen-cell" onclick="applyCard('305', 'success')">
+        <boop-face size="88" skin="305" color="#131620"></boop-face>
+        <div class="specimen-meta"><strong>305 // GUMMY</strong><span>STATE: SUCCESS</span></div>
+      </div>
+      <div class="specimen-cell" onclick="applyCard('604', 'affirm')">
+        <boop-face size="88" skin="604" color="#131620"></boop-face>
+        <div class="specimen-meta"><strong>604 // JELLY</strong><span>STATE: AFFIRM</span></div>
+      </div>
+      <div class="specimen-cell" onclick="applyCard('1005', 'wary')">
+        <boop-face size="88" skin="1005" color="#131620"></boop-face>
+        <div class="specimen-meta"><strong>1005 // GEM</strong><span>STATE: WARY</span></div>
+      </div>
+      <div class="specimen-cell" onclick="applyCard('1302', 'surprise')">
+        <boop-face size="88" skin="1302" color="#131620"></boop-face>
+        <div class="specimen-meta"><strong>1302 // SHIMMER</strong><span>STATE: SURPRISE</span></div>
+      </div>
+      <div class="specimen-cell" onclick="applyCard('1703', 'failure')">
+        <boop-face size="88" skin="1703" color="#131620"></boop-face>
+        <div class="specimen-meta"><strong>1703 // TECH</strong><span>STATE: FAILURE</span></div>
       </div>
     </section>
 
-    <!-- LIVE BOOPFACE EXPRESSION & SKIN GALLERY -->
-    <section class="section reveal" id="emotions">
-      <div class="container">
-        <div class="section-head">
-          <span class="section-eyebrow">BoopFace Web Component Showcase</span>
-          <h2>Live SVG expressions &amp; material skins.</h2>
-          <p>Every card below is a live interactive <code>&lt;boop-face&gt;</code> instance. Click any card to equip its skin and expression on the Hero stage.</p>
+    <!-- SECTION 04: GTK3 STUDIO & CRASH DOCTOR PIPELINE -->
+    <div class="sec-bar" id="studio">
+      <div class="sec-bar-left">
+        <span class="sec-index">04 // DESKTOP_TELEMETRY</span>
+        <h2>Host Telemetry &amp; 6-Stage Crash Doctor Specification</h2>
+      </div>
+      <p>tchiko/assistant_window.py • direct /proc metrics &amp; automated bundle repair</p>
+    </div>
+
+    <section class="studio-split">
+      <div class="studio-pane">
+        <span class="pane-label">HOST_TELEMETRY // /PROC/MEMINFO &amp; STATVFS</span>
+        <div class="telemetry-bars">
+          <div class="t-bar-row">
+            <div class="t-bar-head">
+              <span>CPU_LOAD [24 CORES // 0.42]</span>
+              <span style="color:var(--green);">18.0%</span>
+            </div>
+            <div class="t-bar-track"><div class="t-bar-fill" style="width:18%;background:var(--green);"></div></div>
+          </div>
+          <div class="t-bar-row">
+            <div class="t-bar-head">
+              <span>MEM_RSS [16.1 / 60.9 GB]</span>
+              <span style="color:var(--blue);">26.4%</span>
+            </div>
+            <div class="t-bar-track"><div class="t-bar-fill" style="width:26.4%;background:var(--blue);"></div></div>
+          </div>
+          <div class="t-bar-row">
+            <div class="t-bar-head">
+              <span>NVME_ROOT [/dev/nvme0n1p2]</span>
+              <span style="color:var(--crimson);">32.6%</span>
+            </div>
+            <div class="t-bar-track"><div class="t-bar-fill" style="width:32.6%;background:var(--crimson);"></div></div>
+          </div>
         </div>
 
-        <div class="emotion-grid">
-          <div class="emo-card" onclick="applyCard('901', 'idle')">
-            <boop-face size="92" skin="901" color="#131620"></boop-face>
-            <strong>Metal • Idle</strong>
-            <span>skin="901" • idle</span>
-          </div>
-          <div class="emo-card" onclick="applyCard('102', 'waiting-wave')">
-            <boop-face size="92" skin="102" color="#131620"></boop-face>
-            <strong>Glaze • Waiting</strong>
-            <span>skin="102" • waiting-wave</span>
-          </div>
-          <div class="emo-card" onclick="applyCard('203', 'inspect')">
-            <boop-face size="92" skin="203" color="#131620"></boop-face>
-            <strong>Ice Glass • Inspect</strong>
-            <span>skin="203" • inspect</span>
-          </div>
-          <div class="emo-card" onclick="applyCard('305', 'success')">
-            <boop-face size="92" skin="305" color="#131620"></boop-face>
-            <strong>Gummy • Success</strong>
-            <span>skin="305" • success</span>
-          </div>
-          <div class="emo-card" onclick="applyCard('604', 'affirm')">
-            <boop-face size="92" skin="604" color="#131620"></boop-face>
-            <strong>Jelly • Affirm</strong>
-            <span>skin="604" • affirm</span>
-          </div>
-          <div class="emo-card" onclick="applyCard('1005', 'wary')">
-            <boop-face size="92" skin="1005" color="#131620"></boop-face>
-            <strong>Gem • Wary</strong>
-            <span>skin="1005" • wary</span>
-          </div>
-          <div class="emo-card" onclick="applyCard('1302', 'surprise')">
-            <boop-face size="92" skin="1302" color="#131620"></boop-face>
-            <strong>Shimmer • Surprise</strong>
-            <span>skin="1302" • surprise</span>
-          </div>
-          <div class="emo-card" onclick="applyCard('1703', 'failure')">
-            <boop-face size="92" skin="1703" color="#131620"></boop-face>
-            <strong>Tech • Failure</strong>
-            <span>skin="1703" • failure</span>
-          </div>
+        <span class="pane-label">DESKTOP_INTERACTION_BUS</span>
+        <div class="spec-meta" style="border-top:none;padding-top:0;">
+          <span class="code-tag">MIDDLE_CLICK: Quick Input Pill</span>
+          <span class="code-tag">LEFT_CLICK: Chat &amp; Studio</span>
+          <span class="code-tag">RIGHT_CLICK: Diagnose Clipboard</span>
+          <span class="code-tag">DROP_URI: Log / Dir Analysis</span>
         </div>
+      </div>
+
+      <div class="studio-pane">
+        <span class="pane-label">DIAGNOSE_AND_HEAL_APP // 6-STAGE PIPELINE</span>
+        <table class="doctor-table">
+          <tbody>
+            <tr>
+              <td>01</td>
+              <td>find_binaries</td>
+              <td>Resolves <code>PATH</code>, <code>~/.local/bin</code> symlinks, and Freedesktop <code>.desktop</code> launchers.</td>
+            </tr>
+            <tr>
+              <td>02</td>
+              <td>inspect_locks</td>
+              <td>Audits stale <code>SingletonLock</code> sockets and recent <code>Crashpad/*.dmp</code> minidumps.</td>
+            </tr>
+            <tr>
+              <td>03</td>
+              <td>scan_crash_logs</td>
+              <td>Extracts <code>ConnectError</code>, TLS handshake failures, and segfault traces from latest session logs.</td>
+            </tr>
+            <tr>
+              <td>04</td>
+              <td>audit_certs</td>
+              <td>Executes <code>openssl x509 -noout -dates -checkend 0</code> across bundled <code>.pem</code> certificates.</td>
+            </tr>
+            <tr>
+              <td>05</td>
+              <td>atomic_patch</td>
+              <td>Snapshots target bundle into <code>config/snapshots/</code> + <code>.bak</code> and patches <code>nodeOptions</code>.</td>
+            </tr>
+            <tr>
+              <td>06</td>
+              <td>verify_report</td>
+              <td>Verifies patch integrity and streams root-cause evidence to the GTK3 Chat Studio.</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </section>
 
-    <!-- DESKTOP SYSTEM STUDIO & 6-STEP CRASH DOCTOR -->
-    <section class="section reveal" id="studio">
-      <div class="container">
-        <div class="section-head">
-          <span class="section-eyebrow">GTK3 Desktop Studio</span>
-          <h2>Live telemetry, RBAC safety &amp; 6-step self-healing.</h2>
-          <p>Middle-click Tchiko for the quick-input pill, or single-click to open the full Chat &amp; System Studio window.</p>
-        </div>
+    <!-- SECTION 05: BUILD & INSTALL -->
+    <div class="sec-bar" id="deploy">
+      <div class="sec-bar-left">
+        <span class="sec-index">05 // BUILD_SPECIFICATION</span>
+        <h2>Ubuntu Installation &amp; Verification</h2>
+      </div>
+      <p>Native PyGObject (GTK3) + PyCairo • Zero Electron overhead</p>
+    </div>
 
-        <div class="studio-card">
-          <div class="stage-titlebar">
-            <div class="window-dots" aria-hidden="true">
-              <i class="dot-red"></i>
-              <i class="dot-amber"></i>
-              <i class="dot-green"></i>
-            </div>
-            <span class="stage-title">Tchiko Chat &amp; System Studio • /proc Telemetry</span>
-            <span class="tier-badge">RBAC: 6/6 Domains</span>
-          </div>
-          <div class="studio-body">
-            <div>
-              <div class="gauge-row">
-                <div class="gauge-box">
-                  <svg viewBox="0 0 80 80" aria-hidden="true">
-                    <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="7"/>
-                    <circle cx="40" cy="40" r="32" fill="none" stroke="#3ecf8e" stroke-width="7" stroke-dasharray="201" stroke-dashoffset="165" stroke-linecap="round" transform="rotate(-90 40 40)"/>
-                    <text x="40" y="45" text-anchor="middle" fill="#f4f6fb" font-size="15" font-weight="700" font-family="Inter,sans-serif">18%</text>
-                  </svg>
-                  <strong>CPU Load</strong>
-                  <span>0.42 • 24 cores</span>
-                </div>
-                <div class="gauge-box">
-                  <svg viewBox="0 0 80 80" aria-hidden="true">
-                    <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="7"/>
-                    <circle cx="40" cy="40" r="32" fill="none" stroke="#38bdf8" stroke-width="7" stroke-dasharray="201" stroke-dashoffset="148" stroke-linecap="round" transform="rotate(-90 40 40)"/>
-                    <text x="40" y="45" text-anchor="middle" fill="#f4f6fb" font-size="15" font-weight="700" font-family="Inter,sans-serif">26%</text>
-                  </svg>
-                  <strong>Memory</strong>
-                  <span>16.1 / 60.9 GB</span>
-                </div>
-                <div class="gauge-box">
-                  <svg viewBox="0 0 80 80" aria-hidden="true">
-                    <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="7"/>
-                    <circle cx="40" cy="40" r="32" fill="none" stroke="#e5484d" stroke-width="7" stroke-dasharray="201" stroke-dashoffset="135" stroke-linecap="round" transform="rotate(-90 40 40)"/>
-                    <text x="40" y="45" text-anchor="middle" fill="#f4f6fb" font-size="15" font-weight="700" font-family="Inter,sans-serif">33%</text>
-                  </svg>
-                  <strong>NVMe Disk</strong>
-                  <span>/ • healthy</span>
-                </div>
-              </div>
-              <div class="bento-tags" style="margin-top:0;">
-                <span class="tag-mono">Middle-Click: Quick Pill</span>
-                <span class="tag-mono">Click: Chat Studio</span>
-                <span class="tag-mono">Scroll: Cycle Moods</span>
-                <span class="tag-mono">Drag: Reposition</span>
-              </div>
-            </div>
-
-            <div class="activity-feed">
-              <div class="activity-item"><span class="t-accent">[THOUGHT]</span><span>Stripped &lt;think&gt; block; routing to Crash Doctor</span></div>
-              <div class="activity-item"><span class="t-prompt">[TOOL 1/6]</span><span>which agy &amp;&amp; readlink -f ~/.local/bin/agy</span></div>
-              <div class="activity-item"><span class="t-prompt">[TOOL 2/6]</span><span>ls -la ~/.config/Antigravity/SingletonLock</span></div>
-              <div class="activity-item"><span class="t-prompt">[TOOL 3/6]</span><span>grep ConnectError ~/.config/Antigravity/logs</span></div>
-              <div class="activity-item"><span class="t-prompt">[TOOL 4/6]</span><span>openssl x509 -noout -dates -checkend 0</span></div>
-              <div class="activity-item"><span class="t-accent">[PATCH]</span><span>Created main.js.bak &amp; applied HTTP/2 fix</span></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="doctor-steps">
-          <div class="doctor-step"><span class="doctor-num">STEP 01</span><strong>Resolve Binaries</strong><p>Checks PATH, ~/.local/bin symlinks &amp; .desktop entries.</p></div>
-          <div class="doctor-step"><span class="doctor-num">STEP 02</span><strong>Lock &amp; Dumps</strong><p>Audits SingletonLock &amp; Crashpad/*.dmp reports.</p></div>
-          <div class="doctor-step"><span class="doctor-num">STEP 03</span><strong>Log Scan</strong><p>Extracts ConnectError, TLS &amp; segfault traces.</p></div>
-          <div class="doctor-step"><span class="doctor-num">STEP 04</span><strong>X.509 Certs</strong><p>Verifies .pem expiry &amp; chains with OpenSSL.</p></div>
-          <div class="doctor-step"><span class="doctor-num">STEP 05</span><strong>Atomic Patch</strong><p>Creates .bak backup before patching bundles.</p></div>
-          <div class="doctor-step"><span class="doctor-num">STEP 06</span><strong>Verify &amp; Report</strong><p>Streams root cause &amp; fix summary to Chat.</p></div>
+    <section class="deploy-split">
+      <div class="deploy-info">
+        <h3>Run natively on Ubuntu 22.04, 24.04 &amp; 25.10.</h3>
+        <p>
+          Tchiko uses system <code>python3-gi</code> and <code>python3-gi-cairo</code> packages for direct X11/XWayland RGBA compositing, logging all runtime output to <code>logs/tchiko.log</code>.
+        </p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button type="button" class="btn btn-accent" onclick="copyCli(this)">Copy Build Script</button>
+          <a href="https://github.com/ZYNIQ-SOLUTIONS/Tchiko-Assistant-Sysadmin-companion/blob/main/SECURITY.md" target="_blank" rel="noopener noreferrer" class="btn">
+            Security Policy
+          </a>
         </div>
       </div>
-    </section>
 
-    <!-- INSTALL CTA -->
-    <section class="section reveal" id="install">
-      <div class="container">
-        <div class="install-panel">
-          <div>
-            <span class="section-eyebrow">Quick Start on Ubuntu</span>
-            <h2>Up and running in 30 seconds.</h2>
-            <p>
-              Uses Ubuntu’s native `python3-gi` and `python3-gi-cairo` bindings for zero-overhead RGBA compositing across X11 and XWayland.
-            </p>
-            <div class="hero-cta-row" style="margin-bottom: 0;">
-              <button type="button" class="btn btn-primary" onclick="copyCli(this)">Copy Install Commands</button>
-              <a href="https://github.com/ZYNIQ-SOLUTIONS/Tchiko-Assistant-Sysadmin-companion/blob/main/docs/ARCHITECTURE.md" target="_blank" rel="noopener noreferrer" class="btn btn-ghost">
-                Read Architecture
-              </a>
-            </div>
-          </div>
-
-          <div class="code-box">
-            <div class="code-box-head">
-              <span>bash • ubuntu 22.04 / 24.04 / 25.10</span>
-              <span>MIT Open Source</span>
-            </div>
-            <pre><code><span class="t-muted"># 1. Install native GTK3 &amp; Cairo bindings</span>
+      <pre class="deploy-code"><code><span class="t-muted"># 1. Install system GTK3 &amp; Cairo bindings</span>
 sudo apt update &amp;&amp; sudo apt install -y \
   python3 python3-venv python3-gi python3-gi-cairo gir1.2-gtk-3.0 xclip
 
-<span class="t-muted"># 2. Clone, verify &amp; launch Tchiko</span>
+<span class="t-muted"># 2. Clone repository &amp; run verification suite (11 unit tests + 4-stage self-test)</span>
 git clone https://github.com/ZYNIQ-SOLUTIONS/Tchiko-Assistant-Sysadmin-companion.git
 cd Tchiko-Assistant-Sysadmin-companion
 make self-test &amp;&amp; make test
+
+<span class="t-muted"># 3. Launch desktop companion (streams logs to logs/tchiko.log)</span>
 ./run_tchiko.sh</code></pre>
-          </div>
-        </div>
-      </div>
     </section>
   </main>
 
   <footer>
-    <div class="container footer-inner">
-      <div>
-        <strong>Tchiko Assistant</strong> • MIT License • Crafted by <a href="https://zyniq.studio" target="_blank" rel="noopener noreferrer" style="color:var(--text);font-weight:600;">ZYNIQ Studio</a> • SVG Avatar by <a href="https://github.com/CX-ArtLab/BoopFace" target="_blank" rel="noopener noreferrer" style="color:var(--text);">CX-ArtLab/BoopFace</a>
-      </div>
-      <div class="footer-links">
-        <a href="https://github.com/ZYNIQ-SOLUTIONS/Tchiko-Assistant-Sysadmin-companion" target="_blank" rel="noopener noreferrer">GitHub</a>
-        <a href="https://github.com/ZYNIQ-SOLUTIONS/Tchiko-Assistant-Sysadmin-companion/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener noreferrer">Contributing</a>
-        <a href="https://github.com/ZYNIQ-SOLUTIONS/Tchiko-Assistant-Sysadmin-companion/blob/main/docs/ARCHITECTURE.md" target="_blank" rel="noopener noreferrer">Architecture</a>
-        <a href="https://github.com/ZYNIQ-SOLUTIONS/Tchiko-Assistant-Sysadmin-companion/blob/main/SECURITY.md" target="_blank" rel="noopener noreferrer">Security</a>
-        <a href="https://github.com/ZYNIQ-SOLUTIONS/Tchiko-Assistant-Sysadmin-companion/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">License</a>
-      </div>
+    <div>
+      TCHIKO ASSISTANT v1.2.0 // MIT LICENSE // ENGINEERED BY <a href="https://zyniq.studio" target="_blank" rel="noopener noreferrer" style="color:var(--text);">ZYNIQ STUDIO</a> // SVG ENGINE: <a href="https://github.com/CX-ArtLab/BoopFace" target="_blank" rel="noopener noreferrer" style="color:var(--text);">CX-ARTLAB/BOOPFACE</a>
+    </div>
+    <div class="footer-links">
+      <a href="https://github.com/ZYNIQ-SOLUTIONS/Tchiko-Assistant-Sysadmin-companion" target="_blank" rel="noopener noreferrer">GITHUB</a>
+      <a href="https://github.com/ZYNIQ-SOLUTIONS/Tchiko-Assistant-Sysadmin-companion/blob/main/docs/ARCHITECTURE.md" target="_blank" rel="noopener noreferrer">ARCHITECTURE</a>
+      <a href="https://github.com/ZYNIQ-SOLUTIONS/Tchiko-Assistant-Sysadmin-companion/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener noreferrer">CONTRIBUTING</a>
+      <a href="https://github.com/ZYNIQ-SOLUTIONS/Tchiko-Assistant-Sysadmin-companion/blob/main/SECURITY.md" target="_blank" rel="noopener noreferrer">SECURITY</a>
+      <a href="https://github.com/ZYNIQ-SOLUTIONS/Tchiko-Assistant-Sysadmin-companion/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">LICENSE</a>
     </div>
   </footer>
 
@@ -1463,11 +1504,11 @@ make self-test &amp;&amp; make test
 
     function updateSkinLabel(skinId) {
       if (!skinId) {
-        skinLabel.textContent = 'Skin: Flat Obsidian (#131620)';
+        skinLabel.textContent = 'SKIN: RAW [#131620]';
         return;
       }
-      const name = SKIN_NAMES?.[skinId] || 'Material';
-      skinLabel.textContent = `Skin: ${skinId} (${name})`;
+      const name = (SKIN_NAMES?.[skinId] || 'MATERIAL').toUpperCase();
+      skinLabel.textContent = `SKIN: ${skinId} [${name}]`;
     }
 
     window.setSkinId = function (skinId) {
@@ -1512,7 +1553,7 @@ make self-test &amp;&amp; make test
 
     roundnessSlider.addEventListener('input', (e) => {
       const val = Number(e.target.value);
-      roundnessVal.textContent = val;
+      roundnessVal.textContent = String(val).padStart(3, '0');
       boop.setHeadRoundness?.(val);
     });
 
@@ -1531,21 +1572,25 @@ make self-test &amp;&amp; make test
       if (!val) return;
       quickEntry.value = '';
       const lower = val.toLowerCase();
-      if (lower.includes('rm -rf') || lower.includes('delete') || lower.includes('sudo')) {
+      if (lower.includes('rm -rf') || lower.includes('mkfs') || lower.includes('sudo')) {
         window.simulatePrompt('blocked');
+      } else if (lower.includes('container') || lower.includes('docker')) {
+        window.simulatePrompt('containers');
+      } else if (lower.includes('skill')) {
+        window.simulatePrompt('skills');
       } else if (lower.includes('ssh') || lower.includes('hetzner')) {
         window.simulatePrompt('ssh');
       } else if (lower.includes('sys') || lower.includes('cpu') || lower.includes('doctor')) {
         window.simulatePrompt('sysinfo');
       } else {
         boop.startWaiting?.({ variant: 'wave' });
-        bubbleText.innerHTML = `<i>Routing via TchikoAgentEngine...</i>`;
+        bubbleText.innerHTML = `<b>[DISPATCH]</b> Classifying risk &amp; routing via <code>TchikoAgentEngine</code>...`;
         setTimeout(() => {
           boop.stopWaiting?.();
           boop.play('success');
           lastCopyText = val;
-          bubbleText.innerHTML = `<b>Done!</b> Executed <code>${val.replace(/</g, '&lt;')}</code> on Ubuntu with RBAC policy verification.`;
-        }, 700);
+          bubbleText.innerHTML = `<b>[OK // SAFE_READONLY]</b> Executed <code>${val.replace(/</g, '&lt;')}</code> on Ubuntu host.`;
+        }, 600);
       }
     };
 
@@ -1554,52 +1599,52 @@ make self-test &amp;&amp; make test
         boop.stopWaiting?.();
         boop.play('refuse');
         bubbleText.innerHTML =
-          `<b>🛡️ RBAC Denylist Blocked!</b><br/>` +
-          `Command matches <code>permissions.command_denylist</code> — execution refused.`;
+          `<b>[BLOCKED // PRIVILEGED_DESTRUCTIVE]</b><br/>` +
+          `Pipeline rejected by <code>ConfigManager.classify_command()</code> &amp; <code>command_denylist</code>.`;
         return;
       }
 
       boop.startWaiting?.({ variant: 'spin' });
-      bubbleText.innerHTML = `<i>Running command on Ubuntu...</i>`;
+      bubbleText.innerHTML = `<b>[EXEC]</b> Running host diagnostic...`;
       setTimeout(() => {
         boop.stopWaiting?.();
         boop.play('success');
         if (kind === 'ssh') {
           lastCopyText = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINtchikoExampleOpenSSHKey2026 operator@ubuntu";
           bubbleText.innerHTML =
-            `<b>🔑 OpenSSH Key Created (<code>~/.ssh/id_ed25519.pub</code>)</b><br/>` +
+            `<b>[TIER 03 // SSH_KEYGEN]</b> Written to <code>~/.ssh/id_ed25519.pub</code> (0600)<br/>` +
             `<code>${lastCopyText}</code>`;
         } else if (kind === 'containers') {
           lastCopyText = "docker ps -a: api-gateway (Up 4h) | redis-cache (Up 4h) | worker (Exited 137 OOMKilled)";
           bubbleText.innerHTML =
-            `<b>🐳 Container Doctor (<code>docker</code>)</b><br/>` +
-            `• <code>api-gateway</code> Up 4h • <code>worker</code> Exited (137) — logs tailed`;
+            `<b>[TIER 01 // CONTAINER_DOCTOR]</b><br/>` +
+            `<code>api-gateway</code> Up 4h // <code>worker</code> Exited (137) — last 25 log lines captured.`;
         } else if (kind === 'skills') {
-          lastCopyText = "/skills: nginx-tls-audit, postgres-doctor, gpu-cuda-doctor, git-recovery";
+          lastCopyText = "skills/*.md: nginx-tls-audit, postgres-doctor, gpu-cuda-doctor, git-recovery";
           bubbleText.innerHTML =
-            `<b>🧩 Loaded Skills (<code>skills/*.md</code>)</b><br/>` +
-            `<code>nginx-tls-audit</code> • <code>postgres-doctor</code> • <code>gpu-cuda-doctor</code> • <code>git-recovery</code>`;
+            `<b>[TIER 01 // SKILLS_LOADER]</b> 4 runbooks indexed:<br/>` +
+            `<code>nginx-tls-audit</code> <code>postgres-doctor</code> <code>gpu-cuda-doctor</code> <code>git-recovery</code>`;
         } else {
-          lastCopyText = "CPU Load: 0.42 | RAM: 11.6/60.9 GB (19.1%) | Disk: 32.6% | Failed Units: 0";
+          lastCopyText = "LOAD: 0.42 (24c) | RAM: 11.6/60.9 GB (19.1%) | DISK: 32.6% | FAILED_UNITS: 0";
           bubbleText.innerHTML =
-            `<b>🩺 Ubuntu System Doctor — HEALTHY</b><br/>` +
-            `• <b>Load:</b> <code>0.42</code> • <b>RAM:</b> <code>11.6/60.9 GB</code> • <b>Disk:</b> <code>32.6%</code>`;
+            `<b>[TIER 01 // SYSTEM_DOCTOR — HEALTHY]</b><br/>` +
+            `LOAD: <code>0.42</code> // RAM: <code>11.6/60.9 GB</code> // DISK: <code>32.6%</code> // FAILED_UNITS: <code>0</code>`;
         }
-      }, 650);
+      }, 520);
     };
 
     window.copyBubble = function () {
       navigator.clipboard.writeText(lastCopyText);
       const btn = document.getElementById('copy-btn');
-      btn.textContent = '✓ Copied';
-      setTimeout(() => (btn.textContent = 'Copy'), 1500);
+      btn.textContent = 'COPIED';
+      setTimeout(() => (btn.textContent = 'COPY'), 1400);
     };
 
     window.resetBubble = function () {
       boop.stopWaiting?.();
       boop.play('idle');
       bubbleText.innerHTML =
-        `<b>BoopFace Ready!</b> Move your cursor, press-and-hold to squeeze, drag my head, or pull my spring antenna (careful—I get angry!).`;
+        `<b>[READY]</b> Pointer-tracking eyes, elastic head drag, center press-squeeze, and spring antenna active. Select a diagnostic preset below.`;
     };
 
     window.copyCli = function (btn) {
@@ -1610,100 +1655,78 @@ make self-test &amp;&amp; make test
         `make self-test && make test\n` +
         `./run_tchiko.sh`
       );
-      btn.textContent = '✓ Copied!';
-      setTimeout(() => (btn.textContent = 'Copy Install Commands'), 1600);
+      const orig = btn.textContent;
+      btn.textContent = 'COPIED';
+      setTimeout(() => (btn.textContent = orig), 1500);
     };
 
-    // ── Spotlight hover on Bento Cards ────────────────────────────────────
-    document.querySelectorAll('.bento-card').forEach((card) => {
-      card.addEventListener('mousemove', (e) => {
-        const rect = card.getBoundingClientRect();
-        card.style.setProperty('--mx', `${e.clientX - rect.left}px`);
-        card.style.setProperty('--my', `${e.clientY - rect.top}px`);
-      });
-    });
-
-    // ── Scroll Reveal ─────────────────────────────────────────────────────
-    const revealObserver = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('visible');
-            revealObserver.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0.12 }
-    );
-    document.querySelectorAll('.reveal').forEach((el) => revealObserver.observe(el));
-
-    // ── Terminal Tier Simulator ───────────────────────────────────────────
     const TIER_OUTPUTS = {
       tier1: {
-        title: 'tier-1-slash-router.log',
+        title: 'tier-01-slash-router.log',
         body:
 `<span class="t-prompt">operator@ubuntu</span>:<span class="t-accent">~</span>$ <span class="t-cmd">/doctor</span>
-<span class="t-muted">[Tier 1 • 4ms] Executing 5-point Ubuntu health audit (/proc + systemd + ss)...</span>
+<span class="t-muted">[TIER_01 // 3.8ms // SAFE_READONLY] Reading /proc/loadavg, /proc/meminfo, statvfs, systemctl --failed, ss -tulnp</span>
 
-🩺 <span class="t-cmd">Tchiko System Doctor Report — 🟢 HEALTHY</span>
-• <span class="t-cmd">OS:</span> Ubuntu 25.10  • <span class="t-cmd">Load:</span> 0.42 (24 cores)
-• <span class="t-cmd">RAM:</span> 11.6 / 60.9 GB (19.1%)  • <span class="t-cmd">Disk:</span> 32.6%
-• <span class="t-cmd">Failed systemd units:</span> 0
-• <span class="t-cmd">Listening sockets:</span> 22/tcp, 8000/tcp, 5432/tcp`
+HOST      : ubuntu-workstation (Ubuntu 25.10 // Linux 6.14.0-generic)
+CPU_LOAD  : 0.42, 0.38, 0.31 (24 logical cores)
+MEMORY    : 11.64 GB / 60.92 GB (19.1% used, 48.21 GB available)
+DISK_ROOT : 32.6% used on /dev/nvme0n1p2 (inodes: 4.1%)
+SYSTEMD   : 0 failed units (system &amp; user)
+SOCKETS   : 22/tcp (sshd), 8000/tcp (vllm-router), 11434/tcp (ollama)`
       },
       tier2: {
-        title: 'tier-2-context-memory.log',
+        title: 'tier-02-context-memory.log',
         body:
-`<span class="t-prompt">operator@ubuntu</span>:<span class="t-accent">~</span>$ <span class="t-cmd">remember staging ip is 10.10.0.42</span>
-<span class="t-muted">[Tier 2 • 2ms] Saved to config/agent_memory.json -> notes["staging ip"]</span>
-✓ Noted: <span class="t-cmd">staging ip</span> = <span class="t-accent">10.10.0.42</span>
+`<span class="t-prompt">operator@ubuntu</span>:<span class="t-accent">~</span>$ <span class="t-cmd">remember staging-db is 10.10.4.22</span>
+<span class="t-muted">[TIER_02 // 1.4ms] Persisted key="staging-db" -> config/agent_memory.json</span>
+OK: notes["staging-db"] = "10.10.4.22"
 
 <span class="t-prompt">operator@ubuntu</span>:<span class="t-accent">~</span>$ <span class="t-cmd">copy it</span>
-<span class="t-muted">[Tier 2 • 3ms] Copying last_artifact_content via xclip...</span>
-✓ Copied <code>ssh-ed25519 AAAAC3NzaC1lZDI1...</code> to clipboard.`
+<span class="t-muted">[TIER_02 // 2.1ms] Piping last_artifact_content to xclip -selection clipboard</span>
+OK: 94 bytes copied to X11/Wayland clipboard.`
       },
       tier3: {
-        title: 'tier-3-crash-doctor.log',
+        title: 'tier-03-crash-doctor.log',
         body:
 `<span class="t-prompt">operator@ubuntu</span>:<span class="t-accent">~</span>$ <span class="t-cmd">check why antigravity code ide is crashing and fix it</span>
-<span class="t-muted">[Tier 3 • 14ms] Running LinuxSystemToolkit.diagnose_and_heal_app()...</span>
+<span class="t-muted">[TIER_03 // 14.2ms] LinuxSystemToolkit.diagnose_and_heal_app("Antigravity")</span>
 
-[1/6] Locating binaries &amp; symlinks... <span class="t-prompt">✓ ~/.local/bin/agy</span>
-[2/6] Checking SingletonLock &amp; Crashpad/*.dmp... <span class="t-prompt">✓ Clean</span>
-[3/6] Scanning logs/main.log... <span class="t-accent">! Found ConnectError (HTTP/2 TLS)</span>
-[4/6] Auditing X.509 .pem expiry via openssl... <span class="t-prompt">✓ Valid</span>
-[5/6] Backing up main.js -&gt; main.js.bak &amp; patching nodeOptions... <span class="t-prompt">✓ Patched</span>
-[6/6] Verification complete. Ready to launch.`
+[01/06] resolve_binaries : ~/.local/bin/agy -> /usr/share/antigravity/antigravity
+[02/06] inspect_locks    : ~/.config/Antigravity/SingletonLock (clean), 0 new Crashpad dumps
+[03/06] scan_crash_logs  : logs/main.log -> ConnectError: [internal] certificate has expired
+[04/06] audit_x509_certs : resources/app/extensions/antigravity/cert.pem (EXPIRED)
+[05/06] atomic_patch     : snapshot tx-1731961204 -> main.js.bak, patched nodeOptions
+[06/06] verify_fix       : patch verified. Type /undo to roll back transaction tx-1731961204.`
       },
       tier4: {
-        title: 'tier-4-agy-ndjson-stream.log',
+        title: 'tier-04-agy-ndjson-bridge.log',
         body:
 `<span class="t-prompt">operator@ubuntu</span>:<span class="t-accent">~</span>$ <span class="t-cmd">agy -p "audit nginx reverse proxy" --output-format stream-json</span>
-<span class="t-muted">{"event": "init", "conversation_id": "5a6241b1-bdf8-4126-ba6c-0813df6bdded"}</span>
-<span class="t-accent">{"event": "step_update", "step_type": "tool", "tool": "view_file", "path": "/etc/nginx/sites-enabled/default"}</span>
-<span class="t-prompt">{"event": "step_update", "step_type": "agent_response", "text_delta": "TLS 1.3 is enabled; HSTS header is missing..."}</span>
-<span class="t-muted">{"event": "result", "status": "ok"}</span>`
+<span class="t-muted">{"event":"init","conversation_id":"5a6241b1-bdf8-4126-ba6c-0813df6bdded"}</span>
+<span class="t-accent">{"event":"step_update","step_type":"tool","tool":"view_file","path":"/etc/nginx/sites-enabled/default"}</span>
+<span class="t-prompt">{"event":"step_update","step_type":"agent_response","text_delta":"Upstream 127.0.0.1:8000 is reachable; missing proxy_read_timeout..."}</span>
+<span class="t-muted">{"event":"result","status":"ok","duration_ms":640}</span>`
       },
       tier5: {
-        title: 'tier-5-react-sanitizer.log',
+        title: 'tier-05-parallel-react-loop.log',
         body:
-`<span class="t-prompt">operator@ubuntu</span>:<span class="t-accent">~</span>$ <span class="t-cmd">ollama:gemma4:e4b (8-Step ReAct Loop)</span>
-<span class="t-muted">[Sanitizer] Stripped &lt;think&gt;...&lt;/think&gt; block -&gt; routed to Activity feed</span>
-<span class="t-accent">[Tool 1/8]</span> &lt;grep pattern="ERR_CONNECTION_REFUSED" path="/var/log/syslog" /&gt;
-<span class="t-accent">[Tool 2/8]</span> &lt;view_file path="/etc/systemd/system/api.service" start="1" end="40" /&gt;
-<span class="t-accent">[Tool 3/8]</span> &lt;patch_file path="/etc/systemd/system/api.service"&gt;...&lt;/patch_file&gt;
-<span class="t-prompt">✓ Atomic .bak created. Service restarted cleanly.</span>`
+`<span class="t-prompt">operator@ubuntu</span>:<span class="t-accent">~</span>$ <span class="t-cmd">ollama:gemma4:e4b [8-Step ReAct + SkillsLoader]</span>
+<span class="t-muted">[SKILLS] Matched skills/nginx-tls-audit.md -> injected into system briefing</span>
+<span class="t-muted">[SANITIZER] Stripped 312B &lt;think&gt; block -> routed to Activity feed</span>
+<span class="t-accent">[PARALLEL_BATCH]</span> asyncio.gather(&lt;network_audit /&gt;, &lt;systemd unit="nginx" lines="30" /&gt;)
+<span class="t-accent">[PATCH_TX]</span> &lt;patch_file path="/etc/nginx/conf.d/api.conf"&gt;...&lt;/patch_file&gt; [tx-1731961299]
+<span class="t-prompt">OK: Snapshot saved to config/snapshots/tx-1731961299_api.conf.before</span>`
       }
     };
 
     window.selectTier = function (btn, key) {
-      document.querySelectorAll('.tier-btn').forEach((b) => b.classList.remove('active'));
+      document.querySelectorAll('.tier-row').forEach((b) => b.classList.remove('active'));
       btn.classList.add('active');
       const data = TIER_OUTPUTS[key];
       document.getElementById('term-title').textContent = data.title;
       document.getElementById('term-output').innerHTML = data.body;
     };
-    window.selectTier(document.querySelector('.tier-btn.active'), 'tier1');
+    window.selectTier(document.querySelector('.tier-row.active'), 'tier1');
   </script>
 </body>
 </html>
