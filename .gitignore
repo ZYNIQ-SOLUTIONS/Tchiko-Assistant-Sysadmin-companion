@@ -26,6 +26,7 @@ htmlcov/
 config/agent_memory.json
 config/action_ledger.json
 config/snapshots/
+logs/
 .concord/
 
 # Editors & OS

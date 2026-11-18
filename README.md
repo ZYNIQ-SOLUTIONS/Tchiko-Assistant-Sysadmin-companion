@@ -10,7 +10,8 @@
   [![Runtime](https://img.shields.io/badge/Python-3.10%2B_%7C_Asyncio-38bdf8?style=for-the-badge)](pyproject.toml)
   [![Graphics](https://img.shields.io/badge/GTK3_%2B_PyCairo-60_FPS_Vector_Physics-10b981?style=for-the-badge)](tchiko/svg_ghost_renderer.py)
   [![Platform](https://img.shields.io/badge/Ubuntu_Linux-X11_%26_XWayland-0f172a?style=for-the-badge)](main.py)
-  [![License: MIT](https://img.shields.io/badge/License-MIT-ffffff?style=for-the-badge)](#license)
+  [![License: MIT](https://img.shields.io/badge/License-MIT-ffffff?style=for-the-badge)](LICENSE)
+  [![Open Source Helpers](https://www.codetriage.com/zyniq-solutions/tchiko-assistant-sysadmin-companion/badges/users.svg)](https://www.codetriage.com/zyniq-solutions/tchiko-assistant-sysadmin-companion)
 
   **[📐 Architecture Deep-Dive (`docs/ARCHITECTURE.md`)](docs/ARCHITECTURE.md)** • **[🛠️ Contributing Guide (`CONTRIBUTING.md`)](CONTRIBUTING.md)** • **[🔒 Security (`SECURITY.md`)](SECURITY.md)** • **[🌐 Interactive Web Showcase (`landing/index.html`)](landing/index.html)**
 </div>
