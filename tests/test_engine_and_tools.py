@@ -216,6 +216,39 @@ class TestTchikoEngineAndTools(unittest.TestCase):
             self.assertTrue(svg_out.exists())
             self.assertGreater(svg_out.stat().st_size, 1000)
 
+    def test_container_systemd_network_tools_and_rbac(self) -> None:
+        """Verify new sysadmin tools (containers, systemd, network audit), RBAC gating & ReAct XML parsing."""
+        # 1. XML ReAct extraction
+        xml_sample = (
+            '<containers target="api" /> '
+            '<systemd unit="nginx.service" lines="25" /> '
+            "<network_audit />"
+        )
+        actions = TchikoAgentEngine._extract_tool_actions(xml_sample)
+        self.assertEqual([a["tool"] for a in actions], ["containers", "systemd", "network_audit"])
+        self.assertEqual(actions[0]["target"], "api")
+        self.assertEqual(actions[1]["unit"], "nginx.service")
+        self.assertEqual(actions[1]["lines"], 25)
+
+        # 2. RBAC gating when capabilities are disabled
+        self.config.set_all_permissions(False)
+        self.config.data["permissions"]["capabilities"]["process_management"] = False
+        self.config.data["permissions"]["capabilities"]["network_requests"] = False
+
+        self.assertFalse(self.toolkit.diagnose_containers().ok)
+        self.assertFalse(self.toolkit.inspect_systemd_unit().ok)
+        self.assertFalse(self.toolkit.audit_network_security().ok)
+
+        # 3. Enable capabilities and verify network & systemd tools run cleanly
+        self.config.set_all_permissions(True)
+        net_res = self.toolkit.audit_network_security()
+        self.assertTrue(net_res.ok)
+        self.assertIn("Listening Sockets", net_res.output)
+
+        sys_res = self.toolkit.inspect_systemd_unit()
+        self.assertTrue(sys_res.ok)
+        self.assertIn("Systemd Failed Units", sys_res.output)
+
 
 if __name__ == "__main__":
     unittest.main()

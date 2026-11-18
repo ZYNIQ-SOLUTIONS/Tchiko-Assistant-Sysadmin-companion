@@ -47,18 +47,17 @@ FONT_UI = '"Ubuntu Sans", "Inter", "Cantarell", "Noto Sans", sans-serif'
 FONT_MONO = '"JetBrains Mono", "Ubuntu Sans Mono", "Ubuntu Mono", monospace'
 PANGO_MONO = "Ubuntu Sans Mono, JetBrains Mono, monospace"
 
-# Display names for the mascot coats (keys are the renderer's theme ids).
+# Display names for the BoopFace material coats (keys are the renderer's theme ids).
 COAT_NAMES: List[Tuple[str, str]] = [
-    ("phantom_cyan", "Crimson Cloud"),
-    ("astral_violet", "Velvet Panda"),
-    ("emerald_matrix", "Marshmallow"),
-    ("solar_gold", "Crimson Fox"),
+    ("phantom_cyan", "Obsidian Metal"),
+    ("astral_violet", "Velvet Slate"),
+    ("emerald_matrix", "Porcelain Glaze"),
+    ("solar_gold", "Crimson Carbon"),
 ]
 
 MOOD_NAMES: List[Tuple[str, str]] = [
     ("idle", "Hover"),
     ("happy", "Tippy-tap dance"),
-    ("love", "Happy chirps"),
     ("excited", "Zoomies"),
     ("thinking", "Curious head-tilt"),
     ("executing", "Ring juggle"),

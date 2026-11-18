@@ -67,7 +67,7 @@ def run_self_test() -> int:
     renderer.set_emotion("idle")
     renderer.export_to_svg(str(logo_svg_path), width=360, height=340, theme_name="phantom_cyan")
     renderer.export_to_svg(str(landing_assets / "tchiko-logo.svg"), width=360, height=340, theme_name="phantom_cyan")
-    for mood in ("love", "happy", "roar", "executing", "sleepy", "thinking"):
+    for mood in ("happy", "excited", "roar", "executing", "sleepy", "thinking"):
         r_mood = SvgGhostRenderer()
         r_mood.set_emotion(mood, duration=5.0)
         r_mood.step(0.4)

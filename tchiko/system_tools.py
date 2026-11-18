@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import os
 import platform
+import re
 import shutil
 import subprocess
 import time
@@ -616,4 +617,152 @@ class LinuxSystemToolkit:
             title=f"Diagnosed & Repaired: {app_name}",
             output=report,
         )
+
+    def diagnose_containers(self, target: str = "") -> ToolResult:
+        """Inspect Docker or Podman containers, exit codes, and tail logs for exited/targeted units."""
+        if not self.config.can_execute_capability("process_management"):
+            return ToolResult(
+                ok=False,
+                title="Container Doctor Blocked",
+                output="Permission denied: `process_management` is disabled in Tchiko Settings.",
+                exit_code=126,
+            )
+
+        runtime = shutil.which("docker") or shutil.which("podman")
+        if not runtime:
+            return ToolResult(
+                ok=False,
+                title="No Container Runtime Found",
+                output="Neither `docker` nor `podman` was found in `PATH`.",
+                exit_code=127,
+            )
+
+        rt_name = Path(runtime).name
+        ps_cmd = f"{rt_name} ps -a --format '{{{{.Names}}}}\\t{{{{.Status}}}}\\t{{{{.Image}}}}\\t{{{{.Ports}}}}'"
+        ps_res = self.run_shell_command(ps_cmd, timeout=15)
+        if not ps_res.ok:
+            return ToolResult(
+                ok=False,
+                title=f"{rt_name} Inspection Failed",
+                output=ps_res.output,
+                command=ps_cmd,
+                exit_code=ps_res.exit_code,
+            )
+
+        lines = [ln.strip() for ln in ps_res.output.splitlines() if ln.strip()]
+        target_clean = target.strip()
+        log_sections: List[str] = []
+
+        if target_clean:
+            safe_target = re.sub(r"[^A-Za-z0-9_.-]", "", target_clean)
+            if safe_target:
+                lg = self.run_shell_command(f"{rt_name} logs --tail 35 {safe_target} 2>&1", timeout=10)
+                log_sections.append(f"**Logs (`{safe_target}`):**\n```text\n{lg.output[:2500]}\n```")
+        else:
+            for ln in lines:
+                parts = ln.split("\t")
+                cname = parts[0] if parts else ""
+                cstatus = parts[1] if len(parts) > 1 else ""
+                if cname and ("Exited" in cstatus or "unhealthy" in cstatus.lower()):
+                    safe_c = re.sub(r"[^A-Za-z0-9_.-]", "", cname)
+                    lg = self.run_shell_command(f"{rt_name} logs --tail 25 {safe_c} 2>&1", timeout=10)
+                    log_sections.append(
+                        f"**Exited/Unhealthy `{safe_c}` ({cstatus}):**\n```text\n{lg.output[:1800]}\n```"
+                    )
+                    if len(log_sections) >= 3:
+                        break
+
+        table = "\n".join(lines) if lines else "(no containers found)"
+        extra = ("\n\n" + "\n\n".join(log_sections)) if log_sections else ""
+        return ToolResult(
+            ok=True,
+            title=f"Container Doctor ({rt_name})",
+            output=f"### 🐳 Container Doctor (`{rt_name}`)\n```text\n{table}\n```{extra}",
+            command=ps_cmd,
+        )
+
+    def inspect_systemd_unit(self, unit: str = "", lines: int = 40) -> ToolResult:
+        """Inspect failed systemd units or a specific unit's status and journalctl logs."""
+        if not self.config.can_execute_capability("process_management"):
+            return ToolResult(
+                ok=False,
+                title="Systemd Inspector Blocked",
+                output="Permission denied: `process_management` is disabled in Tchiko Settings.",
+                exit_code=126,
+            )
+
+        if not shutil.which("systemctl"):
+            return ToolResult(
+                ok=False,
+                title="systemctl Unavailable",
+                output="`systemctl` is not available on this host.",
+                exit_code=127,
+            )
+
+        unit_clean = re.sub(r"[^A-Za-z0-9_.@-]", "", unit.strip())
+        if not unit_clean:
+            sys_fail = self.run_shell_command("systemctl --failed --no-pager --plain", timeout=10)
+            usr_fail = self.run_shell_command("systemctl --user --failed --no-pager --plain", timeout=10)
+            return ToolResult(
+                ok=True,
+                title="Systemd Health Summary",
+                output=(
+                    "### ⚙️ Systemd Failed Units\n"
+                    f"**System:**\n```text\n{sys_fail.output}\n```\n\n"
+                    f"**User:**\n```text\n{usr_fail.output}\n```"
+                ),
+                command="systemctl --failed",
+            )
+
+        n_lines = max(10, min(200, int(lines)))
+        status_res = self.run_shell_command(f"systemctl status {unit_clean} --no-pager -l", timeout=10)
+        if not status_res.ok and "could not be found" in status_res.output.lower():
+            status_res = self.run_shell_command(f"systemctl --user status {unit_clean} --no-pager -l", timeout=10)
+            j_res = self.run_shell_command(f"journalctl --user -u {unit_clean} -n {n_lines} --no-pager", timeout=10)
+        else:
+            j_res = self.run_shell_command(f"journalctl -u {unit_clean} -n {n_lines} --no-pager", timeout=10)
+
+        return ToolResult(
+            ok=True,
+            title=f"Systemd Unit: {unit_clean}",
+            output=(
+                f"### ⚙️ Systemd Unit (`{unit_clean}`)\n"
+                f"**Status:**\n```text\n{status_res.output[:2200]}\n```\n\n"
+                f"**Journal (last {n_lines} lines):**\n```text\n{j_res.output[:2600]}\n```"
+            ),
+            command=f"systemctl status {unit_clean}",
+        )
+
+    def audit_network_security(self) -> ToolResult:
+        """Audit listening TCP/UDP sockets, UFW/nftables firewall state, and active connections."""
+        if not self.config.can_execute_capability("network_requests"):
+            return ToolResult(
+                ok=False,
+                title="Network Audit Blocked",
+                output="Permission denied: `network_requests` is disabled in Tchiko Settings.",
+                exit_code=126,
+            )
+
+        sockets = self.run_shell_command("ss -tulnp | head -n 35", timeout=10)
+        estab = self.run_shell_command("ss -tnp state established | head -n 20", timeout=10)
+        fw_out = "No `ufw` or `nft` firewall CLI detected."
+        if shutil.which("ufw"):
+            fw_res = self.run_shell_command("ufw status verbose 2>&1 || true", timeout=8)
+            fw_out = fw_res.output
+        elif shutil.which("nft"):
+            fw_res = self.run_shell_command("nft list ruleset 2>&1 | head -n 35 || true", timeout=8)
+            fw_out = fw_res.output
+
+        return ToolResult(
+            ok=True,
+            title="Network & Firewall Audit",
+            output=(
+                "### 🌐 Network & Firewall Audit\n"
+                f"**Listening Sockets (`ss -tulnp`):**\n```text\n{sockets.output}\n```\n\n"
+                f"**Established TCP Connections:**\n```text\n{estab.output}\n```\n\n"
+                f"**Firewall Status:**\n```text\n{fw_out}\n```"
+            ),
+            command="ss -tulnp",
+        )
+
 

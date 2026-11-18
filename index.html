@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tchiko Assistant — Autonomous Linux Sysadmin &amp; Cairo Desktop Companion</title>
-  <meta name="description" content="Open-source autonomous Linux systems engineering agent and 60 FPS procedural Cairo desktop companion for Ubuntu, powered by Google Antigravity SDK &amp; CLI." />
+  <title>Tchiko Assistant — Autonomous Linux Sysadmin &amp; BoopFace SVG Companion</title>
+  <meta name="description" content="Open-source autonomous Linux systems engineering agent and interactive BoopFace SVG desktop companion for Ubuntu, powered by Google Antigravity SDK &amp; CLI." />
   <meta property="og:title" content="Tchiko Assistant — Autonomous Linux Sysadmin Companion" />
-  <meta property="og:description" content="5-Tier Autonomous Agent Engine, 6-Step Crash Doctor, RBAC Security, and 60 FPS Procedural Cairo Physics on Ubuntu Linux." />
+  <meta property="og:description" content="5-Tier Autonomous Agent Engine, 6-Step Crash Doctor, RBAC Security, and 188-skin interactive BoopFace SVG avatar." />
   <meta property="og:type" content="website" />
   <meta name="theme-color" content="#07080c" />
-  <link rel="icon" type="image/svg+xml" href="assets/tchiko-logo.svg" />
+  <link rel="icon" type="image/svg+xml" href="landing/assets/tchiko-logo.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -61,7 +61,6 @@
       position: relative;
     }
 
-    /* Ambient Mesh & Subtle Grid Background */
     .ambient-bg {
       position: fixed;
       inset: 0;
@@ -126,18 +125,12 @@
       letter-spacing: -0.02em;
     }
 
-    .brand-logo {
-      width: 34px;
-      height: 34px;
-      border-radius: 10px;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid var(--border-strong);
-      padding: 3px;
-      transition: transform 0.25s ease;
-    }
-
-    .brand:hover .brand-logo {
-      transform: scale(1.08) rotate(-4deg);
+    .brand-avatar {
+      width: 38px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .brand-tag {
@@ -160,13 +153,8 @@
       color: var(--text-secondary);
     }
 
-    .nav-links a {
-      transition: color 0.2s ease;
-    }
-
-    .nav-links a:hover {
-      color: var(--text);
-    }
+    .nav-links a { transition: color 0.2s ease; }
+    .nav-links a:hover { color: var(--text); }
 
     .nav-actions {
       display: flex;
@@ -218,12 +206,12 @@
 
     /* ── HERO ───────────────────────────────────────────────────────────── */
     .hero {
-      padding: 72px 0 88px;
+      padding: 64px 0 88px;
     }
 
     .hero-grid {
       display: grid;
-      grid-template-columns: 1.05fr 0.95fr;
+      grid-template-columns: 1fr 1fr;
       gap: 48px;
       align-items: center;
     }
@@ -257,7 +245,7 @@
     }
 
     .hero h1 {
-      font-size: clamp(2.5rem, 4.6vw, 3.85rem);
+      font-size: clamp(2.45rem, 4.5vw, 3.75rem);
       font-weight: 800;
       line-height: 1.08;
       letter-spacing: -0.035em;
@@ -272,10 +260,10 @@
     }
 
     .hero-sub {
-      font-size: 1.1rem;
+      font-size: 1.08rem;
       color: var(--text-secondary);
       max-width: 560px;
-      margin-bottom: 32px;
+      margin-bottom: 30px;
       line-height: 1.7;
     }
 
@@ -284,7 +272,7 @@
       flex-wrap: wrap;
       align-items: center;
       gap: 14px;
-      margin-bottom: 36px;
+      margin-bottom: 34px;
     }
 
     .hero-specs {
@@ -308,10 +296,10 @@
       color: var(--text-muted);
     }
 
-    /* ── INTERACTIVE STAGE WINDOW ───────────────────────────────────────── */
+    /* ── BOOPFACE INTERACTIVE STAGE WINDOW ──────────────────────────────── */
     .stage-window {
       position: relative;
-      background: linear-gradient(180deg, rgba(22, 26, 38, 0.9), rgba(11, 13, 19, 0.94));
+      background: linear-gradient(180deg, rgba(22, 26, 38, 0.92), rgba(11, 13, 19, 0.96));
       border: 1px solid var(--border-strong);
       border-radius: var(--radius-xl);
       box-shadow:
@@ -325,31 +313,25 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 10px;
       padding: 12px 18px;
       border-bottom: 1px solid var(--border);
       background: rgba(255, 255, 255, 0.02);
     }
 
-    .window-dots {
-      display: flex;
-      gap: 7px;
-    }
-
-    .window-dots i {
-      width: 11px;
-      height: 11px;
-      border-radius: 50%;
-      display: block;
-    }
-
+    .window-dots { display: flex; gap: 7px; }
+    .window-dots i { width: 11px; height: 11px; border-radius: 50%; display: block; }
     .dot-red { background: #ff5f57; }
     .dot-amber { background: #febc2e; }
     .dot-green { background: #28c840; }
 
     .stage-title {
       font-family: var(--font-mono);
-      font-size: 0.75rem;
+      font-size: 0.74rem;
       color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .coat-btn {
@@ -362,6 +344,7 @@
       border-radius: 999px;
       cursor: pointer;
       transition: all 0.2s ease;
+      white-space: nowrap;
     }
 
     .coat-btn:hover {
@@ -371,12 +354,12 @@
 
     .stage-canvas-wrap {
       position: relative;
-      padding: 20px 22px 16px;
+      padding: 18px 22px 16px;
       display: flex;
       flex-direction: column;
       align-items: center;
       background:
-        radial-gradient(circle at 50% 48%, rgba(229, 72, 77, 0.09), transparent 62%);
+        radial-gradient(circle at 50% 48%, rgba(229, 72, 77, 0.1), transparent 62%);
     }
 
     .speech-bubble {
@@ -388,7 +371,7 @@
       font-size: 0.84rem;
       color: var(--text-secondary);
       margin-bottom: 10px;
-      min-height: 64px;
+      min-height: 66px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -409,7 +392,8 @@
     .bubble-actions {
       display: flex;
       justify-content: flex-end;
-      gap: 8px;
+      flex-wrap: wrap;
+      gap: 6px;
     }
 
     .mini-btn {
@@ -429,35 +413,52 @@
       border-color: var(--border-strong);
     }
 
-    #pet-hitbox {
+    .boop-stage-box {
       position: relative;
-      width: 240px;
-      height: 220px;
-      cursor: grab;
+      width: 100%;
+      min-height: 225px;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
+      padding: 6px 0;
     }
 
-    #pet-hitbox:active { cursor: grabbing; }
+    .boop-hint {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
 
-    #desktop-tchiko-canvas {
-      width: 240px;
-      height: 220px;
-      display: block;
+    .controls-row {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 8px;
+      margin-bottom: 10px;
+      padding: 8px 12px;
+      border-radius: var(--radius-md);
+      background: rgba(255, 255, 255, 0.025);
+      border: 1px solid var(--border);
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-secondary);
+    }
+
+    .controls-row input[type="range"] {
+      flex: 1;
+      accent-color: var(--accent);
+      cursor: pointer;
     }
 
     .quick-pill {
       width: 100%;
       display: flex;
       gap: 8px;
-      margin-top: 4px;
-      margin-bottom: 12px;
-      transition: all 0.2s ease;
-    }
-
-    .quick-pill.is-hidden {
-      opacity: 0.45;
+      margin-bottom: 4px;
     }
 
     .quick-pill input {
@@ -490,8 +491,8 @@
 
     .emo-chip {
       font-family: var(--font-mono);
-      font-size: 0.72rem;
-      padding: 5px 10px;
+      font-size: 0.71rem;
+      padding: 4px 9px;
       border-radius: 999px;
       background: rgba(255, 255, 255, 0.04);
       border: 1px solid var(--border);
@@ -512,14 +513,8 @@
     }
 
     /* ── SECTION HEADERS ────────────────────────────────────────────────── */
-    .section {
-      padding: 88px 0;
-    }
-
-    .section-head {
-      max-width: 680px;
-      margin-bottom: 48px;
-    }
+    .section { padding: 88px 0; }
+    .section-head { max-width: 680px; margin-bottom: 48px; }
 
     .section-eyebrow {
       display: inline-block;
@@ -581,13 +576,8 @@
       transform: translateY(-3px);
     }
 
-    .bento-card:hover::before {
-      opacity: 1;
-    }
-
-    .bento-span-2 {
-      grid-column: span 2;
-    }
+    .bento-card:hover::before { opacity: 1; }
+    .bento-span-2 { grid-column: span 2; }
 
     .bento-icon {
       width: 42px;
@@ -640,11 +630,7 @@
       align-items: stretch;
     }
 
-    .tier-list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
+    .tier-list { display: flex; flex-direction: column; gap: 10px; }
 
     .tier-btn {
       text-align: left;
@@ -674,10 +660,7 @@
       margin-bottom: 4px;
     }
 
-    .tier-top strong {
-      font-size: 0.95rem;
-      font-weight: 700;
-    }
+    .tier-top strong { font-size: 0.95rem; font-weight: 700; }
 
     .tier-badge {
       font-family: var(--font-mono);
@@ -688,10 +671,7 @@
       border-radius: 999px;
     }
 
-    .tier-btn p {
-      font-size: 0.84rem;
-      color: var(--text-secondary);
-    }
+    .tier-btn p { font-size: 0.84rem; color: var(--text-secondary); }
 
     .terminal-card {
       background: #090b10;
@@ -728,10 +708,10 @@
     .t-accent { color: var(--accent-bright); }
     .t-muted { color: var(--text-muted); }
 
-    /* ── EMOTION SVG SHOWCASE ───────────────────────────────────────────── */
+    /* ── BOOPFACE LIVE EXPRESSION & SKIN GALLERY ────────────────────────── */
     .emotion-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(185px, 1fr));
       gap: 16px;
     }
 
@@ -743,6 +723,10 @@
       text-align: center;
       cursor: pointer;
       transition: all 0.22s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
     }
 
     .emo-card:hover {
@@ -751,22 +735,10 @@
       background: var(--surface-hover);
     }
 
-    .emo-card img {
-      width: 92px;
-      height: 92px;
-      object-fit: contain;
-      margin-bottom: 10px;
-      transition: transform 0.25s ease;
-    }
-
-    .emo-card:hover img {
-      transform: scale(1.1);
-    }
-
     .emo-card strong {
       display: block;
-      font-size: 0.9rem;
-      margin-bottom: 2px;
+      font-size: 0.92rem;
+      margin-top: 4px;
     }
 
     .emo-card span {
@@ -842,21 +814,13 @@
       gap: 20px;
     }
 
-    .footer-links {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 22px;
-    }
+    .footer-links { display: flex; flex-wrap: wrap; gap: 22px; }
+    .footer-links a:hover { color: var(--text); }
 
-    .footer-links a:hover {
-      color: var(--text);
-    }
-
-    /* ── REVEAL ANIMATION ───────────────────────────────────────────────── */
     .reveal {
-      opacity: 0;
-      transform: translateY(18px);
-      transition: opacity 0.6s ease, transform 0.6s ease;
+      opacity: 1;
+      transform: translateY(0);
+      transition: opacity 0.5s ease, transform 0.5s ease;
     }
 
     .reveal.visible {
@@ -864,37 +828,130 @@
       transform: translateY(0);
     }
 
-    /* ── RESPONSIVE ─────────────────────────────────────────────────────── */
+    /* ── STUDIO PREVIEW & CRASH DOCTOR ─────────────────────────────────── */
+    .studio-card {
+      background: linear-gradient(180deg, rgba(20, 22, 26, 0.96), rgba(13, 14, 17, 0.98));
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      box-shadow: 0 28px 70px -24px rgba(0, 0, 0, 0.85);
+    }
+
+    .studio-body {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 24px;
+      padding: 28px;
+    }
+
+    .gauge-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .gauge-box {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px 12px;
+      text-align: center;
+    }
+
+    .gauge-box svg {
+      width: 68px;
+      height: 68px;
+      margin-bottom: 6px;
+    }
+
+    .gauge-box strong {
+      display: block;
+      font-size: 0.95rem;
+    }
+
+    .gauge-box span {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .activity-feed {
+      background: rgba(7, 8, 12, 0.7);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      line-height: 1.75;
+      color: var(--text-secondary);
+    }
+
+    .activity-item {
+      display: flex;
+      gap: 10px;
+      padding: 6px 0;
+      border-bottom: 1px dashed rgba(255, 255, 255, 0.06);
+    }
+
+    .activity-item:last-child { border-bottom: none; }
+
+    .doctor-steps {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 28px;
+    }
+
+    .doctor-step {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px 14px;
+    }
+
+    .doctor-num {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--accent-bright);
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .doctor-step strong {
+      display: block;
+      font-size: 0.88rem;
+      margin-bottom: 4px;
+    }
+
+    .doctor-step p {
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      line-height: 1.45;
+    }
+
+    @media (max-width: 980px) {
+      .studio-body { grid-template-columns: 1fr; }
+      .doctor-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
     @media (max-width: 980px) {
       .hero-grid,
       .arch-split,
       .install-panel {
         grid-template-columns: 1fr;
       }
-      .bento-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-      .bento-span-2 {
-        grid-column: span 2;
-      }
-      .nav-links {
-        display: none;
-      }
+      .bento-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .bento-span-2 { grid-column: span 2; }
+      .nav-links { display: none; }
     }
 
     @media (max-width: 640px) {
-      .bento-grid {
-        grid-template-columns: 1fr;
-      }
-      .bento-span-2 {
-        grid-column: span 1;
-      }
-      .hero-specs {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-      .install-panel {
-        padding: 28px 20px;
-      }
+      .bento-grid { grid-template-columns: 1fr; }
+      .bento-span-2 { grid-column: span 1; }
+      .hero-specs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .install-panel { padding: 28px 20px; }
     }
   </style>
 </head>
@@ -906,7 +963,9 @@
   <header class="navbar">
     <div class="container nav-inner">
       <a href="#top" class="brand">
-        <img src="assets/tchiko-logo.svg" alt="Tchiko Assistant Logo" class="brand-logo" />
+        <span class="brand-avatar">
+          <boop-face size="36" color="#131620" skin="901" motion="reduce" press-squeeze="false" antenna-drag="false"></boop-face>
+        </span>
         <span>Tchiko Assistant</span>
         <span class="brand-tag">v1.2</span>
       </a>
@@ -914,7 +973,7 @@
       <nav class="nav-links" aria-label="Primary">
         <a href="#features">Capabilities</a>
         <a href="#architecture">5-Tier Engine</a>
-        <a href="#emotions">Cairo Vectors</a>
+        <a href="#emotions">BoopFace Gallery</a>
         <a href="#install">Quick Start</a>
       </nav>
 
@@ -934,15 +993,15 @@
         <div>
           <div class="hero-pill">
             <span class="hero-pill-dot"></span>
-            <span>Open Source MIT • Ubuntu 22.04–25.10 • Google Antigravity SDK</span>
+            <span>Open Source MIT • Ubuntu Linux • BoopFace SVG + Antigravity SDK</span>
           </div>
 
           <h1>
-            Your Autonomous Linux Sysadmin, <span class="text-gradient">Alive on Your Desktop.</span>
+            Your Autonomous Linux Sysadmin, <span class="text-gradient">Expressive &amp; Alive.</span>
           </h1>
 
           <p class="hero-sub">
-            Meet <strong>Tchiko</strong> — an autonomous Ubuntu systems engineer, 6-step IDE crash doctor, and 60 FPS procedural Cairo companion with Hooke’s law spring-jelly physics and RBAC-governed host tools.
+            Meet <strong>Tchiko</strong> — an autonomous Ubuntu systems engineer and 6-step IDE crash doctor, paired with <strong>BoopFace</strong>: a zero-dependency interactive SVG avatar with 188 skins, spring antenna physics, jelly drag, and live agent state feedback.
           </p>
 
           <div class="hero-cta-row">
@@ -962,8 +1021,8 @@
               <span>Agentic dispatch</span>
             </div>
             <div class="spec-item">
-              <strong>60 FPS</strong>
-              <span>Cairo Bézier physics</span>
+              <strong>188 Skins</strong>
+              <span>Pure SVG BoopFace</span>
             </div>
             <div class="spec-item">
               <strong>6 Domains</strong>
@@ -972,7 +1031,7 @@
           </div>
         </div>
 
-        <!-- INTERACTIVE LIVE STAGE -->
+        <!-- INTERACTIVE BOOPFACE STAGE WINDOW -->
         <div class="stage-window" id="stage-board">
           <div class="stage-titlebar">
             <div class="window-dots" aria-hidden="true">
@@ -980,50 +1039,75 @@
               <i class="dot-amber"></i>
               <i class="dot-green"></i>
             </div>
-            <span class="stage-title">tchiko-desktop-overlay • cairo-live</span>
-            <button type="button" class="coat-btn" onclick="cycleTheme()" title="Switch Coat Palette">
-              Coat: <span id="coat-label">Crimson Cloud</span>
-            </button>
+            <span class="stage-title" id="skin-label">Skin: 901 (Metal)</span>
+            <div style="display:flex; gap:6px;">
+              <button type="button" class="coat-btn" onclick="cycleSkin()">Next Skin</button>
+              <button type="button" class="coat-btn" onclick="randomSkin()">🎲 188</button>
+            </div>
           </div>
 
           <div class="stage-canvas-wrap">
             <div class="speech-bubble" aria-live="polite">
               <div id="bubble-text">
-                <b>*Happy chirp!* ♪</b> Hover, boop, or middle-click me! I’m rendered in real time with the exact 32-puff Bézier math used in the Ubuntu GTK3 app.
+                <b>BoopFace Ready!</b> Move your cursor, press-and-hold to squeeze, drag my head, or pull my spring antenna (careful—I get angry!).
               </div>
               <div class="bubble-actions">
                 <button type="button" class="mini-btn" onclick="simulatePrompt('sysinfo')">/doctor</button>
                 <button type="button" class="mini-btn" onclick="simulatePrompt('ssh')">SSH Key</button>
+                <button type="button" class="mini-btn" onclick="simulatePrompt('blocked')">RBAC Block</button>
                 <button type="button" class="mini-btn" id="copy-btn" onclick="copyBubble()">Copy</button>
                 <button type="button" class="mini-btn" onclick="resetBubble()">Reset</button>
               </div>
             </div>
 
-            <div id="pet-hitbox" title="Hover to pet • Click to boop • Middle-click for Quick Input">
-              <canvas id="desktop-tchiko-canvas" width="240" height="220"></canvas>
+            <div class="boop-stage-box">
+              <boop-face
+                id="tchiko-boop"
+                size="195"
+                color="#131620"
+                skin="901"
+                auto-sleep="45000"
+                wake-on="activity"
+                motion="full">
+                <img src="landing/assets/tchiko-logo.svg" alt="Tchiko BoopFace Avatar" style="width:195px;height:195px;display:block;" />
+              </boop-face>
+              <span class="boop-hint">Drag head • Hold center to squeeze • Pull spring antenna</span>
+            </div>
+
+            <div class="controls-row">
+              <span>Head Roundness</span>
+              <input type="range" id="roundness-slider" min="0" max="100" value="50" aria-label="Head Roundness" />
+              <span id="roundness-val">50</span>
             </div>
 
             <div class="quick-pill" id="quick-pill">
               <input
                 type="text"
                 id="quick-entry"
-                placeholder="Ask Tchiko (e.g. create ssh key for hetzner, /doctor)..."
+                placeholder="Ask Tchiko (e.g. /doctor, ssh key, or rm -rf to test RBAC)..."
                 aria-label="Quick prompt for Tchiko"
               />
               <button type="button" class="btn btn-primary" onclick="sendQuickPrompt()">Run ↵</button>
             </div>
           </div>
 
-          <div class="emotion-dock" role="group" aria-label="Procedural emotion states">
-            <button type="button" class="emo-chip active" id="btn-emo-idle" onclick="setEmotion('idle')">idle</button>
-            <button type="button" class="emo-chip" id="btn-emo-happy" onclick="setEmotion('happy')">happy</button>
-            <button type="button" class="emo-chip" id="btn-emo-love" onclick="setEmotion('love')">love</button>
-            <button type="button" class="emo-chip" id="btn-emo-excited" onclick="setEmotion('excited')">excited</button>
-            <button type="button" class="emo-chip" id="btn-emo-thinking" onclick="setEmotion('thinking')">thinking</button>
-            <button type="button" class="emo-chip" id="btn-emo-executing" onclick="setEmotion('executing')">executing</button>
-            <button type="button" class="emo-chip" id="btn-emo-roar" onclick="setEmotion('roar')">roar</button>
-            <button type="button" class="emo-chip" id="btn-emo-wing_slash" onclick="setEmotion('wing_slash')">wing_slash</button>
-            <button type="button" class="emo-chip" id="btn-emo-sleepy" onclick="setEmotion('sleepy')">sleepy</button>
+          <div class="emotion-dock" role="group" aria-label="BoopFace expressions and agent states">
+            <button type="button" class="emo-chip active" data-emo="idle" onclick="setBoopAction('idle', this)">idle</button>
+            <button type="button" class="emo-chip" data-emo="waiting-spin" onclick="setBoopAction('waiting-spin', this)">waiting-spin</button>
+            <button type="button" class="emo-chip" data-emo="waiting-wrap" onclick="setBoopAction('waiting-wrap', this)">waiting-wrap</button>
+            <button type="button" class="emo-chip" data-emo="waiting-wave" onclick="setBoopAction('waiting-wave', this)">waiting-wave</button>
+            <button type="button" class="emo-chip" data-emo="input" onclick="setBoopAction('input', this)">input</button>
+            <button type="button" class="emo-chip" data-emo="affirm" onclick="setBoopAction('affirm', this)">affirm</button>
+            <button type="button" class="emo-chip" data-emo="success" onclick="setBoopAction('success', this)">success</button>
+            <button type="button" class="emo-chip" data-emo="failure" onclick="setBoopAction('failure', this)">failure</button>
+            <button type="button" class="emo-chip" data-emo="wary" onclick="setBoopAction('wary', this)">wary</button>
+            <button type="button" class="emo-chip" data-emo="inspect" onclick="setBoopAction('inspect', this)">inspect</button>
+            <button type="button" class="emo-chip" data-emo="angry" onclick="setBoopAction('angry', this)">angry</button>
+            <button type="button" class="emo-chip" data-emo="refuse" onclick="setBoopAction('refuse', this)">refuse</button>
+            <button type="button" class="emo-chip" data-emo="surprise" onclick="setBoopAction('surprise', this)">surprise</button>
+            <button type="button" class="emo-chip" data-emo="random" onclick="setBoopAction('random', this)">random</button>
+            <button type="button" class="emo-chip" data-emo="sleep" onclick="setBoopAction('sleep', this)">sleep</button>
+            <button type="button" class="emo-chip" data-emo="wake" onclick="setBoopAction('wake', this)">wake</button>
           </div>
         </div>
       </div>
@@ -1035,7 +1119,7 @@
         <div class="section-head">
           <span class="section-eyebrow">Engineered for Linux SREs &amp; Builders</span>
           <h2>Zero-latency local tools meet deep agentic reasoning.</h2>
-          <p>Built to diagnose crashes, manage SSH lifecycles, inspect `/proc`, and stream Antigravity CLI tool calls right from your desktop.</p>
+          <p>Built to diagnose crashes, manage SSH lifecycles, inspect `/proc`, and reflect every agent state visually with BoopFace.</p>
         </div>
 
         <div class="bento-grid">
@@ -1043,7 +1127,7 @@
             <div class="bento-icon">🧠</div>
             <h3>5-Tier Autonomous Dispatch &amp; `agy` NDJSON Bridge</h3>
             <p>
-              Common tasks resolve deterministically in under 15 ms. Complex investigations seamlessly stream over `agy --output-format stream-json` with persistent `conversation_id` memory or fall back to an 8-step ReAct loop for Gemini &amp; local Ollama models.
+              Common tasks resolve deterministically in under 15 ms. Complex investigations stream over `agy --output-format stream-json` with persistent `conversation_id` memory or fall back to an 8-step ReAct loop for Gemini &amp; local Ollama models.
             </p>
             <div class="bento-tags">
               <span class="tag-mono">Slash Router</span>
@@ -1088,14 +1172,14 @@
           </article>
 
           <article class="bento-card">
-            <div class="bento-icon">🎨</div>
-            <h3>60 FPS Procedural Cairo Vector</h3>
+            <div class="bento-icon">✨</div>
+            <h3>Interactive BoopFace SVG</h3>
             <p>
-              Zero PNG sprite sheets. `SvgGhostRenderer` computes 32-puff closed cubic Bézier silhouettes, 4 articulated wings, and Hooke’s law squash-and-stretch physics identically for GTK3 and SVG export.
+              Powered by <strong>CX-ArtLab/BoopFace</strong>: zero-dependency native Web Component with pointer-tracking eyes, elastic jelly drag, draggable spring antenna, and 188 pure-SVG skins.
             </p>
             <div class="bento-tags">
-              <span class="tag-mono">pycairo</span>
-              <span class="tag-mono">GdkPixbuf</span>
+              <span class="tag-mono">&lt;boop-face&gt;</span>
+              <span class="tag-mono">188 SVG Skins</span>
             </div>
           </article>
         </div>
@@ -1170,51 +1254,136 @@
       </div>
     </section>
 
-    <!-- PROCEDURAL SVG EMOTION GALLERY -->
+    <!-- LIVE BOOPFACE EXPRESSION & SKIN GALLERY -->
     <section class="section reveal" id="emotions">
       <div class="container">
         <div class="section-head">
-          <span class="section-eyebrow">Procedural Vector Assets</span>
-          <h2>Exported directly from Cairo to SVG.</h2>
-          <p>Click any exported pose to morph the live interactive Tchiko companion at the top of the page.</p>
+          <span class="section-eyebrow">BoopFace Web Component Showcase</span>
+          <h2>Live SVG expressions &amp; material skins.</h2>
+          <p>Every card below is a live interactive <code>&lt;boop-face&gt;</code> instance. Click any card to equip its skin and expression on the Hero stage.</p>
         </div>
 
         <div class="emotion-grid">
-          <div class="emo-card" onclick="jumpAndEmote('idle')">
-            <img src="assets/tchiko-logo.svg" alt="Tchiko Idle Pose" />
-            <strong>Idle Hover</strong>
-            <span>tchiko-logo.svg</span>
+          <div class="emo-card" onclick="applyCard('901', 'idle')">
+            <boop-face size="92" skin="901" color="#131620"></boop-face>
+            <strong>Metal • Idle</strong>
+            <span>skin="901" • idle</span>
           </div>
-          <div class="emo-card" onclick="jumpAndEmote('happy')">
-            <img src="assets/tchiko-happy.svg" alt="Tchiko Happy Pose" />
-            <strong>Tippy-Tap Happy</strong>
-            <span>tchiko-happy.svg</span>
+          <div class="emo-card" onclick="applyCard('102', 'waiting-wave')">
+            <boop-face size="92" skin="102" color="#131620"></boop-face>
+            <strong>Glaze • Waiting</strong>
+            <span>skin="102" • waiting-wave</span>
           </div>
-          <div class="emo-card" onclick="jumpAndEmote('love')">
-            <img src="assets/tchiko-love.svg" alt="Tchiko Love Pose" />
-            <strong>Happy Chirps</strong>
-            <span>tchiko-love.svg</span>
+          <div class="emo-card" onclick="applyCard('203', 'inspect')">
+            <boop-face size="92" skin="203" color="#131620"></boop-face>
+            <strong>Ice Glass • Inspect</strong>
+            <span>skin="203" • inspect</span>
           </div>
-          <div class="emo-card" onclick="jumpAndEmote('executing')">
-            <img src="assets/tchiko-executing.svg" alt="Tchiko Executing Pose" />
-            <strong>Ring Juggle</strong>
-            <span>tchiko-executing.svg</span>
+          <div class="emo-card" onclick="applyCard('305', 'success')">
+            <boop-face size="92" skin="305" color="#131620"></boop-face>
+            <strong>Gummy • Success</strong>
+            <span>skin="305" • success</span>
           </div>
-          <div class="emo-card" onclick="jumpAndEmote('thinking')">
-            <img src="assets/tchiko-thinking.svg" alt="Tchiko Thinking Pose" />
-            <strong>Curious Tilt</strong>
-            <span>tchiko-thinking.svg</span>
+          <div class="emo-card" onclick="applyCard('604', 'affirm')">
+            <boop-face size="92" skin="604" color="#131620"></boop-face>
+            <strong>Jelly • Affirm</strong>
+            <span>skin="604" • affirm</span>
           </div>
-          <div class="emo-card" onclick="jumpAndEmote('roar')">
-            <img src="assets/tchiko-roar.svg" alt="Tchiko Roar Pose" />
-            <strong>Puff Up Roar</strong>
-            <span>tchiko-roar.svg</span>
+          <div class="emo-card" onclick="applyCard('1005', 'wary')">
+            <boop-face size="92" skin="1005" color="#131620"></boop-face>
+            <strong>Gem • Wary</strong>
+            <span>skin="1005" • wary</span>
           </div>
-          <div class="emo-card" onclick="jumpAndEmote('sleepy')">
-            <img src="assets/tchiko-sleepy.svg" alt="Tchiko Sleepy Pose" />
-            <strong>Cozy Nap</strong>
-            <span>tchiko-sleepy.svg</span>
+          <div class="emo-card" onclick="applyCard('1302', 'surprise')">
+            <boop-face size="92" skin="1302" color="#131620"></boop-face>
+            <strong>Shimmer • Surprise</strong>
+            <span>skin="1302" • surprise</span>
           </div>
+          <div class="emo-card" onclick="applyCard('1703', 'failure')">
+            <boop-face size="92" skin="1703" color="#131620"></boop-face>
+            <strong>Tech • Failure</strong>
+            <span>skin="1703" • failure</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DESKTOP SYSTEM STUDIO & 6-STEP CRASH DOCTOR -->
+    <section class="section reveal" id="studio">
+      <div class="container">
+        <div class="section-head">
+          <span class="section-eyebrow">GTK3 Desktop Studio</span>
+          <h2>Live telemetry, RBAC safety &amp; 6-step self-healing.</h2>
+          <p>Middle-click Tchiko for the quick-input pill, or single-click to open the full Chat &amp; System Studio window.</p>
+        </div>
+
+        <div class="studio-card">
+          <div class="stage-titlebar">
+            <div class="window-dots" aria-hidden="true">
+              <i class="dot-red"></i>
+              <i class="dot-amber"></i>
+              <i class="dot-green"></i>
+            </div>
+            <span class="stage-title">Tchiko Chat &amp; System Studio • /proc Telemetry</span>
+            <span class="tier-badge">RBAC: 6/6 Domains</span>
+          </div>
+          <div class="studio-body">
+            <div>
+              <div class="gauge-row">
+                <div class="gauge-box">
+                  <svg viewBox="0 0 80 80" aria-hidden="true">
+                    <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="7"/>
+                    <circle cx="40" cy="40" r="32" fill="none" stroke="#3ecf8e" stroke-width="7" stroke-dasharray="201" stroke-dashoffset="165" stroke-linecap="round" transform="rotate(-90 40 40)"/>
+                    <text x="40" y="45" text-anchor="middle" fill="#f4f6fb" font-size="15" font-weight="700" font-family="Inter,sans-serif">18%</text>
+                  </svg>
+                  <strong>CPU Load</strong>
+                  <span>0.42 • 24 cores</span>
+                </div>
+                <div class="gauge-box">
+                  <svg viewBox="0 0 80 80" aria-hidden="true">
+                    <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="7"/>
+                    <circle cx="40" cy="40" r="32" fill="none" stroke="#38bdf8" stroke-width="7" stroke-dasharray="201" stroke-dashoffset="148" stroke-linecap="round" transform="rotate(-90 40 40)"/>
+                    <text x="40" y="45" text-anchor="middle" fill="#f4f6fb" font-size="15" font-weight="700" font-family="Inter,sans-serif">26%</text>
+                  </svg>
+                  <strong>Memory</strong>
+                  <span>16.1 / 60.9 GB</span>
+                </div>
+                <div class="gauge-box">
+                  <svg viewBox="0 0 80 80" aria-hidden="true">
+                    <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="7"/>
+                    <circle cx="40" cy="40" r="32" fill="none" stroke="#e5484d" stroke-width="7" stroke-dasharray="201" stroke-dashoffset="135" stroke-linecap="round" transform="rotate(-90 40 40)"/>
+                    <text x="40" y="45" text-anchor="middle" fill="#f4f6fb" font-size="15" font-weight="700" font-family="Inter,sans-serif">33%</text>
+                  </svg>
+                  <strong>NVMe Disk</strong>
+                  <span>/ • healthy</span>
+                </div>
+              </div>
+              <div class="bento-tags" style="margin-top:0;">
+                <span class="tag-mono">Middle-Click: Quick Pill</span>
+                <span class="tag-mono">Click: Chat Studio</span>
+                <span class="tag-mono">Scroll: Cycle Moods</span>
+                <span class="tag-mono">Drag: Reposition</span>
+              </div>
+            </div>
+
+            <div class="activity-feed">
+              <div class="activity-item"><span class="t-accent">[THOUGHT]</span><span>Stripped &lt;think&gt; block; routing to Crash Doctor</span></div>
+              <div class="activity-item"><span class="t-prompt">[TOOL 1/6]</span><span>which agy &amp;&amp; readlink -f ~/.local/bin/agy</span></div>
+              <div class="activity-item"><span class="t-prompt">[TOOL 2/6]</span><span>ls -la ~/.config/Antigravity/SingletonLock</span></div>
+              <div class="activity-item"><span class="t-prompt">[TOOL 3/6]</span><span>grep ConnectError ~/.config/Antigravity/logs</span></div>
+              <div class="activity-item"><span class="t-prompt">[TOOL 4/6]</span><span>openssl x509 -noout -dates -checkend 0</span></div>
+              <div class="activity-item"><span class="t-accent">[PATCH]</span><span>Created main.js.bak &amp; applied HTTP/2 fix</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="doctor-steps">
+          <div class="doctor-step"><span class="doctor-num">STEP 01</span><strong>Resolve Binaries</strong><p>Checks PATH, ~/.local/bin symlinks &amp; .desktop entries.</p></div>
+          <div class="doctor-step"><span class="doctor-num">STEP 02</span><strong>Lock &amp; Dumps</strong><p>Audits SingletonLock &amp; Crashpad/*.dmp reports.</p></div>
+          <div class="doctor-step"><span class="doctor-num">STEP 03</span><strong>Log Scan</strong><p>Extracts ConnectError, TLS &amp; segfault traces.</p></div>
+          <div class="doctor-step"><span class="doctor-num">STEP 04</span><strong>X.509 Certs</strong><p>Verifies .pem expiry &amp; chains with OpenSSL.</p></div>
+          <div class="doctor-step"><span class="doctor-num">STEP 05</span><strong>Atomic Patch</strong><p>Creates .bak backup before patching bundles.</p></div>
+          <div class="doctor-step"><span class="doctor-num">STEP 06</span><strong>Verify &amp; Report</strong><p>Streams root cause &amp; fix summary to Chat.</p></div>
         </div>
       </div>
     </section>
@@ -1260,7 +1429,7 @@ make self-test &amp;&amp; make test
   <footer>
     <div class="container footer-inner">
       <div>
-        <strong>Tchiko Assistant</strong> • Open-source MIT License • Crafted by <strong>ZYNIQ SOLUTIONS</strong>
+        <strong>Tchiko Assistant</strong> • MIT License • Crafted by <a href="https://zyniq.studio" target="_blank" rel="noopener noreferrer" style="color:var(--text);font-weight:600;">ZYNIQ Studio</a> • SVG Avatar by <a href="https://github.com/CX-ArtLab/BoopFace" target="_blank" rel="noopener noreferrer" style="color:var(--text);">CX-ArtLab/BoopFace</a>
       </div>
       <div class="footer-links">
         <a href="https://github.com/ZYNIQ-SOLUTIONS/Tchiko-Assistant-Sysadmin-companion" target="_blank" rel="noopener noreferrer">GitHub</a>
@@ -1272,7 +1441,163 @@ make self-test &amp;&amp; make test
     </div>
   </footer>
 
-  <script>
+  <script type="module">
+    import { SKIN_NAMES, SKINS } from './landing/boopface/boopface.js';
+
+    const boop = document.getElementById('tchiko-boop');
+    const skinLabel = document.getElementById('skin-label');
+    const bubbleText = document.getElementById('bubble-text');
+    const quickEntry = document.getElementById('quick-entry');
+    const roundnessSlider = document.getElementById('roundness-slider');
+    const roundnessVal = document.getElementById('roundness-val');
+
+    const FEATURED_SKINS = ['901', '102', '203', '305', '401', '501', '604', '701', '801', '1005', '1101', '1302', '1703', null];
+    let skinIndex = 0;
+    let lastCopyText = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINtchikoExampleOpenSSHKey2026 operator@ubuntu";
+
+    function updateSkinLabel(skinId) {
+      if (!skinId) {
+        skinLabel.textContent = 'Skin: Flat Obsidian (#131620)';
+        return;
+      }
+      const name = SKIN_NAMES?.[skinId] || 'Material';
+      skinLabel.textContent = `Skin: ${skinId} (${name})`;
+    }
+
+    window.setSkinId = function (skinId) {
+      boop.setSkin(skinId);
+      updateSkinLabel(skinId);
+    };
+
+    window.cycleSkin = function () {
+      skinIndex = (skinIndex + 1) % FEATURED_SKINS.length;
+      window.setSkinId(FEATURED_SKINS[skinIndex]);
+    };
+
+    window.randomSkin = function () {
+      const allIds = Object.keys(SKINS || {});
+      if (allIds.length > 0) {
+        const pick = allIds[Math.floor(Math.random() * allIds.length)];
+        window.setSkinId(pick);
+        boop.play('random');
+      } else {
+        window.cycleSkin();
+      }
+    };
+
+    window.setBoopAction = function (action, btn) {
+      boop.stopWaiting?.();
+      if (action.startsWith('waiting-')) {
+        const variant = action.replace('waiting-', '');
+        boop.startWaiting?.({ variant });
+      } else {
+        boop.play(action);
+      }
+      document.querySelectorAll('.emo-chip').forEach((b) => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+    };
+
+    window.applyCard = function (skinId, action) {
+      window.setSkinId(skinId);
+      const chip = document.querySelector(`.emo-chip[data-emo="${action}"]`);
+      window.setBoopAction(action, chip);
+      document.getElementById('stage-board').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    };
+
+    roundnessSlider.addEventListener('input', (e) => {
+      const val = Number(e.target.value);
+      roundnessVal.textContent = val;
+      boop.setHeadRoundness?.(val);
+    });
+
+    quickEntry.addEventListener('input', () => {
+      if (quickEntry.value.length > 0) {
+        boop.play('input');
+      }
+    });
+
+    quickEntry.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') window.sendQuickPrompt();
+    });
+
+    window.sendQuickPrompt = function () {
+      const val = quickEntry.value.trim();
+      if (!val) return;
+      quickEntry.value = '';
+      const lower = val.toLowerCase();
+      if (lower.includes('rm -rf') || lower.includes('delete') || lower.includes('sudo')) {
+        window.simulatePrompt('blocked');
+      } else if (lower.includes('ssh') || lower.includes('hetzner')) {
+        window.simulatePrompt('ssh');
+      } else if (lower.includes('sys') || lower.includes('cpu') || lower.includes('doctor')) {
+        window.simulatePrompt('sysinfo');
+      } else {
+        boop.startWaiting?.({ variant: 'wave' });
+        bubbleText.innerHTML = `<i>Routing via TchikoAgentEngine...</i>`;
+        setTimeout(() => {
+          boop.stopWaiting?.();
+          boop.play('success');
+          lastCopyText = val;
+          bubbleText.innerHTML = `<b>Done!</b> Executed <code>${val.replace(/</g, '&lt;')}</code> on Ubuntu with RBAC policy verification.`;
+        }, 700);
+      }
+    };
+
+    window.simulatePrompt = function (kind) {
+      if (kind === 'blocked') {
+        boop.stopWaiting?.();
+        boop.play('refuse');
+        bubbleText.innerHTML =
+          `<b>🛡️ RBAC Denylist Blocked!</b><br/>` +
+          `Command matches <code>permissions.command_denylist</code> — execution refused.`;
+        return;
+      }
+
+      boop.startWaiting?.({ variant: 'spin' });
+      bubbleText.innerHTML = `<i>Running command on Ubuntu...</i>`;
+      setTimeout(() => {
+        boop.stopWaiting?.();
+        boop.play('success');
+        if (kind === 'ssh') {
+          lastCopyText = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINtchikoExampleOpenSSHKey2026 operator@ubuntu";
+          bubbleText.innerHTML =
+            `<b>🔑 OpenSSH Key Created (<code>~/.ssh/id_ed25519.pub</code>)</b><br/>` +
+            `<code>${lastCopyText}</code>`;
+        } else {
+          lastCopyText = "CPU Load: 0.42 | RAM: 11.6/60.9 GB (19.1%) | Disk: 32.6% | Failed Units: 0";
+          bubbleText.innerHTML =
+            `<b>🩺 Ubuntu System Doctor — HEALTHY</b><br/>` +
+            `• <b>Load:</b> <code>0.42</code> • <b>RAM:</b> <code>11.6/60.9 GB</code> • <b>Disk:</b> <code>32.6%</code>`;
+        }
+      }, 650);
+    };
+
+    window.copyBubble = function () {
+      navigator.clipboard.writeText(lastCopyText);
+      const btn = document.getElementById('copy-btn');
+      btn.textContent = '✓ Copied';
+      setTimeout(() => (btn.textContent = 'Copy'), 1500);
+    };
+
+    window.resetBubble = function () {
+      boop.stopWaiting?.();
+      boop.play('idle');
+      bubbleText.innerHTML =
+        `<b>BoopFace Ready!</b> Move your cursor, press-and-hold to squeeze, drag my head, or pull my spring antenna (careful—I get angry!).`;
+    };
+
+    window.copyCli = function (btn) {
+      navigator.clipboard.writeText(
+        `sudo apt update && sudo apt install -y python3 python3-venv python3-gi python3-gi-cairo gir1.2-gtk-3.0 xclip\n` +
+        `git clone https://github.com/ZYNIQ-SOLUTIONS/Tchiko-Assistant-Sysadmin-companion.git\n` +
+        `cd Tchiko-Assistant-Sysadmin-companion\n` +
+        `make self-test && make test\n` +
+        `./run_tchiko.sh`
+      );
+      btn.textContent = '✓ Copied!';
+      setTimeout(() => (btn.textContent = 'Copy Install Commands'), 1600);
+    };
+
     // ── Spotlight hover on Bento Cards ────────────────────────────────────
     document.querySelectorAll('.bento-card').forEach((card) => {
       card.addEventListener('mousemove', (e) => {
@@ -1355,612 +1680,14 @@ make self-test &amp;&amp; make test
       }
     };
 
-    function selectTier(btn, key) {
+    window.selectTier = function (btn, key) {
       document.querySelectorAll('.tier-btn').forEach((b) => b.classList.remove('active'));
       btn.classList.add('active');
       const data = TIER_OUTPUTS[key];
       document.getElementById('term-title').textContent = data.title;
       document.getElementById('term-output').innerHTML = data.body;
-    }
-    selectTier(document.querySelector('.tier-btn.active'), 'tier1');
-
-    // ── 1:1 Procedural Cairo SvgGhostRenderer Port ────────────────────────
-    const THEMES = {
-      phantom_cyan: {
-        label: "Crimson Cloud",
-        fur_light: [255, 255, 255],
-        fur_mid: [237, 242, 250],
-        fur_dark: [71, 84, 105],
-        fur_deep: [18, 23, 36],
-        wing_base: [255, 255, 255],
-        wing_mid: [36, 43, 59],
-        wing_tip: [230, 36, 46]
-      },
-      astral_violet: {
-        label: "Velvet Panda",
-        fur_light: [250, 252, 255],
-        fur_mid: [199, 209, 224],
-        fur_dark: [41, 48, 64],
-        fur_deep: [10, 13, 20],
-        wing_base: [250, 250, 255],
-        wing_mid: [20, 26, 36],
-        wing_tip: [224, 31, 41]
-      },
-      emerald_matrix: {
-        label: "Pure Mochi",
-        fur_light: [255, 255, 255],
-        fur_mid: [245, 247, 252],
-        fur_dark: [107, 120, 140],
-        fur_deep: [26, 31, 46],
-        wing_base: [255, 255, 255],
-        wing_mid: [46, 54, 71],
-        wing_tip: [245, 46, 46]
-      },
-      solar_gold: {
-        label: "Crimson Fox",
-        fur_light: [255, 252, 247],
-        fur_mid: [242, 227, 219],
-        fur_dark: [148, 41, 46],
-        fur_deep: [20, 15, 20],
-        wing_base: [255, 250, 245],
-        wing_mid: [31, 23, 31],
-        wing_tip: [245, 36, 36]
-      }
     };
-
-    const THEME_KEYS = Object.keys(THEMES);
-    let themeIdx = 0;
-
-    const EMOTION_COLORS = {
-      idle: [235, 46, 51],
-      happy: [250, 56, 56],
-      love: [255, 51, 51],
-      roar: [255, 250, 250],
-      wing_slash: [250, 56, 56],
-      excited: [255, 66, 51],
-      thinking: [240, 245, 255],
-      executing: [242, 41, 46],
-      sleepy: [166, 41, 46]
-    };
-
-    const canvas = document.getElementById('desktop-tchiko-canvas');
-    const ctx = canvas.getContext('2d');
-    const hitbox = document.getElementById('pet-hitbox');
-
-    const state = {
-      phase: 0.5,
-      look_x: 0.0,
-      look_y: 0.0,
-      target_look_x: 0.0,
-      target_look_y: 0.0,
-      vel_x: 0.0,
-      vel_y: 0.0,
-      spin_angle: 0.0,
-      shockwave_prog: 0.0,
-      squish_boost: 0.0,
-      hovered: false,
-      emotion: 'idle'
-    };
-
-    function rgba(rgb, a = 1.0) {
-      return `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${a})`;
-    }
-
-    function drawSinglePlushWing(anchorX, anchorY, side, angle, scaleFactor, theme) {
-      const wb = theme.wing_base;
-      const wm = theme.wing_mid;
-      const wt = theme.wing_tip;
-      const fdeep = theme.fur_deep;
-
-      ctx.save();
-      ctx.translate(anchorX, anchorY);
-      ctx.rotate(angle);
-      ctx.scale(side * scaleFactor, scaleFactor);
-
-      const grad = ctx.createLinearGradient(0, -12, 58, 20);
-      grad.addColorStop(0.0, rgba(wb, 0.99));
-      grad.addColorStop(0.52, rgba(wm, 0.97));
-      grad.addColorStop(1.0, rgba(wt, 0.98));
-
-      ctx.beginPath();
-      ctx.moveTo(0, -14);
-      ctx.bezierCurveTo(24, -34, 52, -26, 58, -8);
-      ctx.bezierCurveTo(62, 2, 50, 10, 40, 7);
-      ctx.bezierCurveTo(50, 15, 38, 25, 25, 19);
-      ctx.bezierCurveTo(30, 28, 16, 32, 4, 19);
-      ctx.closePath();
-
-      ctx.fillStyle = grad;
-      ctx.fill();
-      ctx.strokeStyle = rgba(fdeep, 0.85);
-      ctx.lineWidth = 2.0;
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.arc(12, -4, 9.0, -Math.PI * 0.4, Math.PI * 0.5);
-      ctx.strokeStyle = rgba(wb, 0.75);
-      ctx.lineWidth = 2.2;
-      ctx.stroke();
-
-      ctx.restore();
-    }
-
-    function drawPlushFeatheredWings(theme) {
-      let u_ang_l, u_ang_r, l_ang_l, l_ang_r, spread;
-      const p = state.phase;
-      if (state.emotion === 'sleepy') {
-        u_ang_l = -0.48; u_ang_r = 0.48;
-        l_ang_l = -0.58; l_ang_r = 0.58;
-        spread = 0.80;
-      } else if (['happy', 'excited', 'executing'].includes(state.emotion)) {
-        const flap = Math.sin(p * 2.8) * 0.42;
-        u_ang_l = 0.24 + flap; u_ang_r = -0.24 - flap;
-        l_ang_l = 0.05 + Math.sin(p * 2.8 - 0.6) * 0.36;
-        l_ang_r = -0.05 - Math.sin(p * 2.8 - 0.6) * 0.36;
-        spread = 1.12;
-      } else if (state.emotion === 'love') {
-        const flap = Math.sin(p * 2.4) * 0.28;
-        u_ang_l = 0.16 + flap; u_ang_r = -0.16 - flap;
-        l_ang_l = -0.08 + flap * 0.8; l_ang_r = 0.08 - flap * 0.8;
-        spread = 1.06;
-      } else if (state.emotion === 'roar') {
-        u_ang_l = 0.36; u_ang_r = -0.36;
-        l_ang_l = 0.12; l_ang_r = -0.12;
-        spread = 1.20;
-      } else {
-        const flap_u = Math.sin(p * 1.6) * 0.28;
-        const flap_l = Math.sin(p * 1.6 - 0.7) * 0.24;
-        u_ang_l = 0.08 + flap_u; u_ang_r = -0.08 - flap_u;
-        l_ang_l = -0.14 + flap_l; l_ang_r = 0.14 - flap_l;
-        spread = 1.02;
-      }
-
-      drawSinglePlushWing(-44, 6, -1.0, l_ang_l, 0.80 * spread, theme);
-      drawSinglePlushWing(44, 6, 1.0, l_ang_r, 0.80 * spread, theme);
-      drawSinglePlushWing(-46, -18, -1.0, u_ang_l, 1.06 * spread, theme);
-      drawSinglePlushWing(46, -18, 1.0, u_ang_r, 1.06 * spread, theme);
-    }
-
-    function drawChubbyPetLegs(theme, layer) {
-      const fl = theme.fur_light;
-      const fd = theme.fur_dark;
-      const fdeep = theme.fur_deep;
-      const wt = theme.wing_tip;
-
-      const tuck_y = state.emotion === 'sleepy' ? -11.0 : 0.0;
-      const wiggle_amp = ['happy', 'excited', 'love', 'roar'].includes(state.emotion)
-        ? 9.5
-        : (state.emotion === 'sleepy' ? 2.0 : 5.0);
-      const drag_swing = -state.vel_x * 0.018;
-
-      const legs = layer === 'back'
-        ? [
-            [-50.0, 34.0 + tuck_y, 11.5, 17.5, 0.42 + drag_swing, 2.1, false],
-            [50.0, 34.0 + tuck_y, 11.5, 17.5, -0.42 + drag_swing, 5.2, false],
-            [-36.0, 44.0 + tuck_y, 12.5, 19.0, 0.24 + drag_swing, 1.0, false],
-            [36.0, 44.0 + tuck_y, 12.5, 19.0, -0.24 + drag_swing, 4.1, false]
-          ]
-        : [
-            [-19.0, 47.0 + tuck_y, 13.5, 20.0, 0.08 + drag_swing, 0.0, true],
-            [19.0, 47.0 + tuck_y, 13.5, 20.0, -0.08 + drag_swing, 3.14, true]
-          ];
-
-      for (const [lx, ly, rx, ry, base_ang, p_off, is_front] of legs) {
-        const step_lift = Math.sin(state.phase * 2.3 + p_off) * wiggle_amp;
-        const step_rot = Math.cos(state.phase * 2.3 + p_off) * 0.15;
-
-        ctx.save();
-        ctx.translate(lx, ly + step_lift * 0.5);
-        ctx.rotate(base_ang + step_rot);
-
-        const legGrad = ctx.createLinearGradient(0, -ry, 0, ry);
-        legGrad.addColorStop(0.0, rgba(fl, 0.99));
-        legGrad.addColorStop(0.45, rgba(fd, 0.98));
-        legGrad.addColorStop(1.0, rgba(fdeep, 0.99));
-
-        ctx.beginPath();
-        ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
-        ctx.fillStyle = legGrad;
-        ctx.fill();
-        ctx.strokeStyle = rgba(fdeep, 0.90);
-        ctx.lineWidth = 1.9;
-        ctx.stroke();
-
-        if (is_front) {
-          for (const [tdx, tdy] of [[-4.5, ry - 4.8], [0.0, ry - 3.4], [4.5, ry - 4.8]]) {
-            ctx.beginPath();
-            ctx.arc(tdx, tdy, 2.2, 0, Math.PI * 2);
-            ctx.fillStyle = rgba(wt, 0.92);
-            ctx.fill();
-          }
-        }
-        ctx.restore();
-      }
-    }
-
-    function drawFluffySquishyBody(theme) {
-      const fl = theme.fur_light;
-      const fm = theme.fur_mid;
-      const fd = theme.fur_dark;
-      const fdeep = theme.fur_deep;
-      const wt = theme.wing_tip;
-
-      const shift_x = Math.max(-10.0, Math.min(10.0, state.look_x * 10.0));
-      const shift_y = Math.max(-7.0, Math.min(7.0, state.look_y * 7.0));
-
-      const bodyGrad = ctx.createRadialGradient(
-        -12 + shift_x * 0.6,
-        -20 + shift_y * 0.6,
-        10,
-        shift_x * 0.3,
-        5,
-        68
-      );
-      bodyGrad.addColorStop(0.0, rgba(fl, 1.0));
-      bodyGrad.addColorStop(0.55, rgba(fm, 0.99));
-      bodyGrad.addColorStop(0.86, rgba(fd, 0.98));
-      bodyGrad.addColorStop(1.0, rgba(fdeep, 0.96));
-
-      const rx = 60.0, ry = 50.0, num_puffs = 32;
-      ctx.beginPath();
-      for (let i = 0; i < num_puffs; i++) {
-        const t1 = (i / num_puffs) * 2.0 * Math.PI;
-        const t_mid = ((i + 0.5) / num_puffs) * 2.0 * Math.PI;
-        const t2 = ((i + 1.0) / num_puffs) * 2.0 * Math.PI;
-
-        const cheek_factor = Math.sin(t_mid) > 0.1 ? 1.12 : 1.0;
-        let puff_amp = (Math.abs(Math.cos(t_mid)) > 0.15 && Math.abs(Math.cos(t_mid)) < 0.88) ? 4.6 : 3.2;
-        if (['roar', 'love', 'happy'].includes(state.emotion)) {
-          puff_amp *= 1.28;
-        }
-
-        const x1 = Math.cos(t1) * rx * (Math.sin(t1) > 0.1 ? 1.12 : 1.0);
-        const y1 = Math.sin(t1) * ry;
-        const xm = Math.cos(t_mid) * (rx * cheek_factor + puff_amp);
-        const ym = Math.sin(t_mid) * (ry + puff_amp);
-        const x2 = Math.cos(t2) * rx * (Math.sin(t2) > 0.1 ? 1.12 : 1.0);
-        const y2 = Math.sin(t2) * ry;
-
-        if (i === 0) ctx.moveTo(x1, y1);
-        ctx.bezierCurveTo(xm, ym, xm, ym, x2, y2);
-      }
-      ctx.closePath();
-      ctx.fillStyle = bodyGrad;
-      ctx.fill();
-      ctx.strokeStyle = rgba(fdeep, 0.85);
-      ctx.lineWidth = 2.2;
-      ctx.stroke();
-
-      ctx.save();
-      ctx.translate(shift_x * 0.55, 10 + shift_y * 0.45);
-      ctx.scale(42.0, 33.0);
-      const bellyGrad = ctx.createRadialGradient(0, -0.2, 0.1, 0, 0, 1.0);
-      bellyGrad.addColorStop(0.0, 'rgba(255, 255, 255, 0.85)');
-      bellyGrad.addColorStop(1.0, rgba(fm, 0.0));
-      ctx.beginPath();
-      ctx.arc(0, 0, 1.0, 0, Math.PI * 2);
-      ctx.fillStyle = bellyGrad;
-      ctx.fill();
-      ctx.restore();
-
-      if (['love', 'happy', 'excited'].includes(state.emotion) || state.hovered) {
-        const glow_a = ['love', 'happy'].includes(state.emotion) ? 0.36 : 0.20;
-        for (const gx of [-28.0 + shift_x * 0.7, 28.0 + shift_x * 0.7]) {
-          ctx.save();
-          ctx.translate(gx, 4.0 + shift_y * 0.6);
-          ctx.scale(11.5, 6.5);
-          ctx.beginPath();
-          ctx.arc(0, 0, 1.0, 0, Math.PI * 2);
-          ctx.fillStyle = rgba(wt, glow_a);
-          ctx.fill();
-          ctx.restore();
-        }
-      }
-
-      const fx = shift_x * 0.95;
-      const fy = shift_y * 0.85;
-      ctx.lineCap = 'round';
-
-      ctx.beginPath();
-      ctx.moveTo(fx - 10, -36 + fy * 0.4);
-      ctx.bezierCurveTo(fx - 2, -46 + fy * 0.4, fx + 8, -44 + fy * 0.4, fx + 12, -35 + fy * 0.4);
-      ctx.strokeStyle = rgba(wt, 0.75);
-      ctx.lineWidth = 2.5;
-      ctx.stroke();
-
-      const arch_lift = ['happy', 'love', 'roar', 'excited'].includes(state.emotion)
-        ? -4.5
-        : (state.emotion === 'sleepy' ? 3.0 : 0.0);
-      ctx.beginPath();
-      ctx.moveTo(fx - 22, fy - 16 + arch_lift * 0.5);
-      ctx.bezierCurveTo(fx - 8, fy - 26 + arch_lift, fx + 8, fy - 26 + arch_lift, fx + 22, fy - 16 + arch_lift * 0.5);
-      ctx.strokeStyle = rgba(wt, 0.72);
-      ctx.lineWidth = 2.4;
-      ctx.stroke();
-
-      const dimple_curve = ['happy', 'love', 'excited'].includes(state.emotion) ? 10.0 : 6.0;
-      ctx.beginPath();
-      ctx.moveTo(fx - 26, fy - 2);
-      ctx.bezierCurveTo(fx - 10, fy + dimple_curve, fx + 10, fy + dimple_curve, fx + 26, fy - 2);
-      ctx.strokeStyle = rgba(fdeep, 0.65);
-      ctx.lineWidth = 2.6;
-      ctx.stroke();
-
-      for (const [rx_c, ry_c, rw] of [[fx - 14, fy + 15, 11.0], [fx, fy + 18, 13.0], [fx + 14, fy + 15, 11.0]]) {
-        ctx.beginPath();
-        ctx.moveTo(rx_c - rw * 0.5, ry_c);
-        ctx.bezierCurveTo(rx_c - rw * 0.25, ry_c + 6.5, rx_c + rw * 0.25, ry_c + 6.5, rx_c + rw * 0.5, ry_c);
-        ctx.strokeStyle = rgba(fd, 0.58);
-        ctx.lineWidth = 2.2;
-        ctx.stroke();
-      }
-    }
-
-    function drawPetParticles() {
-      const p = state.phase;
-      if (state.shockwave_prog > 0 || state.emotion === 'roar') {
-        const prog = state.shockwave_prog > 0 ? state.shockwave_prog : ((p * 0.6) % 1.0);
-        const rad = 34.0 + prog * 66.0;
-        ctx.beginPath();
-        ctx.arc(0, 0, rad, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(255, 255, 255, ${Math.max(0, (1 - prog) * 0.85)})`;
-        ctx.lineWidth = 2.8;
-        ctx.stroke();
-      }
-
-      if (['love', 'happy', 'excited'].includes(state.emotion)) {
-        const spots = [[-70, -28], [70, -32], [-52, -58], [54, -56], [0, -68]];
-        spots.forEach(([sx, sy], i) => {
-          const drift = (p * 11.0 + i * 14.0) % 24.0;
-          const alpha = Math.max(0, 1.0 - drift / 24.0);
-          ctx.save();
-          ctx.font = 'bold 15px sans-serif';
-          ctx.fillStyle = i % 2 === 0 ? `rgba(245, 41, 46, ${alpha})` : `rgba(255, 255, 255, ${alpha})`;
-          ctx.fillText(i % 2 === 0 ? '♪' : '✦', sx + Math.sin(p + i) * 4.0, sy - drift * 0.7);
-          ctx.restore();
-        });
-      } else if (state.emotion === 'executing') {
-        for (let r = 0; r < 4; r++) {
-          const ang = p * 2.2 + r * (Math.PI / 2.0);
-          ctx.beginPath();
-          ctx.arc(Math.cos(ang) * 66.0, Math.sin(ang) * 38.0, 9.5, 0, Math.PI * 2);
-          ctx.strokeStyle = 'rgba(242, 41, 46, 0.92)';
-          ctx.lineWidth = 2.4;
-          ctx.stroke();
-        }
-      } else if (state.emotion === 'sleepy') {
-        ctx.save();
-        ctx.font = 'italic bold 14px sans-serif';
-        for (let i = 0; i < 3; i++) {
-          const prog = (p * 0.4 + i * 0.33) % 1.0;
-          const zx = 36.0 + prog * 28.0;
-          const zy = -36.0 - prog * 38.0;
-          const alpha = Math.sin(prog * Math.PI) * 0.92;
-          ctx.fillStyle = i % 2 === 0 ? `rgba(255,255,255,${alpha})` : `rgba(240,46,51,${alpha})`;
-          ctx.fillText('Z', zx, zy);
-        }
-        ctx.restore();
-      } else {
-        for (let i = 0; i < 4; i++) {
-          const ang = p * (0.75 + i * 0.15) + i * (Math.PI / 2.0);
-          const px = Math.cos(ang) * (72.0 + (i % 2) * 6.0);
-          const py = Math.sin(ang * 1.3) * 44.0;
-          const r_dot = 2.8 + Math.sin(p * 2.0 + i) * 0.9;
-          ctx.beginPath();
-          ctx.arc(px, py, r_dot, 0, Math.PI * 2);
-          ctx.fillStyle = i % 2 === 0 ? 'rgba(255,255,255,0.8)' : 'rgba(240,41,46,0.8)';
-          ctx.fill();
-        }
-      }
-    }
-
-    function renderDesktopTchikoFrame() {
-      const width = canvas.width;
-      const height = canvas.height;
-      ctx.clearRect(0, 0, width, height);
-
-      const speedMult = state.emotion === 'sleepy'
-        ? 0.45
-        : (['excited', 'happy', 'love', 'executing', 'roar', 'wing_slash'].includes(state.emotion) ? 1.65 : 1.0);
-      state.phase += 0.036 * 3.8 * speedMult;
-      state.look_x += (state.target_look_x - state.look_x) * 0.25;
-      state.look_y += (state.target_look_y - state.look_y) * 0.25;
-      state.vel_x *= 0.82;
-      state.vel_y *= 0.82;
-      state.squish_boost *= 0.86;
-
-      if (state.emotion === 'wing_slash' || state.spin_angle > 0) {
-        state.spin_angle += 0.036 * 7.8;
-        if (state.spin_angle >= Math.PI * 2) {
-          state.spin_angle = 0;
-          if (state.emotion === 'wing_slash') state.emotion = 'happy';
-        }
-      }
-
-      const theme = THEMES[THEME_KEYS[themeIdx]];
-      const emoRGB = EMOTION_COLORS[state.emotion] || EMOTION_COLORS.idle;
-      const scale = Math.min(width / 230.0, height / 215.0);
-
-      const jelly_wave = Math.sin(state.phase * 2.6) * state.squish_boost;
-      let bob_y, squish_x, squish_y;
-      if (state.emotion === 'love') {
-        bob_y = 3.0 + Math.sin(state.phase * 2.2) * 3.5;
-        squish_x = 1.13 + Math.sin(state.phase * 2.2) * 0.05 + jelly_wave;
-        squish_y = 0.88 - Math.sin(state.phase * 2.2) * 0.04 - jelly_wave * 0.7;
-      } else if (['happy', 'excited'].includes(state.emotion)) {
-        const jump_sin = Math.sin(state.phase * 1.4);
-        bob_y = -Math.abs(jump_sin) * 11.0 + 4.0;
-        squish_x = 1.04 - Math.abs(jump_sin) * 0.08 + jelly_wave;
-        squish_y = 0.96 + Math.abs(jump_sin) * 0.08 - jelly_wave * 0.7;
-      } else if (state.emotion === 'roar') {
-        bob_y = -6.0 + Math.sin(state.phase * 3.5) * 2.5;
-        squish_x = 1.12 + Math.sin(state.phase * 4.0) * 0.04;
-        squish_y = 1.10 - Math.sin(state.phase * 4.0) * 0.04;
-      } else if (state.emotion === 'sleepy') {
-        bob_y = 7.0 + Math.sin(state.phase * 0.7) * 2.0;
-        squish_x = 1.10 + Math.sin(state.phase * 0.7) * 0.03;
-        squish_y = 0.89 - Math.sin(state.phase * 0.7) * 0.02;
-      } else {
-        bob_y = Math.sin(state.phase) * 5.5;
-        squish_x = 1.0 + Math.sin(state.phase * 1.1) * 0.028 + jelly_wave;
-        squish_y = 1.0 - Math.sin(state.phase * 1.1) * 0.028 - jelly_wave * 0.7;
-      }
-
-      const sway_x = Math.cos(state.phase * 0.5) * 2.5;
-      const tilt_rad = state.hovered ? state.look_x * 0.14 : 0;
-
-      ctx.save();
-      ctx.translate(width / 2.0 + sway_x, height / 2.0 + bob_y);
-      ctx.scale(scale, scale);
-
-      const shadow_scale = Math.max(0.55, 1.0 - (-bob_y / 45.0)) * squish_x;
-      ctx.save();
-      ctx.translate(0, 74 - bob_y * 0.65);
-      ctx.scale(50 * shadow_scale, 8.5 * shadow_scale);
-      ctx.beginPath();
-      ctx.arc(0, 0, 1.0, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(5, 8, 15, 0.36)';
-      ctx.fill();
-      ctx.restore();
-
-      const aura_r = 92.0 + (state.hovered ? 8.0 : 0.0) + Math.sin(state.phase * 1.4) * 4.0;
-      const aura = ctx.createRadialGradient(0, -2, 14, 0, -2, aura_r);
-      aura.addColorStop(0.0, rgba(emoRGB, 0.34));
-      aura.addColorStop(0.55, 'rgba(250, 250, 255, 0.12)');
-      aura.addColorStop(1.0, 'rgba(0, 0, 0, 0)');
-      ctx.beginPath();
-      ctx.arc(0, -2, aura_r, 0, Math.PI * 2);
-      ctx.fillStyle = aura;
-      ctx.fill();
-
-      ctx.rotate(tilt_rad + state.spin_angle);
-      ctx.scale(squish_x, squish_y);
-
-      drawPlushFeatheredWings(theme);
-      drawChubbyPetLegs(theme, 'back');
-      drawFluffySquishyBody(theme);
-      drawChubbyPetLegs(theme, 'front');
-      drawPetParticles();
-
-      ctx.restore();
-      requestAnimationFrame(renderDesktopTchikoFrame);
-    }
-
-    renderDesktopTchikoFrame();
-
-    hitbox.addEventListener('mouseenter', () => { state.hovered = true; });
-    hitbox.addEventListener('mouseleave', () => {
-      state.hovered = false;
-      state.target_look_x = 0;
-      state.target_look_y = 0;
-    });
-    hitbox.addEventListener('mousemove', (e) => {
-      const rect = hitbox.getBoundingClientRect();
-      state.target_look_x = ((e.clientX - rect.left) - rect.width / 2) / (rect.width / 2);
-      state.target_look_y = ((e.clientY - rect.top) - rect.height / 2) / (rect.height / 2);
-      state.squish_boost = Math.min(0.24, state.squish_boost + 0.02);
-    });
-    hitbox.addEventListener('mousedown', (e) => {
-      state.squish_boost = 0.28;
-      if (e.button === 1) {
-        e.preventDefault();
-        document.getElementById('quick-entry').focus();
-      }
-    });
-    hitbox.addEventListener('auxclick', (e) => {
-      if (e.button === 1) e.preventDefault();
-    });
-
-    function setEmotion(emo) {
-      state.emotion = emo;
-      state.squish_boost = 0.24;
-      if (emo === 'wing_slash') state.spin_angle = 0.01;
-      document.querySelectorAll('.emo-chip').forEach((b) => b.classList.remove('active'));
-      const btn = document.getElementById(`btn-emo-${emo}`);
-      if (btn) btn.classList.add('active');
-    }
-
-    function jumpAndEmote(emo) {
-      setEmotion(emo);
-      document.getElementById('stage-board').scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-
-    function cycleTheme() {
-      themeIdx = (themeIdx + 1) % THEME_KEYS.length;
-      document.getElementById('coat-label').textContent = THEMES[THEME_KEYS[themeIdx]].label;
-      state.squish_boost = 0.25;
-    }
-
-    const quickEntry = document.getElementById('quick-entry');
-    const bubbleText = document.getElementById('bubble-text');
-    let lastCopyText = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINtchikoExampleOpenSSHKey2026 operator@ubuntu";
-
-    quickEntry.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') sendQuickPrompt();
-    });
-
-    function sendQuickPrompt() {
-      const val = quickEntry.value.trim();
-      if (!val) return;
-      quickEntry.value = '';
-      if (val.toLowerCase().includes('ssh') || val.toLowerCase().includes('hetzner')) {
-        simulatePrompt('ssh');
-      } else if (val.toLowerCase().includes('sys') || val.toLowerCase().includes('cpu') || val.toLowerCase().includes('doctor')) {
-        simulatePrompt('sysinfo');
-      } else {
-        setEmotion('executing');
-        bubbleText.innerHTML = `<i>Thinking &amp; routing via TchikoAgentEngine...</i>`;
-        setTimeout(() => {
-          setEmotion('happy');
-          lastCopyText = val;
-          bubbleText.innerHTML = `<b>🐾 Done!</b> Executed <code>${val.replace(/</g, '&lt;')}</code> on Ubuntu with RBAC policy verification.`;
-        }, 420);
-      }
-    }
-
-    function simulatePrompt(kind) {
-      setEmotion('executing');
-      bubbleText.innerHTML = `<i>🐾 Tchiko is running command on Ubuntu...</i>`;
-      setTimeout(() => {
-        setEmotion('happy');
-        if (kind === 'ssh') {
-          lastCopyText = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINtchikoExampleOpenSSHKey2026 operator@ubuntu";
-          bubbleText.innerHTML =
-            `<b>🔑 OpenSSH Key Created (<code>~/.ssh/id_ed25519.pub</code>)</b><br/>` +
-            `<code>${lastCopyText}</code>`;
-        } else {
-          lastCopyText = "CPU Load: 0.42 | RAM: 11.6/60.9 GB (19.1%) | Disk: 32.6% | Failed Units: 0";
-          bubbleText.innerHTML =
-            `<b>🩺 Ubuntu System Doctor — HEALTHY</b><br/>` +
-            `• <b>Load:</b> <code>0.42</code> • <b>RAM:</b> <code>11.6/60.9 GB</code> • <b>Disk:</b> <code>32.6%</code>`;
-        }
-      }, 360);
-    }
-
-    function copyBubble() {
-      navigator.clipboard.writeText(lastCopyText);
-      const btn = document.getElementById('copy-btn');
-      btn.textContent = '✓ Copied';
-      setTimeout(() => (btn.textContent = 'Copy'), 1500);
-    }
-
-    function resetBubble() {
-      setEmotion('idle');
-      bubbleText.innerHTML =
-        `<b>*Happy chirp!* ♪</b> Hover, boop, or middle-click me! I’m rendered in real time with the exact 32-puff Bézier math used in the Ubuntu GTK3 app.`;
-    }
-
-    function copyCli(btn) {
-      navigator.clipboard.writeText(
-        `sudo apt update && sudo apt install -y python3 python3-venv python3-gi python3-gi-cairo gir1.2-gtk-3.0 xclip\n` +
-        `git clone https://github.com/ZYNIQ-SOLUTIONS/Tchiko-Assistant-Sysadmin-companion.git\n` +
-        `cd Tchiko-Assistant-Sysadmin-companion\n` +
-        `make self-test && make test\n` +
-        `./run_tchiko.sh`
-      );
-      btn.textContent = '✓ Copied!';
-      setTimeout(() => (btn.textContent = 'Copy Install Commands'), 1600);
-    }
+    window.selectTier(document.querySelector('.tier-btn.active'), 'tier1');
   </script>
 </body>
 </html>

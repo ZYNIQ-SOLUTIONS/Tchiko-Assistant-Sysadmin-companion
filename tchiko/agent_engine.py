@@ -1558,7 +1558,33 @@ class TchikoAgentEngine:
                 }
             )
 
-        # 5. <bash>...</bash>
+        # 5. <containers target="..." />
+        for m in re.finditer(
+            r'<containers(?:\s+target=["\']([^"\']*)["\'])?\s*/?>',
+            clean_text,
+            flags=re.IGNORECASE,
+        ):
+            actions.append({"tool": "containers", "target": (m.group(1) or "").strip()})
+
+        # 6. <systemd unit="..." lines="40" />
+        for m in re.finditer(
+            r'<systemd(?:\s+unit=["\']([^"\']*)["\'])?(?:\s+lines=["\']?(\d+)["\']?)?\s*/?>',
+            clean_text,
+            flags=re.IGNORECASE,
+        ):
+            actions.append(
+                {
+                    "tool": "systemd",
+                    "unit": (m.group(1) or "").strip(),
+                    "lines": int(m.group(2) or 40),
+                }
+            )
+
+        # 7. <network_audit />
+        if re.search(r'<network_audit\s*/?>', clean_text, flags=re.IGNORECASE):
+            actions.append({"tool": "network_audit"})
+
+        # 8. <bash>...</bash>
         for cmd in cls._extract_valid_bash_commands(clean_text):
             actions.append({"tool": "bash", "command": cmd})
 
@@ -1660,7 +1686,7 @@ class TchikoAgentEngine:
 
             actions = self._extract_tool_actions(visible_text)
             clean_reply = re.sub(
-                r"(<bash>.*?</bash>|<view_file[^>]*/?>|<grep[^>]*/?>|<patch_file.*?</patch_file>|<write_file.*?</write_file>)",
+                r"(<bash>.*?</bash>|<view_file[^>]*/?>|<grep[^>]*/?>|<patch_file.*?</patch_file>|<write_file.*?</write_file>|<containers[^>]*/?>|<systemd[^>]*/?>|<network_audit[^>]*/?>)",
                 "",
                 visible_text,
                 flags=re.DOTALL | re.IGNORECASE,
@@ -1697,6 +1723,15 @@ class TchikoAgentEngine:
                 path = self._resolve_user_path(action["path"])
                 on_tool_call("write_file_content", f"{{'path': {path!r}}}")
                 res = await asyncio.to_thread(self.toolkit.write_file_content, path, action["content"], True)
+            elif t_kind == "containers":
+                on_tool_call("diagnose_containers", f"{{'target': {action['target']!r}}}")
+                res = await asyncio.to_thread(self.toolkit.diagnose_containers, action["target"])
+            elif t_kind == "systemd":
+                on_tool_call("inspect_systemd_unit", f"{{'unit': {action['unit']!r}, 'lines': {action['lines']}}}")
+                res = await asyncio.to_thread(self.toolkit.inspect_systemd_unit, action["unit"], action["lines"])
+            elif t_kind == "network_audit":
+                on_tool_call("audit_network_security", "{}")
+                res = await asyncio.to_thread(self.toolkit.audit_network_security)
             else:
                 cmd = action["command"]
                 if self.config.requires_manual_review() and on_approval_needed is not None:
@@ -1850,6 +1885,9 @@ class TchikoAgentEngine:
                 "  - *\"remember my hetzner ip is 95.216.10.20\"*, *\"copy it\"*, *\"retry\"*, *\"cd ~/Desktop\"*\n"
                 "- **Slash Commands:**\n"
                 "  - `/doctor` — Run 5-point Ubuntu System Doctor diagnostic\n"
+                "  - `/containers [name]` — Inspect Docker/Podman containers & crash logs\n"
+                "  - `/systemd [unit]` — Inspect failed systemd units or unit journal logs\n"
+                "  - `/net` — Audit listening sockets, established TCP & UFW/nftables firewall\n"
                 "  - `/memory` — Inspect or clear Tchiko's persistent memory & notes\n"
                 "  - `/new` — Start a fresh conversation (keeps saved notes)\n"
                 "  - `/sysinfo` — Live Ubuntu CPU, RAM, Disk & Uptime report\n"
@@ -1877,6 +1915,38 @@ class TchikoAgentEngine:
             return await self._run_system_doctor(
                 on_thought, on_tool_call, on_token, on_complete, on_state_change
             )
+
+        if lower.startswith(("/containers", "/docker")):
+            target = prompt.strip().split(None, 1)[1] if len(prompt.strip().split(None, 1)) > 1 else ""
+            on_thought("Inspecting Docker/Podman containers and recent logs...")
+            on_state_change("executing")
+            on_tool_call("diagnose_containers", f"{{'target': {target!r}}}")
+            res = await asyncio.to_thread(self.toolkit.diagnose_containers, target)
+            await self._stream_markdown(res.output, on_token)
+            on_state_change("happy" if res.ok else "alert")
+            on_complete(res.output)
+            return True
+
+        if lower.startswith(("/systemd", "/service")):
+            unit = prompt.strip().split(None, 1)[1] if len(prompt.strip().split(None, 1)) > 1 else ""
+            on_thought(f"Inspecting systemd unit {unit or '(failed units)'}...")
+            on_state_change("executing")
+            on_tool_call("inspect_systemd_unit", f"{{'unit': {unit!r}}}")
+            res = await asyncio.to_thread(self.toolkit.inspect_systemd_unit, unit)
+            await self._stream_markdown(res.output, on_token)
+            on_state_change("happy" if res.ok else "alert")
+            on_complete(res.output)
+            return True
+
+        if lower in ("/net", "/ports", "/firewall"):
+            on_thought("Auditing listening sockets, established connections & firewall rules...")
+            on_state_change("executing")
+            on_tool_call("audit_network_security", "{}")
+            res = await asyncio.to_thread(self.toolkit.audit_network_security)
+            await self._stream_markdown(res.output, on_token)
+            on_state_change("happy" if res.ok else "alert")
+            on_complete(res.output)
+            return True
 
         if lower.startswith("/memory"):
             if "clear" in lower:

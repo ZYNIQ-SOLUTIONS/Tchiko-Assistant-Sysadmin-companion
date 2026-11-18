@@ -1,60 +1,52 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 250 230" width="250" height="230">
-  <defs>
-    <radialGradient id="petAura" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#ef4444" stop-opacity="0.34"/>
-      <stop offset="60%" stop-color="#f8fafc" stop-opacity="0.14"/>
-      <stop offset="100%" stop-color="#090d16" stop-opacity="0"/>
-    </radialGradient>
-    <radialGradient id="fluffyFur" cx="44%" cy="34%" r="64%">
-      <stop offset="0%" stop-color="#ffffff"/>
-      <stop offset="48%" stop-color="#f1f5f9"/>
-      <stop offset="80%" stop-color="#475569"/>
-      <stop offset="100%" stop-color="#0f172a"/>
-    </radialGradient>
-    <linearGradient id="plushWing" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#ffffff"/>
-      <stop offset="52%" stop-color="#1e293b"/>
-      <stop offset="100%" stop-color="#dc2626"/>
-    </linearGradient>
-    <linearGradient id="chubbyLeg" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#f1f5f9"/>
-      <stop offset="45%" stop-color="#1e293b"/>
-      <stop offset="100%" stop-color="#0f172a"/>
-    </linearGradient>
-  </defs>
-
-  <!-- Soft Warm Crimson & White Aura -->
-  <circle cx="125" cy="116" r="100" fill="url(#petAura)"/>
-
-  <!-- 4 Plump, Fluffy Feathered Wings (White, Velvet Black & Crimson Tips) -->
-  <!-- Upper Left Wing -->
-  <path d="M 72 90 C 26 52, 8 68, 22 92 C 12 100, 22 114, 38 112 C 30 122, 44 128, 70 114 Z"
-        fill="url(#plushWing)" stroke="#0f172a" stroke-width="2" stroke-linejoin="round"/>
-  <!-- Upper Right Wing -->
-  <path d="M 178 90 C 224 52, 242 68, 228 92 C 238 100, 228 114, 212 112 C 220 122, 206 128, 180 114 Z"
-        fill="url(#plushWing)" stroke="#0f172a" stroke-width="2" stroke-linejoin="round"/>
-  <!-- Lower Left Wing -->
-  <path d="M 68 114 C 32 108, 20 124, 34 138 C 30 146, 46 150, 70 134 Z"
-        fill="url(#plushWing)" stroke="#0f172a" stroke-width="1.8" stroke-linejoin="round"/>
-  <!-- Lower Right Wing -->
-  <path d="M 182 114 C 218 108, 230 124, 216 138 C 220 146, 204 150, 180 134 Z"
-        fill="url(#plushWing)" stroke="#0f172a" stroke-width="1.8" stroke-linejoin="round"/>
-
-  <!-- 6 Chubby Squishy Pet Legs (Hind, Middle, Front Pairs) -->
-  <ellipse cx="68" cy="158" rx="12" ry="18" transform="rotate(24 68 158)" fill="url(#chubbyLeg)" stroke="#0f172a" stroke-width="1.8"/>
-  <ellipse cx="182" cy="158" rx="12" ry="18" transform="rotate(-24 182 158)" fill="url(#chubbyLeg)" stroke="#0f172a" stroke-width="1.8"/>
-  <ellipse cx="83" cy="168" rx="13" ry="19" transform="rotate(14 83 168)" fill="url(#chubbyLeg)" stroke="#0f172a" stroke-width="1.8"/>
-  <ellipse cx="167" cy="168" rx="13" ry="19" transform="rotate(-14 167 168)" fill="url(#chubbyLeg)" stroke="#0f172a" stroke-width="1.8"/>
-
-  <!-- Ultra-Fluffy, Chubby, Squishy Tchiko Body -->
-  <ellipse cx="125" cy="114" rx="62" ry="52" fill="url(#fluffyFur)" stroke="#1e293b" stroke-width="2.2"/>
-
-  <!-- Soft Fluffy Fur Swirls & Faceless Dimples -->
-  <path d="M 98 86 Q 125 74 152 86" fill="none" stroke="#dc2626" stroke-width="2.4" stroke-linecap="round" opacity="0.75"/>
-  <path d="M 90 104 Q 125 118 160 104" fill="none" stroke="#1e293b" stroke-width="2.6" stroke-linecap="round" opacity="0.65"/>
-  <path d="M 104 122 Q 125 132 146 122" fill="none" stroke="#dc2626" stroke-width="2.0" stroke-linecap="round" opacity="0.60"/>
-
-  <!-- Chubby Front Pair of Paws with Crimson Toe-Beans -->
-  <ellipse cx="101" cy="172" rx="13.5" ry="20" transform="rotate(6 101 172)" fill="url(#chubbyLeg)" stroke="#0f172a" stroke-width="2"/>
-  <ellipse cx="149" cy="172" rx="13.5" ry="20" transform="rotate(-6 149 172)" fill="url(#chubbyLeg)" stroke="#0f172a" stroke-width="2"/>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="360" height="340" viewBox="0 0 360 340">
+<defs>
+<radialGradient id="radial-pattern-0" gradientUnits="userSpaceOnUse" cx="0" cy="0" fx="0" fy="0" r="105.621169" gradientTransform="matrix(1.416667, 0, 0, 1.416667, 181.04703, 185.118534)">
+<stop offset="0.151485" stop-color="rgb(90%, 28%, 30%)" stop-opacity="0.28"/>
+<stop offset="0.70302" stop-color="rgb(90%, 28%, 30%)" stop-opacity="0.08"/>
+<stop offset="1" stop-color="rgb(0%, 0%, 0%)" stop-opacity="0"/>
+</radialGradient>
+<radialGradient id="radial-pattern-1" gradientUnits="userSpaceOnUse" cx="1.368914" cy="-98" fx="-2.081086" fy="-101.45" r="11.5">
+<stop offset="0.130435" stop-color="rgb(100%, 100%, 100%)" stop-opacity="0.98"/>
+<stop offset="0.434783" stop-color="rgb(90%, 28%, 30%)" stop-opacity="0.98"/>
+<stop offset="1" stop-color="rgb(49.5%, 15.4%, 16.5%)" stop-opacity="0.98"/>
+</radialGradient>
+<linearGradient id="linear-pattern-0" gradientUnits="userSpaceOnUse" x1="0" y1="-78" x2="0" y2="86" gradientTransform="matrix(1.275651, 0, 0, 1.499717, 181.04703, 185.118534)">
+<stop offset="0" stop-color="rgb(11%, 13%, 18%)" stop-opacity="1"/>
+<stop offset="0.55" stop-color="rgb(5%, 6%, 8%)" stop-opacity="1"/>
+<stop offset="1" stop-color="rgb(2%, 3%, 4%)" stop-opacity="1"/>
+</linearGradient>
+<radialGradient id="radial-pattern-2" gradientUnits="userSpaceOnUse" cx="-24" cy="-32" fx="-24" fy="-32" r="92">
+<stop offset="0.0434783" stop-color="rgb(100%, 100%, 100%)" stop-opacity="0.12"/>
+<stop offset="1" stop-color="rgb(100%, 100%, 100%)" stop-opacity="0"/>
+</radialGradient>
+<clipPath id="clip-0">
+<path clip-rule="nonzero" d="M 115 162 L 170 162 L 170 232 L 115 232 Z M 115 162 "/>
+</clipPath>
+<clipPath id="clip-1">
+<path clip-rule="nonzero" d="M 169.566406 197.117188 C 169.566406 216.167969 157.574219 231.609375 142.777344 231.609375 C 127.984375 231.609375 115.988281 216.167969 115.988281 197.117188 C 115.988281 178.066406 127.984375 162.621094 142.777344 162.621094 C 157.574219 162.621094 169.566406 178.066406 169.566406 197.117188 "/>
+</clipPath>
+<clipPath id="clip-2">
+<path clip-rule="nonzero" d="M 192 162 L 247 162 L 247 232 L 192 232 Z M 192 162 "/>
+</clipPath>
+<clipPath id="clip-3">
+<path clip-rule="nonzero" d="M 246.105469 197.117188 C 246.105469 216.167969 234.113281 231.609375 219.316406 231.609375 C 204.523438 231.609375 192.527344 216.167969 192.527344 197.117188 C 192.527344 178.066406 204.523438 162.621094 219.316406 162.621094 C 234.113281 162.621094 246.105469 178.066406 246.105469 197.117188 "/>
+</clipPath>
+</defs>
+<path fill-rule="nonzero" fill="rgb(2%, 3%, 6%)" fill-opacity="0.34" d="M 266.789062 320.734375 C 266.789062 327.609375 228.402344 333.179688 181.046875 333.179688 C 133.691406 333.179688 95.304688 327.609375 95.304688 320.734375 C 95.304688 313.859375 133.691406 308.289062 181.046875 308.289062 C 228.402344 308.289062 266.789062 313.859375 266.789062 320.734375 "/>
+<path fill-rule="nonzero" fill="url(#radial-pattern-0)" d="M 330.675781 185.117188 C 330.675781 267.757812 263.683594 334.75 181.046875 334.75 C 98.410156 334.75 31.417969 267.757812 31.417969 185.117188 C 31.417969 102.480469 98.410156 35.488281 181.046875 35.488281 C 263.683594 35.488281 330.675781 102.480469 330.675781 185.117188 "/>
+<path fill="none" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="miter" stroke="rgb(28%, 32%, 42%)" stroke-opacity="0.95" stroke-miterlimit="10" d="M -0.000121163 -75.999598 C 0.272411 -85.998878 0.958336 -92.000009 1.368666 -98.001141 " transform="matrix(1.275651, 0, 0, 1.499717, 181.04703, 185.118534)"/>
+<path fill-rule="nonzero" fill="url(#radial-pattern-1)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="miter" stroke="rgb(2%, 3%, 4%)" stroke-opacity="0.65" stroke-miterlimit="10" d="M 12.870149 -98.001141 C 12.870149 -91.648381 7.719591 -86.498972 1.368666 -86.498972 C -4.98226 -86.498972 -10.129756 -91.648381 -10.129756 -98.001141 C -10.129756 -104.351296 -4.98226 -109.500704 1.368666 -109.500704 C 7.719591 -109.500704 12.870149 -104.351296 12.870149 -98.001141 " transform="matrix(1.275651, 0, 0, 1.499717, 181.04703, 185.118534)"/>
+<path fill-rule="nonzero" fill="url(#linear-pattern-0)" d="M 288.203125 191.117188 L 288.085938 221.035156 L 287.742188 233.378906 L 287.167969 242.785156 L 286.359375 250.628906 L 285.320312 257.4375 L 284.042969 263.480469 L 282.527344 268.914062 L 280.765625 273.832031 L 278.757812 278.308594 L 276.488281 282.386719 L 273.960938 286.105469 L 271.152344 289.484375 L 268.058594 292.546875 L 264.652344 295.308594 L 260.917969 297.785156 L 256.816406 299.976562 L 252.308594 301.898438 L 247.335938 303.554688 L 241.800781 304.949219 L 235.5625 306.085938 L 228.375 306.964844 L 219.761719 307.59375 L 208.449219 307.96875 L 181.046875 308.09375 L 153.644531 307.96875 L 142.332031 307.59375 L 133.71875 306.964844 L 126.53125 306.085938 L 120.296875 304.949219 L 114.757812 303.554688 L 109.785156 301.898438 L 105.277344 299.976562 L 101.175781 297.785156 L 97.441406 295.308594 L 94.039062 292.546875 L 90.941406 289.484375 L 88.132812 286.105469 L 85.605469 282.386719 L 83.339844 278.308594 L 81.328125 273.832031 L 79.566406 268.914062 L 78.050781 263.480469 L 76.773438 257.4375 L 75.734375 250.628906 L 74.925781 242.785156 L 74.351562 233.378906 L 74.007812 221.035156 L 73.890625 191.117188 L 74.007812 161.203125 L 74.351562 148.855469 L 74.925781 139.449219 L 75.734375 131.605469 L 76.773438 124.796875 L 78.050781 118.753906 L 79.566406 113.320312 L 81.328125 108.402344 L 83.339844 103.925781 L 85.605469 99.847656 L 88.132812 96.132812 L 90.941406 92.75 L 94.039062 89.6875 L 97.441406 86.925781 L 101.175781 84.449219 L 105.277344 82.257812 L 109.785156 80.335938 L 114.757812 78.679688 L 120.296875 77.285156 L 126.53125 76.148438 L 133.71875 75.269531 L 142.332031 74.640625 L 153.644531 74.265625 L 181.046875 74.140625 L 208.449219 74.265625 L 219.761719 74.640625 L 228.375 75.269531 L 235.5625 76.148438 L 241.800781 77.285156 L 247.335938 78.679688 L 252.308594 80.335938 L 256.816406 82.257812 L 260.917969 84.449219 L 264.652344 86.925781 L 268.058594 89.6875 L 271.152344 92.75 L 273.960938 96.132812 L 276.488281 99.847656 L 278.757812 103.925781 L 280.765625 108.402344 L 282.527344 113.320312 L 284.042969 118.753906 L 285.320312 124.796875 L 286.359375 131.605469 L 287.167969 139.449219 L 287.742188 148.855469 L 288.085938 161.203125 Z M 288.203125 191.117188 "/>
+<path fill-rule="nonzero" fill="url(#radial-pattern-2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="miter" stroke="rgb(28%, 32%, 42%)" stroke-opacity="0.85" stroke-miterlimit="10" d="M 84.001128 3.999856 L 83.909263 23.948929 L 83.639792 32.179647 L 83.189655 38.451663 L 82.555787 43.681815 L 81.741252 48.221734 L 80.739924 52.251139 L 79.551805 55.874218 L 78.17077 59.153482 L 76.596818 62.138419 L 74.817702 64.857682 L 72.836482 67.337316 L 70.634787 69.590345 L 68.209554 71.632396 L 65.539348 73.473889 L 62.611921 75.125242 L 59.39665 76.586455 L 55.862914 77.867947 L 51.964781 78.972321 L 47.625696 79.902184 L 42.735422 80.66014 L 37.101043 81.246187 L 30.348974 81.665537 L 21.480951 81.915584 L -0.000121163 81.998934 L -21.481193 81.915584 L -30.349216 81.665537 L -37.101285 81.246187 L -42.735665 80.66014 L -47.622876 79.902184 L -51.965023 78.972321 L -55.863156 77.867947 L -59.396892 76.586455 L -62.612163 75.125242 L -65.539591 73.473889 L -68.206734 71.632396 L -70.63503 69.590345 L -72.836725 67.337316 L -74.817944 64.857682 L -76.593998 62.138419 L -78.171012 59.153482 L -79.552048 55.874218 L -80.740167 52.251139 L -81.741494 48.221734 L -82.556029 43.681815 L -83.189897 38.451663 L -83.640035 32.179647 L -83.909505 23.948929 L -84.00137 3.999856 L -83.909505 -15.946612 L -83.640035 -24.179934 L -83.189897 -30.45195 L -82.556029 -35.682102 L -81.741494 -40.222021 L -80.740167 -44.251426 L -79.552048 -47.874505 L -78.171012 -51.153769 L -76.593998 -54.138706 L -74.817944 -56.857969 L -72.836725 -59.334998 L -70.63503 -61.590632 L -68.206734 -63.632683 L -65.539591 -65.474176 L -62.612163 -67.125529 L -59.396892 -68.586742 L -55.863156 -69.868234 L -51.965023 -70.972608 L -47.622876 -71.902471 L -42.735665 -72.660427 L -37.101285 -73.246475 L -30.349216 -73.665824 L -21.481193 -73.915872 L -0.000121163 -73.999221 L 21.480951 -73.915872 L 30.348974 -73.665824 L 37.101043 -73.246475 L 42.735422 -72.660427 L 47.625696 -71.902471 L 51.964781 -70.972608 L 55.862914 -69.868234 L 59.39665 -68.586742 L 62.611921 -67.125529 L 65.539348 -65.474176 L 68.209554 -63.632683 L 70.634787 -61.590632 L 72.836482 -59.334998 L 74.817702 -56.857969 L 76.596818 -54.138706 L 78.17077 -51.153769 L 79.551805 -47.874505 L 80.739924 -44.251426 L 81.741252 -40.222021 L 82.555787 -35.682102 L 83.189655 -30.45195 L 83.639792 -24.179934 L 83.909263 -15.946612 Z M 84.001128 3.999856 " transform="matrix(1.275651, 0, 0, 1.499717, 181.04703, 185.118534)"/>
+<g clip-path="url(#clip-0)">
+<g clip-path="url(#clip-1)">
+<rect x="-36" y="-34" width="432" height="408" fill="rgb(100%, 100%, 100%)" fill-opacity="1"/>
+</g>
+</g>
+<g clip-path="url(#clip-2)">
+<g clip-path="url(#clip-3)">
+<rect x="-36" y="-34" width="432" height="408" fill="rgb(100%, 100%, 100%)" fill-opacity="1"/>
+</g>
+</g>
 </svg>

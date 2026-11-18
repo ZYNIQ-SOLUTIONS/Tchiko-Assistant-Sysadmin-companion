@@ -30,15 +30,15 @@
   },
   "ghost_widget": {
     "size": 90,
-    "opacity": 0.98,
+    "opacity": 0.9,
     "always_on_top": true,
     "stick_all_workspaces": true,
-    "theme": "astral_violet",
+    "theme": "emerald_matrix",
     "animation_speed": 1.0,
     "show_speech_bubble": true,
     "show_permission_badge": false,
-    "position_x": 966,
-    "position_y": 938
+    "position_x": 1765,
+    "position_y": 909
   },
   "ui": {
     "theme_mode": "dark",
