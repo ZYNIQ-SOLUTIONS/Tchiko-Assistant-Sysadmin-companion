@@ -27,6 +27,7 @@ config/agent_memory.json
 config/action_ledger.json
 config/snapshots/
 logs/
+brag-output*/
 .concord/
 
 # Editors & OS

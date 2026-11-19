@@ -33,7 +33,7 @@
 
 If you discover a security issue (e.g., command-injection bypass, denylist evasion, privilege escalation, or credential leakage), please report it privately:
 
-- **Email:** `dev@zyniq.solutions`
+- **Email:** `contact@zyniq.studio`
 - **GitHub Security Advisories:** Use the repository's **Security → Advisories → Report a vulnerability** tab if enabled.
 
 Please include:

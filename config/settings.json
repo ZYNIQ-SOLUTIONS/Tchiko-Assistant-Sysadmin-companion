@@ -37,8 +37,8 @@
     "animation_speed": 1.0,
     "show_speech_bubble": true,
     "show_permission_badge": false,
-    "position_x": 1767,
-    "position_y": 514
+    "position_x": 1625,
+    "position_y": 806
   },
   "ui": {
     "theme_mode": "dark",
