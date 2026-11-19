@@ -8,57 +8,71 @@
   <meta property="og:title" content="Tchiko Assistant — Linux Systems Agent &amp; Desktop Companion" />
   <meta property="og:description" content="5-Tier dispatch engine, AST shell risk classifier, snapshot rollback ledger, pluggable skills, and 188-skin BoopFace SVG overlay for Ubuntu Linux." />
   <meta property="og:type" content="website" />
-  <meta name="theme-color" content="#141821" />
+  <meta name="theme-color" content="#0d0e11" />
   <link rel="icon" type="image/svg+xml" href="landing/assets/tchiko-logo.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    /* Lifted, breathable Slate-Titanium Studio Palette (No pitch-black void) */
+    /* 4K Promo Video & Poster Studio Palette (Obsidian Carbon + Emerald/Sky/Violet/Crimson Accents) */
     :root {
-      --bg: #131720;
-      --shell-bg: #171c26;
-      --panel: #1d2330;
-      --panel-alt: #232a39;
-      --panel-hover: #293142;
-      --stage-bg: #eef1f6;
-      --stage-text: #1e2330;
-      --stage-muted: #5a6376;
-      --code-bg: #11141c;
-      --line: #283040;
-      --line-strong: #364056;
-      --text: #f3f5f9;
-      --text-dim: #b0b8c9;
-      --text-muted: #7d879c;
+      --bg: #0d0e11;
+      --shell-bg: #111318;
+      --panel: #14161a;
+      --panel-alt: #1a1d23;
+      --panel-hover: #22262e;
+      --stage-bg: #161820;
+      --stage-text: #eceef2;
+      --stage-muted: #a3a9b5;
+      --code-bg: #0a0b0d;
+      --line: #262a32;
+      --line-strong: #353a45;
+      --text: #eceef2;
+      --text-dim: #a3a9b5;
+      --text-muted: #6b7280;
       --crimson: #e5484d;
+      --crimson-bright: #ff5a5f;
+      --crimson-text: #ff8589;
       --crimson-soft: rgba(229, 72, 77, 0.16);
-      --green: #34d399;
-      --green-soft: rgba(52, 211, 153, 0.14);
+      --green: #3ecf8e;
+      --green-soft: rgba(62, 207, 142, 0.16);
       --blue: #38bdf8;
-      --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+      --blue-soft: rgba(56, 189, 248, 0.16);
+      --violet: #b852eb;
+      --violet-soft: rgba(184, 82, 235, 0.16);
+      --amber: #f5a524;
+      --amber-soft: rgba(245, 165, 36, 0.16);
+      --sans: 'Ubuntu Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --mono: 'Ubuntu Sans Mono', 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
     }
 
     html[data-theme="light"] {
-      --bg: #eef0f4;
-      --shell-bg: #f8f9fb;
+      --bg: #eef0f5;
+      --shell-bg: #f8f9fc;
       --panel: #ffffff;
-      --panel-alt: #f1f3f7;
-      --panel-hover: #e8ecf2;
-      --stage-bg: #eef1f6;
-      --stage-text: #141821;
-      --stage-muted: #5a6376;
-      --code-bg: #151922;
-      --line: #dde1ea;
-      --line-strong: #c7cedb;
-      --text: #12151e;
-      --text-dim: #4a5365;
-      --text-muted: #737d92;
-      --crimson: #dc353b;
-      --crimson-soft: rgba(220, 53, 59, 0.1);
-      --green: #059669;
-      --green-soft: rgba(5, 150, 105, 0.1);
+      --panel-alt: #f1f3f8;
+      --panel-hover: #e7ebf3;
+      --stage-bg: #e9edf5;
+      --stage-text: #12151e;
+      --stage-muted: #555e70;
+      --code-bg: #101217;
+      --line: #dce1ec;
+      --line-strong: #c5ccdc;
+      --text: #0f1219;
+      --text-dim: #464f62;
+      --text-muted: #6b7488;
+      --crimson: #e5484d;
+      --crimson-bright: #ff5a5f;
+      --crimson-text: #d9383e;
+      --crimson-soft: rgba(229, 72, 77, 0.12);
+      --green: #10b981;
+      --green-soft: rgba(16, 185, 129, 0.12);
       --blue: #0284c7;
+      --blue-soft: rgba(2, 132, 199, 0.12);
+      --violet: #9333ea;
+      --violet-soft: rgba(147, 51, 234, 0.12);
+      --amber: #d97706;
+      --amber-soft: rgba(217, 119, 6, 0.12);
     }
 
     *, *::before, *::after {
@@ -109,8 +123,14 @@
       position: sticky;
       top: 0;
       z-index: 100;
-      background: var(--shell-bg);
+      background: rgba(13, 14, 17, 0.88);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
       border-bottom: 1px solid var(--line);
+    }
+
+    html[data-theme="light"] .topbar {
+      background: rgba(248, 249, 252, 0.90);
     }
 
     .topbar-inner {
@@ -179,30 +199,33 @@
       align-items: center;
       justify-content: center;
       gap: 8px;
-      padding: 9px 16px;
-      border-radius: 6px;
+      padding: 9px 18px;
+      border-radius: 999px;
       font-size: 0.84rem;
-      font-weight: 500;
+      font-weight: 600;
       cursor: pointer;
       border: 1px solid var(--line-strong);
-      background: var(--panel);
+      background: var(--panel-alt);
       color: var(--text);
-      transition: all 0.15s ease;
+      transition: all 0.16s ease;
     }
 
     .btn:hover {
       background: var(--panel-hover);
+      border-color: var(--blue);
     }
 
     .btn-accent {
-      background: var(--crimson);
-      border-color: var(--crimson);
+      background: linear-gradient(135deg, var(--crimson-bright) 0%, #c82838 100%);
+      border-color: var(--crimson-bright);
       color: #ffffff;
+      box-shadow: 0 6px 20px rgba(229, 72, 77, 0.28);
     }
 
     .btn-accent:hover {
-      background: #d13d42;
-      border-color: #d13d42;
+      background: linear-gradient(135deg, #ff6b70 0%, var(--crimson) 100%);
+      border-color: #ff6b70;
+      transform: translateY(-1px);
     }
 
     /* ── HERO SECTION ───────────────────────────────────────────────────── */
@@ -228,34 +251,47 @@
     .eyebrow-badge {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
+      align-self: flex-start;
+      gap: 10px;
       font-family: var(--mono);
       font-size: 0.74rem;
-      color: var(--text-dim);
-      margin-bottom: 20px;
+      font-weight: 600;
+      color: var(--text);
+      background: var(--panel-alt);
+      border: 1px solid rgba(62, 207, 142, 0.65);
+      padding: 6px 16px;
+      border-radius: 999px;
+      box-shadow: 0 6px 22px rgba(0, 0, 0, 0.35);
+      margin-bottom: 24px;
     }
 
     .status-dot {
-      width: 8px;
-      height: 8px;
+      width: 9px;
+      height: 9px;
       border-radius: 50%;
       background: var(--green);
+      box-shadow: 0 0 10px var(--green);
       display: inline-block;
     }
 
     .hero-left h1 {
-      font-size: clamp(2.25rem, 3.6vw, 3.2rem);
-      font-weight: 700;
+      font-size: clamp(2.35rem, 3.8vw, 3.45rem);
+      font-weight: 800;
       line-height: 1.12;
       letter-spacing: -0.035em;
-      margin-bottom: 20px;
+      margin-bottom: 22px;
       color: var(--text);
     }
 
     .hero-left h1 span {
-      color: var(--text-muted);
-      font-weight: 400;
-      display: block;
+      display: inline-block;
+      margin-top: 10px;
+      padding: 4px 18px 8px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, var(--crimson-bright) 0%, #9b23ea 100%);
+      color: #ffffff;
+      font-weight: 800;
+      box-shadow: 0 10px 28px rgba(229, 72, 77, 0.28);
     }
 
     .hero-lead {
@@ -268,8 +304,9 @@
 
     .hero-cli-card {
       background: var(--code-bg);
-      border: 1px solid var(--line-strong);
-      border-radius: 8px;
+      border: 1.5px solid var(--line-strong);
+      border-radius: 14px;
+      box-shadow: 0 14px 36px rgba(0, 0, 0, 0.45);
       margin-bottom: 28px;
       overflow: hidden;
     }
@@ -278,25 +315,26 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 8px 16px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 10px 16px;
+      background: rgba(26, 29, 35, 0.85);
+      border-bottom: 1px solid var(--line);
       font-family: var(--mono);
       font-size: 0.72rem;
-      color: #8b95a7;
+      color: var(--text-dim);
     }
 
     .hero-cli-body {
-      padding: 14px 16px;
+      padding: 16px 18px;
       font-family: var(--mono);
-      font-size: 0.78rem;
-      line-height: 1.7;
-      color: #e5e9f0;
+      font-size: 0.8rem;
+      line-height: 1.75;
+      color: var(--green);
       overflow-x: auto;
       white-space: pre;
     }
 
     .hero-cli-body .prompt-sign {
-      color: var(--crimson);
+      color: var(--crimson-text);
       margin-right: 8px;
       user-select: none;
     }
@@ -381,16 +419,17 @@
       background: var(--panel-hover);
     }
 
-    /* Warm light-studio well so BoopFace's dark head & 188 skins pop */
+    /* Studio dark stage with subtle radial glow matching the 4K promo videos */
     .boop-viewport {
       position: relative;
-      height: 260px;
+      height: 265px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       border-bottom: 1px solid var(--line);
-      background: radial-gradient(circle at 50% 45%, #ffffff 0%, var(--stage-bg) 100%);
+      background:
+        radial-gradient(circle at 50% 48%, rgba(56, 189, 248, 0.14) 0%, rgba(184, 82, 235, 0.08) 42%, var(--stage-bg) 100%);
       color: var(--stage-text);
     }
 
@@ -403,11 +442,15 @@
       gap: 8px;
       font-family: var(--mono);
       font-size: 0.7rem;
-      color: var(--stage-muted);
-      background: rgba(255, 255, 255, 0.75);
-      padding: 4px 10px;
+      color: var(--text-dim);
+      background: rgba(20, 22, 26, 0.88);
+      padding: 4px 12px;
       border-radius: 999px;
-      border: 1px solid rgba(0, 0, 0, 0.08);
+      border: 1px solid var(--line-strong);
+    }
+
+    html[data-theme="light"] .viewport-roundness {
+      background: rgba(255, 255, 255, 0.88);
     }
 
     .viewport-roundness input[type="range"] {
@@ -436,42 +479,51 @@
       font-size: 0.84rem;
       line-height: 1.55;
       color: var(--text-dim);
-      min-height: 44px;
+      min-height: 54px;
+      background: var(--panel);
+      border: 1.5px solid var(--line-strong);
+      border-radius: 16px;
+      padding: 12px 16px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.32);
     }
 
     .telemetry-readout b {
-      color: var(--text);
+      color: var(--green);
       font-weight: 600;
     }
 
     .telemetry-readout code {
       font-size: 0.76rem;
-      color: var(--crimson);
-      background: var(--crimson-soft);
-      padding: 2px 6px;
-      border-radius: 4px;
+      color: var(--blue);
+      background: var(--blue-soft);
+      padding: 2px 7px;
+      border-radius: 6px;
     }
 
     .prompt-bus {
       display: flex;
       gap: 8px;
+      background: var(--panel);
+      border: 1.5px solid rgba(229, 72, 77, 0.72);
+      border-radius: 999px;
+      padding: 5px 6px 5px 16px;
+      box-shadow: 0 0 0 4px rgba(229, 72, 77, 0.12), 0 8px 22px rgba(0, 0, 0, 0.35);
     }
 
     .prompt-bus input {
       flex: 1;
       min-width: 0;
-      background: var(--panel);
-      border: 1px solid var(--line-strong);
-      border-radius: 6px;
-      padding: 9px 12px;
+      background: transparent;
+      border: none;
+      padding: 6px 4px;
       color: var(--text);
-      font-family: var(--sans);
-      font-size: 0.84rem;
+      font-family: var(--mono);
+      font-size: 0.82rem;
       outline: none;
     }
 
     .prompt-bus input:focus {
-      border-color: var(--crimson);
+      color: #ffffff;
     }
 
     .readout-presets {
@@ -532,9 +584,13 @@
 
     .sec-index {
       font-family: var(--mono);
-      font-size: 0.8rem;
-      color: var(--crimson);
-      font-weight: 600;
+      font-size: 0.76rem;
+      color: var(--green);
+      background: var(--green-soft);
+      border: 1px solid rgba(62, 207, 142, 0.55);
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-weight: 700;
     }
 
     .sec-bar h2 {
@@ -639,10 +695,10 @@
       flex: 1;
     }
 
-    .t-prompt { color: #34d399; }
+    .t-prompt { color: var(--green); }
     .t-cmd { color: #ffffff; font-weight: 600; }
-    .t-accent { color: #f87171; }
-    .t-muted { color: #7d879c; }
+    .t-accent { color: var(--crimson-text); }
+    .t-muted { color: var(--text-muted); }
 
     /* ── SECTION 02: ARCHITECTURAL SUBSYSTEMS GRID ──────────────────────── */
     .spec-grid {
@@ -660,7 +716,25 @@
       flex-direction: column;
       justify-content: space-between;
       gap: 20px;
+      transition: background 0.18s ease, box-shadow 0.18s ease;
     }
+
+    .spec-cell:hover {
+      background: var(--panel);
+    }
+
+    .spec-cell:nth-child(1) { box-shadow: inset 0 3px 0 var(--crimson-bright); }
+    .spec-cell:nth-child(2) { box-shadow: inset 0 3px 0 var(--blue); }
+    .spec-cell:nth-child(3) { box-shadow: inset 0 3px 0 var(--green); }
+    .spec-cell:nth-child(4) { box-shadow: inset 0 3px 0 var(--violet); }
+    .spec-cell:nth-child(5) { box-shadow: inset 0 3px 0 var(--amber); }
+    .spec-cell:nth-child(6) { box-shadow: inset 0 3px 0 var(--green); }
+
+    .spec-cell:nth-child(2) .spec-cell-top svg { stroke: var(--blue); }
+    .spec-cell:nth-child(3) .spec-cell-top svg { stroke: var(--green); }
+    .spec-cell:nth-child(4) .spec-cell-top svg { stroke: var(--violet); }
+    .spec-cell:nth-child(5) .spec-cell-top svg { stroke: var(--amber); }
+    .spec-cell:nth-child(6) .spec-cell-top svg { stroke: var(--green); }
 
     .spec-cell:nth-child(3n) {
       border-right: none;
@@ -751,12 +825,29 @@
 
     .specimen-stage {
       width: 100%;
-      height: 132px;
-      border-radius: 8px;
-      background: var(--stage-bg);
+      height: 136px;
+      border-radius: 16px;
+      background: radial-gradient(circle at 50% 45%, #202430 0%, #14161b 100%);
+      border: 1.5px solid var(--line-strong);
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
       display: flex;
       align-items: center;
       justify-content: center;
+      transition: border-color 0.16s ease, transform 0.16s ease;
+    }
+
+    html[data-theme="light"] .specimen-stage {
+      background: radial-gradient(circle at 50% 45%, #ffffff 0%, var(--stage-bg) 100%);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+    }
+
+    .specimen-cell:nth-child(4n+1) .specimen-stage { border-color: rgba(62, 207, 142, 0.65); }
+    .specimen-cell:nth-child(4n+2) .specimen-stage { border-color: rgba(56, 189, 248, 0.65); }
+    .specimen-cell:nth-child(4n+3) .specimen-stage { border-color: rgba(184, 82, 235, 0.65); }
+    .specimen-cell:nth-child(4n+4) .specimen-stage { border-color: rgba(245, 165, 36, 0.65); }
+
+    .specimen-cell:hover .specimen-stage {
+      transform: translateY(-2px);
     }
 
     .specimen-meta {
@@ -1033,7 +1124,7 @@
           <div class="hero-cli-card">
             <div class="hero-cli-head">
               <span>Ubuntu Quick Start</span>
-              <button type="button" class="inst-btn" onclick="copyCli(this)" style="background:#1e2433;color:#f3f5f9;border-color:#364056;">Copy</button>
+              <button type="button" class="inst-btn" onclick="copyCli(this)">Copy</button>
             </div>
             <div class="hero-cli-body"><code><span class="prompt-sign">$</span>git clone https://github.com/ZYNIQ-SOLUTIONS/Tchiko-Assistant-Sysadmin-companion.git
 <span class="prompt-sign">$</span>cd Tchiko-Assistant-Sysadmin-companion &amp;&amp; ./run_tchiko.sh</code></div>
