@@ -53,7 +53,7 @@ tchiko = "main:main"
 
 [tool.setuptools]
 py-modules = ["main"]
-packages = ["tchiko"]
+packages = ["tchiko", "tchiko.remote"]
 
 [tool.ruff]
 line-length = 110

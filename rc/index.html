@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0d0e11" />
+  <title>Tchiko RC — Encrypted Remote Control</title>
+  <link rel="icon" type="image/svg+xml" href="assets/tchiko-icon.svg" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="stylesheet" href="css/rc.css" />
+</head>
+<body>
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       1. ONE-STEP PAIRING / CONNECT SCREEN
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <main id="pair-screen" class="pair-screen">
+    <section class="card pair-card">
+      <div class="pair-brand">
+        <div id="pair-boopface"></div>
+        <span class="rc-badge">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Tchiko RC
+        </span>
+        <h1 class="display">Connect to Tchiko Desktop</h1>
+        <p class="pair-subtitle">
+          Scan the personalized Tchiko Sigil on your desktop to open a private, encrypted remote session.
+        </p>
+      </div>
+
+      <div id="saved-pair-card" class="saved-pair-card" hidden>
+        <div class="saved-pair-meta">
+          <div class="caption">Paired Desktop</div>
+          <div id="saved-pair-host" class="saved-pair-host">Tchiko Desktop</div>
+        </div>
+        <div class="saved-pair-actions">
+          <button id="btn-resume-saved" type="button" class="btn btn-primary btn-sm">Reconnect</button>
+          <button id="btn-forget-saved" type="button" class="btn btn-sm">Forget</button>
+        </div>
+      </div>
+
+      <div id="pair-dropzone" class="pair-dropzone">
+        <div class="pair-actions">
+          <button id="btn-scan-sigil" type="button" class="btn btn-primary">
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            Scan Tchiko Sigil
+          </button>
+          <button id="btn-upload-sigil" type="button" class="btn">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Upload Sigil Image
+          </button>
+        </div>
+        <input id="sigil-file-input" type="file" accept="image/*" hidden />
+        <p class="pair-hint">Or drag &amp; drop a sigil screenshot here, or press <kbd>Ctrl+V</kbd></p>
+      </div>
+
+      <div id="pair-busy" class="pair-busy" hidden>
+        <span class="spinner"></span>
+        <span id="pair-busy-label">Securing connection…</span>
+      </div>
+
+      <div id="pair-error" class="pair-error" role="alert" hidden></div>
+
+      <div class="pair-security-strip">
+        <span>
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></svg>
+          ECDH P-256 + AES-256-GCM
+        </span>
+        <span>Single active connection</span>
+        <span>One-time sigil</span>
+      </div>
+    </section>
+  </main>
+
+  <!-- Live Camera Viewfinder Overlay -->
+  <div id="scanner-overlay" class="scanner-overlay" hidden>
+    <div class="scanner-viewport">
+      <video id="scanner-video" class="scanner-video" muted playsinline></video>
+      <div class="scanner-reticle"></div>
+    </div>
+    <p id="scanner-state" class="scanner-caption">Align the Tchiko Sigil inside the ring</p>
+    <button id="btn-close-scanner" type="button" class="btn">Cancel</button>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       2. AUTHENTICATED TCHIKO RC WORKSPACE
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <div id="app-shell" class="app-shell" hidden>
+    <header class="topbar">
+      <div class="brand-left">
+        <div id="header-boopface" class="brand-avatar"></div>
+        <div class="brand-meta">
+          <div class="brand-name">Tchiko <span class="rc-tag">RC</span></div>
+          <div class="brand-status">
+            <span id="header-status-dot" class="status-dot"></span>
+            <span id="header-status-text">Ready</span>
+          </div>
+        </div>
+      </div>
+
+      <nav class="segmented" aria-label="Workspace views">
+        <button type="button" data-nav="chat" class="active">Chat</button>
+        <button type="button" data-nav="system">System</button>
+        <button type="button" data-nav="activity">Activity</button>
+        <button type="button" data-nav="settings">Settings</button>
+      </nav>
+
+      <div class="topbar-right">
+        <button id="btn-security-pill" type="button" class="pill security-pill" title="Encrypted channel details &amp; safety code">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          E2E
+        </button>
+        <button id="btn-perm-pill" type="button" class="pill ok" title="Permission mode">●  Full access</button>
+        <button id="btn-new-chat" type="button" class="icon-btn" title="New chat">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="workspace">
+      <!-- ── CHAT VIEW ───────────────────────────────────────────────────── -->
+      <section id="view-chat" class="view-panel">
+        <div id="chat-scroll" class="chat-scroll">
+          <div class="chat-column">
+            <div id="chat-welcome" class="chat-welcome">
+              <div id="welcome-boopface"></div>
+              <h2 class="display">What needs doing?</h2>
+              <p class="sub">
+                I'm Tchiko. Tell me in plain words and I'll do it on your desktop — install, configure, diagnose, fix.
+              </p>
+              <div id="starter-grid" class="starter-grid"></div>
+            </div>
+            <div id="chat-feed" class="chat-feed"></div>
+          </div>
+        </div>
+
+        <div id="approval-banner" class="approval-wrap" hidden>
+          <div class="approval-banner">
+            <span class="approval-icon">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </span>
+            <div class="approval-body">
+              <div class="approval-title">Tchiko wants to run a command</div>
+              <div id="approval-cmd" class="approval-cmd mono"></div>
+            </div>
+            <div class="approval-actions">
+              <button id="btn-approve-deny" type="button" class="btn btn-sm">Deny</button>
+              <button id="btn-approve-always" type="button" class="btn btn-sm">Always allow</button>
+              <button id="btn-approve-run" type="button" class="btn btn-primary btn-sm">Run</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="composer-dock">
+          <div class="composer-inner">
+            <div id="slash-popover" class="popover left" hidden></div>
+            <div id="mood-popover" class="popover right" hidden></div>
+
+            <div id="composer-box" class="composer-box">
+              <button id="btn-slash-menu" type="button" class="icon-btn" title="Quick commands">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+              </button>
+              <textarea
+                id="prompt-input"
+                class="prompt-input"
+                rows="1"
+                placeholder="Ask Tchiko to check, fix or set up anything on your desktop"
+              ></textarea>
+              <button id="btn-mood-menu" type="button" class="icon-btn" title="Make Tchiko do a trick">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+              </button>
+              <button id="btn-send" type="button" class="send-btn" title="Send (Enter)" disabled>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+              </button>
+            </div>
+
+            <div class="composer-hints">
+              <span class="hint-shortcuts"><strong>Enter</strong> to send · <strong>$</strong> runs a shell command · <strong>/help</strong> lists commands</span>
+              <span id="composer-cwd" class="composer-cwd mono">~</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── SYSTEM VIEW ─────────────────────────────────────────────────── -->
+      <section id="view-system" class="view-panel" hidden>
+        <div class="page-scroll">
+          <div class="page-column">
+            <div>
+              <h2 id="sys-hostname" class="display">—</h2>
+              <p id="sys-sub" class="dim">—</p>
+            </div>
+
+            <div class="gauges-grid">
+              <div class="card card-pad gauge-card">
+                <div id="gauge-cpu"></div>
+                <div class="gauge-meta">
+                  <span class="caption">CPU LOAD</span>
+                  <span id="val-cpu" class="gauge-val">—</span>
+                  <span id="det-cpu" class="dim"></span>
+                </div>
+              </div>
+              <div class="card card-pad gauge-card">
+                <div id="gauge-ram"></div>
+                <div class="gauge-meta">
+                  <span class="caption">MEMORY</span>
+                  <span id="val-ram" class="gauge-val">—</span>
+                  <span id="det-ram" class="dim"></span>
+                </div>
+              </div>
+              <div class="card card-pad gauge-card">
+                <div id="gauge-disk"></div>
+                <div class="gauge-meta">
+                  <span class="caption">DISK · HOME</span>
+                  <span id="val-disk" class="gauge-val">—</span>
+                  <span id="det-disk" class="dim"></span>
+                </div>
+              </div>
+            </div>
+
+            <label class="card card-pad access-card">
+              <span class="tile-icon">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></svg>
+              </span>
+              <span class="access-card-text">
+                <span class="pref-title">Full system access</span>
+                <span class="pref-desc">Run commands, edit files and manage services without asking each time.</span>
+              </span>
+              <input id="sys-full-access" type="checkbox" class="tchiko-switch" />
+            </label>
+
+            <span class="caption">QUICK ACTIONS</span>
+            <div id="quick-actions-grid" class="quick-actions-grid"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── ACTIVITY VIEW ───────────────────────────────────────────────── -->
+      <section id="view-activity" class="view-panel" hidden>
+        <div class="page-scroll">
+          <div class="page-column">
+            <div class="page-head">
+              <div>
+                <h2 class="display">Activity</h2>
+                <p class="dim">Every step the agent takes on your desktop, as it happens.</p>
+              </div>
+              <button id="btn-clear-activity" type="button" class="btn btn-sm">Clear</button>
+            </div>
+            <div class="card timeline-card">
+              <div id="activity-empty" class="timeline-empty">
+                Nothing yet. Ask Tchiko something and its steps will show up here.
+              </div>
+              <div id="activity-list"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── SETTINGS VIEW ───────────────────────────────────────────────── -->
+      <section id="view-settings" class="view-panel" hidden>
+        <div class="settings-layout">
+          <aside class="settings-sidebar">
+            <button type="button" class="settings-nav-btn active" data-settings-tab="access">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></svg>
+              Access
+            </button>
+            <button type="button" class="settings-nav-btn" data-settings-tab="agent">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/></svg>
+              Agent
+            </button>
+            <button type="button" class="settings-nav-btn" data-settings-tab="companion">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+              Companion
+            </button>
+            <button type="button" class="settings-nav-btn" data-settings-tab="remote">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              Remote
+            </button>
+            <div class="settings-sidebar-note">Changes sync live with Tchiko Desktop</div>
+          </aside>
+
+          <div class="settings-content">
+            <!-- Access panel -->
+            <div id="settings-panel-access" class="settings-panel">
+              <div>
+                <h2 class="display">Access</h2>
+                <p class="dim">Decide how much of your desktop Tchiko may touch, and whether it asks first.</p>
+              </div>
+              <label id="settings-access-hero" class="card card-pad access-card hero-ok">
+                <span class="tile-icon">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></svg>
+                </span>
+                <span class="access-card-text">
+                  <span id="settings-hero-title" class="section-title">Full access is on</span>
+                  <span id="settings-hero-desc" class="pref-desc">Tchiko runs commands, edits files and manages services on its own.</span>
+                </span>
+                <input id="set-master-switch" type="checkbox" class="tchiko-switch" />
+              </label>
+
+              <span class="caption">CAPABILITIES</span>
+              <div id="settings-caps-card" class="card pref-card"></div>
+
+              <span class="caption">EXECUTION POLICY</span>
+              <div class="card pref-card">
+                <div class="pref-row">
+                  <span class="pref-text">
+                    <span class="pref-title">When Tchiko wants to run a tool</span>
+                    <span class="pref-desc">Applies to commands and file edits</span>
+                  </span>
+                  <select id="set-tool-policy" class="tchiko-select"></select>
+                </div>
+                <div class="pref-row">
+                  <span class="pref-text">
+                    <span class="pref-title">Files outside the workspace</span>
+                    <span class="pref-desc">Anything beyond the working directory</span>
+                  </span>
+                  <select id="set-file-access" class="tchiko-select"></select>
+                </div>
+                <div class="pref-row">
+                  <span class="pref-text">
+                    <span class="pref-title">Internet access</span>
+                    <span class="pref-desc">Downloads, package indexes and web requests</span>
+                  </span>
+                  <select id="set-net-access" class="tchiko-select"></select>
+                </div>
+                <label class="pref-row">
+                  <span class="pref-text">
+                    <span class="pref-title">Terminal sandbox</span>
+                    <span class="pref-desc">Isolate commands from the host. Turn off for direct access.</span>
+                  </span>
+                  <input id="set-sandbox" type="checkbox" class="tchiko-switch" />
+                </label>
+              </div>
+            </div>
+
+            <!-- Agent panel -->
+            <div id="settings-panel-agent" class="settings-panel" hidden>
+              <div>
+                <h2 class="display">Agent</h2>
+                <p class="dim">The model that plans and carries out your requests.</p>
+              </div>
+              <span class="caption">MODEL</span>
+              <div class="card pref-card">
+                <div class="pref-row">
+                  <span class="pref-text">
+                    <span class="pref-title">Preferred model</span>
+                    <span class="pref-desc">Used by the Antigravity backend</span>
+                  </span>
+                  <select id="set-model" class="tchiko-select"></select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Companion panel -->
+            <div id="settings-panel-companion" class="settings-panel" hidden>
+              <div>
+                <h2 class="display">Companion</h2>
+                <p class="dim">How the floating Tchiko looks and behaves on your desktop and in Tchiko RC.</p>
+              </div>
+              <span class="caption">COAT</span>
+              <div id="settings-coat-grid" class="coat-grid"></div>
+
+              <span class="caption">APPEARANCE</span>
+              <div class="card pref-card">
+                <div class="pref-row">
+                  <span class="pref-text"><span class="pref-title">Size</span></span>
+                  <div class="range-wrap">
+                    <input id="set-size" type="range" class="tchiko-range" min="90" max="220" step="5" value="140" />
+                    <span id="set-size-val" class="range-val mono">140 px</span>
+                  </div>
+                </div>
+                <div class="pref-row">
+                  <span class="pref-text"><span class="pref-title">Opacity</span></span>
+                  <div class="range-wrap">
+                    <input id="set-opacity" type="range" class="tchiko-range" min="0.4" max="1" step="0.02" value="0.96" />
+                    <span id="set-opacity-val" class="range-val mono">96%</span>
+                  </div>
+                </div>
+              </div>
+
+              <span class="caption">BEHAVIOUR</span>
+              <div class="card pref-card">
+                <label class="pref-row">
+                  <span class="pref-text">
+                    <span class="pref-title">Always on top</span>
+                    <span class="pref-desc">Keep Tchiko above other desktop windows</span>
+                  </span>
+                  <input id="set-always-top" type="checkbox" class="tchiko-switch" />
+                </label>
+                <label class="pref-row">
+                  <span class="pref-text">
+                    <span class="pref-title">Speech bubble</span>
+                    <span class="pref-desc">Show replies in a bubble above the desktop companion</span>
+                  </span>
+                  <input id="set-bubble" type="checkbox" class="tchiko-switch" />
+                </label>
+              </div>
+            </div>
+
+            <!-- Remote panel -->
+            <div id="settings-panel-remote" class="settings-panel" hidden>
+              <div>
+                <h2 class="display">Remote Channel</h2>
+                <p class="dim">End-to-end encrypted single-device tunnel to Tchiko Desktop.</p>
+              </div>
+              <div class="card pref-card">
+                <div class="pref-row">
+                  <span class="pref-text">
+                    <span class="pref-title">Connected host</span>
+                    <span class="pref-desc">Verified via Tchiko Sigil mutual handshake</span>
+                  </span>
+                  <span id="remote-host-name" class="mono">—</span>
+                </div>
+                <div class="pref-row">
+                  <span class="pref-text">
+                    <span class="pref-title">Safety code</span>
+                    <span class="pref-desc">Should match the 6 digits shown on Tchiko Desktop</span>
+                  </span>
+                  <span id="remote-safety-code" class="mono section-title">—</span>
+                </div>
+                <div class="pref-row">
+                  <span class="pref-text">
+                    <span class="pref-title">Cipher suite</span>
+                    <span class="pref-desc">Ephemeral key exchange + authenticated framing</span>
+                  </span>
+                  <span class="mono dim">ECDH P-256 · AES-256-GCM</span>
+                </div>
+              </div>
+              <div style="display:flex;gap:10px;flex-wrap:wrap">
+                <button id="btn-settings-disconnect" type="button" class="btn">Disconnect</button>
+                <button id="btn-settings-unpair" type="button" class="btn btn-danger">Unpair this device</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Session / Safety Code Modal -->
+  <div id="session-modal" class="modal-backdrop" hidden>
+    <div class="card modal-card" role="dialog" aria-modal="true" aria-label="Encrypted session details">
+      <div class="modal-head">
+        <span class="section-title">Encrypted Channel</span>
+        <button id="btn-close-session-modal" type="button" class="icon-btn" title="Close">✕</button>
+      </div>
+      <div class="safety-box">
+        <div class="caption">VERIFICATION SAFETY CODE</div>
+        <div id="safety-code-value" class="safety-digits mono">—</div>
+        <div class="dim" style="font-size:12px;margin-top:4px">Confirm these 6 digits match Tchiko Desktop</div>
+      </div>
+      <div class="kv-list">
+        <div class="kv-row"><span class="dim">Desktop host</span><span id="session-host-label" class="mono">—</span></div>
+        <div class="kv-row"><span class="dim">Agent engine</span><span id="session-engine-label" class="mono">—</span></div>
+        <div class="kv-row"><span class="dim">Cipher</span><span class="mono">ECDH P-256 + AES-256-GCM</span></div>
+        <div class="kv-row"><span class="dim">Channel mode</span><span class="mono">Exclusive (1 client)</span></div>
+        <div class="kv-row"><span class="dim">Latency</span><span id="session-latency" class="mono">—</span></div>
+      </div>
+      <div class="modal-actions">
+        <button id="btn-modal-unpair" type="button" class="btn btn-danger btn-sm">Unpair</button>
+        <button id="btn-modal-disconnect" type="button" class="btn btn-sm">Disconnect</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

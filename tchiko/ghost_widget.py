@@ -47,6 +47,7 @@ class FloatingGhostWidget(Gtk.Window):
         on_quick_command: Callable[[str], None],
         on_inline_prompt: Callable[[str], None],
         on_quit: Callable[[], None],
+        on_open_remote: Optional[Callable[[], None]] = None,
     ) -> None:
         super().__init__(type=Gtk.WindowType.TOPLEVEL)
         self.config = config
@@ -55,6 +56,7 @@ class FloatingGhostWidget(Gtk.Window):
         self.on_quick_command = on_quick_command
         self.on_inline_prompt = on_inline_prompt
         self.on_quit = on_quit
+        self.on_open_remote = on_open_remote
 
         self.renderer = SvgGhostRenderer()
         self._dragging = False
@@ -542,6 +544,8 @@ class FloatingGhostWidget(Gtk.Window):
         perm_item.connect("toggled", lambda item: self.config.set_all_permissions(item.get_active()))
         menu.append(perm_item)
         _item(menu, "Settings…", self.on_open_settings)
+        if self.on_open_remote is not None:
+            _item(menu, "Remote Control (Tchiko RC)…", self.on_open_remote)
 
         menu.append(Gtk.SeparatorMenuItem())
         _item(menu, "Quit Tchiko", self.on_quit)

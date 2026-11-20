@@ -25,6 +25,7 @@ htmlcov/
 *.bak
 config/agent_memory.json
 config/action_ledger.json
+config/rc_pair.json
 config/snapshots/
 logs/
 brag-output*/

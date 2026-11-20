@@ -84,9 +84,15 @@ def run_self_test() -> int:
 
 
 class TchikoApplication:
-    """Coordinates the Floating Tchiko Companion, Quick Input Bubble, Chat Window, and Settings."""
+    """Coordinates the Floating Tchiko Companion, Quick Input Bubble, Chat Window, Settings, and RC."""
 
-    def __init__(self, open_chat: bool = False, open_settings: bool = False) -> None:
+    def __init__(
+        self,
+        open_chat: bool = False,
+        open_settings: bool = False,
+        open_remote: bool = False,
+        rc_port: int = 8765,
+    ) -> None:
         import gi
 
         gi.require_version("Gtk", "3.0")
@@ -94,6 +100,8 @@ class TchikoApplication:
 
         from tchiko.assistant_window import TchikoAssistantWindow
         from tchiko.ghost_widget import FloatingGhostWidget
+        from tchiko.remote.pair_window import TchikoPairWindow
+        from tchiko.remote.service import RemoteControlService
         from tchiko.settings_window import TchikoSettingsWindow
         from tchiko.watchdog import SystemWatchdog
 
@@ -104,6 +112,16 @@ class TchikoApplication:
         self.toolkit = LinuxSystemToolkit(self.config)
         self.engine = TchikoAgentEngine(self.config, self.toolkit)
 
+        self.remote_service = RemoteControlService(
+            config=self.config,
+            toolkit=self.toolkit,
+            engine=self.engine,
+            port=rc_port,
+            on_status_change=self._on_remote_status,
+            on_remote_mood=self._on_remote_mood,
+        )
+        self.pair_win = TchikoPairWindow(self.remote_service)
+
         self.settings_win = TchikoSettingsWindow(self.config)
         self.assistant_win = TchikoAssistantWindow(
             config=self.config,
@@ -111,6 +129,7 @@ class TchikoApplication:
             engine=self.engine,
             on_open_settings=self.show_settings,
             on_ghost_state=self.set_ghost_state,
+            on_open_remote=self.show_remote,
         )
         self.ghost_win = FloatingGhostWidget(
             config=self.config,
@@ -119,6 +138,7 @@ class TchikoApplication:
             on_quick_command=self.run_inline_prompt,
             on_inline_prompt=self.run_inline_prompt,
             on_quit=self.quit,
+            on_open_remote=self.show_remote,
         )
 
         # Connect live streaming from AssistantWindow -> FloatingGhostWidget's talking bubble!
@@ -127,9 +147,16 @@ class TchikoApplication:
         # Start proactive background anomaly watchdog
         def _on_watchdog_alert(msg: str) -> None:
             self.GLib.idle_add(self._deliver_watchdog_alert, msg)
+            self.remote_service.notify_watchdog_alert(msg)
 
         self.watchdog = SystemWatchdog(self.toolkit, on_anomaly=_on_watchdog_alert)
         self.watchdog.start()
+
+        # Start the encrypted RC server so previously paired clients reconnect seamlessly.
+        try:
+            self.remote_service.start()
+        except Exception as exc:
+            print(f"[Tchiko RC] Warning: failed to auto-start remote server: {exc}", file=sys.stderr)
 
         self.ghost_win.show_all()
         self.ghost_win.present()
@@ -137,6 +164,8 @@ class TchikoApplication:
             self.assistant_win.show_all()
         if open_settings:
             self.settings_win.show_all()
+        if open_remote:
+            self.show_remote()
 
     def toggle_chat(self) -> None:
         if self.assistant_win.get_visible():
@@ -151,6 +180,22 @@ class TchikoApplication:
         self.settings_win.show_all()
         self.settings_win.present()
 
+    def show_remote(self) -> None:
+        self.pair_win.show_all()
+        self.pair_win.present()
+
+    def _on_remote_status(self, snapshot: dict) -> None:
+        if hasattr(self, "pair_win"):
+            self.pair_win.refresh_status(snapshot)
+        if hasattr(self, "assistant_win"):
+            connected = bool(snapshot.get("connected"))
+            device = str(snapshot.get("device_name") or "")
+            self.GLib.idle_add(self.assistant_win.set_remote_connected, connected, device)
+
+    def _on_remote_mood(self, mood: str) -> None:
+        if hasattr(self, "ghost_win"):
+            self.GLib.idle_add(self.set_ghost_state, mood, None)
+
     def run_inline_prompt(self, prompt: str) -> None:
         """Execute prompt from the quick-input bar below Tchiko and reply in the talking bubble."""
         self.assistant_win.submit_inline_prompt(prompt)
@@ -164,6 +209,8 @@ class TchikoApplication:
         return False
 
     def quit(self) -> None:
+        if hasattr(self, "remote_service"):
+            self.remote_service.stop()
         if hasattr(self, "watchdog"):
             self.watchdog.stop()
         self.Gtk.main_quit()
@@ -171,6 +218,78 @@ class TchikoApplication:
     def run(self) -> None:
         signal.signal(signal.SIGINT, signal.SIG_DFL)
         self.Gtk.main()
+
+
+def run_remote_headless(port: int = 8765, use_tls: bool = True, sigil_out: Optional[str] = None) -> int:
+    """Run Tchiko RC headless (no GTK display required) for servers / SSH sessions."""
+    import time
+    from pathlib import Path
+
+    from tchiko.remote.service import RemoteControlService
+
+    cfg = ConfigManager()
+    toolkit = LinuxSystemToolkit(cfg)
+    engine = TchikoAgentEngine(cfg, toolkit)
+
+    last_state = {"connected": None, "safety_code": ""}
+
+    def _on_status(snap: dict) -> None:
+        conn = bool(snap.get("connected"))
+        code = str(snap.get("safety_code") or "")
+        prev_conn = last_state["connected"]
+        if conn != prev_conn or code != last_state["safety_code"]:
+            last_state["connected"] = conn
+            last_state["safety_code"] = code
+            if conn:
+                dev = snap.get("device_name") or "Remote Browser"
+                ip = snap.get("peer_ip") or ""
+                print(f"\n[Tchiko RC] Connected: {dev} ({ip})  |  Safety Code: {code}", flush=True)
+            elif prev_conn is True:
+                print("\n[Tchiko RC] Client disconnected.", flush=True)
+
+    service = RemoteControlService(
+        config=cfg,
+        toolkit=toolkit,
+        engine=engine,
+        port=port,
+        use_tls=use_tls,
+        on_status_change=_on_status,
+    )
+    bound = service.start()
+    session = service.new_pairing_session()
+    primary = service.primary_url()
+    one_step = f"{primary}/#pair={session.pair_fragment()}"
+
+    out_path = Path(sigil_out) if sigil_out else (PROJECT_ROOT / "config" / "tchiko_sigil.svg")
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(session.svg(size=420), encoding="utf-8")
+
+    print(f"Tchiko RC listening on port {bound} ({'HTTPS/WSS' if use_tls else 'HTTP/WS'})")
+    for url in service.urls():
+        print(f"  Web App      : {url}")
+    print(f"  One-Step Link: {one_step}")
+    print(f"  Tchiko Sigil : {out_path} (valid for 120s, single-use)")
+    print("Press Ctrl+C to stop.", flush=True)
+
+    stop_flag = {"stop": False}
+
+    def _handle_sig(_signum: int, _frame: object) -> None:
+        stop_flag["stop"] = True
+
+    signal.signal(signal.SIGINT, _handle_sig)
+    signal.signal(signal.SIGTERM, _handle_sig)
+
+    try:
+        while not stop_flag["stop"]:
+            time.sleep(0.5)
+    finally:
+        service.stop()
+        try:
+            if out_path.exists() and sigil_out is None:
+                out_path.unlink()
+        except OSError:
+            pass
+    return 0
 
 
 def main() -> int:
@@ -190,12 +309,47 @@ def main() -> int:
         action="store_true",
         help="Open the Tchiko Settings & Permissions window on startup",
     )
+    parser.add_argument(
+        "--open-remote",
+        action="store_true",
+        help="Open the Tchiko RC pairing window on startup",
+    )
+    parser.add_argument(
+        "--remote",
+        action="store_true",
+        help="Run Tchiko RC in headless server mode without launching the GTK desktop UI",
+    )
+    parser.add_argument(
+        "--rc-port",
+        type=int,
+        default=8765,
+        help="TCP port for the Tchiko RC HTTPS/WSS server (default: 8765)",
+    )
+    parser.add_argument(
+        "--rc-no-tls",
+        action="store_true",
+        help="Disable TLS in headless --remote mode (only for localhost/reverse-proxy setups)",
+    )
+    parser.add_argument(
+        "--sigil-out",
+        type=str,
+        default=None,
+        help="Optional path to write the Tchiko Sigil SVG in --remote mode",
+    )
     args = parser.parse_args()
 
     if args.self_test:
         return run_self_test()
 
-    app = TchikoApplication(open_chat=args.open_chat, open_settings=args.open_settings)
+    if args.remote:
+        return run_remote_headless(port=args.rc_port, use_tls=not args.rc_no_tls, sigil_out=args.sigil_out)
+
+    app = TchikoApplication(
+        open_chat=args.open_chat,
+        open_settings=args.open_settings,
+        open_remote=args.open_remote,
+        rc_port=args.rc_port,
+    )
     app.run()
     return 0
 

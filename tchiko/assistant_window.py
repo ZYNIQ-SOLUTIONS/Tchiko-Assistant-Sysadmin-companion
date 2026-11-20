@@ -75,6 +75,7 @@ class TchikoAssistantWindow(Gtk.Window):
         engine: TchikoAgentEngine,
         on_open_settings: Callable[[], None],
         on_ghost_state: Callable[[str, Optional[str]], None],
+        on_open_remote: Optional[Callable[[], None]] = None,
     ) -> None:
         super().__init__(title="Tchiko")
         self.config = config
@@ -82,6 +83,7 @@ class TchikoAssistantWindow(Gtk.Window):
         self.engine = engine
         self.on_open_settings = on_open_settings
         self.on_ghost_state = on_ghost_state
+        self.on_open_remote = on_open_remote
 
         self._mini_renderer = SvgGhostRenderer()
         self._bubble_listener: Optional[Callable[[str], None]] = None
@@ -160,6 +162,15 @@ class TchikoAssistantWindow(Gtk.Window):
         new_btn.connect("clicked", self._on_new_chat)
         hbar.pack_end(new_btn)
 
+        self.rc_pill: Optional[Gtk.Button] = None
+        if self.on_open_remote is not None:
+            self.rc_pill = Gtk.Button(label="RC")
+            self.rc_pill.set_valign(Gtk.Align.CENTER)
+            self.rc_pill.set_tooltip_text("Pair & connect Tchiko RC (Remote Control)")
+            self.rc_pill.get_style_context().add_class("tchiko-pill")
+            self.rc_pill.connect("clicked", lambda *_: self.on_open_remote and self.on_open_remote())
+            hbar.pack_end(self.rc_pill)
+
         self.perm_pill = Gtk.Button(label="Full access")
         self.perm_pill.set_valign(Gtk.Align.CENTER)
         self.perm_pill.get_style_context().add_class("tchiko-pill")
@@ -168,6 +179,20 @@ class TchikoAssistantWindow(Gtk.Window):
 
         self.set_titlebar(hbar)
         self._update_avatars()
+
+    def set_remote_connected(self, connected: bool, device_name: str = "") -> None:
+        """Update the Tchiko RC header pill with live connection status."""
+        if self.rc_pill is None:
+            return
+        ctx = self.rc_pill.get_style_context()
+        ctx.remove_class("ok")
+        if connected:
+            ctx.add_class("ok")
+            self.rc_pill.set_label("●  RC")
+            self.rc_pill.set_tooltip_text(f"Tchiko RC connected: {device_name or 'Remote Browser'}")
+        else:
+            self.rc_pill.set_label("RC")
+            self.rc_pill.set_tooltip_text("Pair & connect Tchiko RC (Remote Control)")
 
     def _build_body(self) -> None:
         root = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
