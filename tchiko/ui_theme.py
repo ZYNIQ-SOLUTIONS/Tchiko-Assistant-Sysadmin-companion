@@ -145,7 +145,7 @@ headerbar.tchiko-titlebar button.titlebutton:hover {{ background-color: @t_hover
 .tchiko-segmented {{
     background-color: @t_surface;
     border: 1px solid @t_border;
-    border-radius: 10px;
+    border-radius: 6px;
     padding: 3px;
 }}
 .tchiko-segmented button {{
@@ -153,19 +153,21 @@ headerbar.tchiko-titlebar button.titlebutton:hover {{ background-color: @t_hover
     background-color: transparent;
     border: none;
     box-shadow: none;
-    border-radius: 7px;
-    padding: 4px 16px;
+    border-radius: 4px;
+    padding: 4px 14px;
     min-height: 22px;
     color: @t_text2;
     font-weight: 600;
-    font-size: 9.5pt;
+    font-size: 9pt;
+    font-family: {FONT_MONO};
+    letter-spacing: 0.3px;
     transition: background-color 140ms ease, color 140ms ease;
 }}
 .tchiko-segmented button:hover {{ color: @t_text; }}
 .tchiko-segmented button:checked {{
     background-color: @t_hover;
     color: @t_text;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
 }}
 
 /* ── Buttons ──────────────────────────────────────────────────────────── */
@@ -181,7 +183,7 @@ button.tchiko-btn {{
     background-color: @t_raised;
     color: @t_text;
     border: 1px solid @t_border;
-    border-radius: 9px;
+    border-radius: 5px;
     padding: 6px 14px;
     font-weight: 600;
     font-size: 9.5pt;
@@ -191,7 +193,7 @@ button.tchiko-primary {{
     background-color: @t_accent;
     color: #ffffff;
     border: 1px solid @t_accent;
-    border-radius: 9px;
+    border-radius: 5px;
     padding: 6px 16px;
     font-weight: 700;
     font-size: 9.5pt;
@@ -203,7 +205,7 @@ button.tchiko-icon-btn {{
     background-color: transparent;
     color: @t_text2;
     border: 1px solid transparent;
-    border-radius: 8px;
+    border-radius: 5px;
     padding: 5px;
     min-width: 20px;
     min-height: 20px;
@@ -214,7 +216,7 @@ button.tchiko-ghost-btn {{
     background-color: transparent;
     color: @t_text2;
     border: none;
-    border-radius: 7px;
+    border-radius: 5px;
     padding: 3px 8px;
     font-size: 8.5pt;
     font-weight: 600;
@@ -226,7 +228,7 @@ button.tchiko-send {{
     color: #ffffff;
     border: none;
     box-shadow: none;
-    border-radius: 999px;
+    border-radius: 6px;
     padding: 0;
     min-width: 32px;
     min-height: 32px;
@@ -239,10 +241,12 @@ button.tchiko-send:disabled {{ background-color: @t_hover; color: @t_muted; }}
 button.tchiko-pill {{
     background-image: none;
     box-shadow: none;
-    border-radius: 999px;
-    padding: 3px 11px 3px 9px;
-    font-size: 8.8pt;
+    border-radius: 4px;
+    padding: 3px 9px;
+    font-size: 8.2pt;
     font-weight: 600;
+    font-family: {FONT_MONO};
+    letter-spacing: 0.3px;
     border: 1px solid @t_border;
     background-color: @t_surface;
     color: @t_text2;
@@ -255,15 +259,15 @@ button.tchiko-pill.review {{ color: @t_warning; border-color: alpha(@t_warning, 
 .tchiko-card {{
     background-color: @t_surface;
     border: 1px solid @t_border;
-    border-radius: 14px;
+    border-radius: 6px;
 }}
-.tchiko-card-pad {{ padding: 16px 18px; }}
+.tchiko-card-pad {{ padding: 14px 16px; }}
 button.tchiko-tile {{
     background-image: none;
     box-shadow: none;
     background-color: @t_surface;
     border: 1px solid @t_border;
-    border-radius: 12px;
+    border-radius: 6px;
     padding: 12px 14px;
     color: @t_text;
     transition: background-color 140ms ease, border-color 140ms ease;
@@ -273,7 +277,7 @@ button.tchiko-tile:active {{ background-color: @t_hover; }}
 .tchiko-tile-icon {{
     background-color: alpha(@t_accent, 0.12);
     color: {ACCENT_TEXT};
-    border-radius: 9px;
+    border-radius: 4px;
     padding: 7px;
 }}
 
@@ -281,20 +285,21 @@ button.tchiko-tile:active {{ background-color: @t_hover; }}
 .tchiko-user-bubble {{
     background-color: @t_raised;
     border: 1px solid @t_border;
-    border-radius: 16px 16px 5px 16px;
+    border-radius: 6px;
     padding: 9px 14px;
 }}
 .tchiko-activity-chip {{
     background-color: @t_surface;
     border: 1px solid @t_border;
-    border-radius: 999px;
-    padding: 4px 12px 4px 9px;
+    border-radius: 4px;
+    padding: 3px 10px 3px 8px;
+    font-family: {FONT_MONO};
 }}
-.tchiko-activity-chip label {{ color: @t_text2; font-size: 9pt; }}
+.tchiko-activity-chip label {{ color: @t_text2; font-size: 8.5pt; font-family: {FONT_MONO}; }}
 .tchiko-code-card {{
-    background-color: #0a0b0d;
+    background-color: #07080a;
     border: 1px solid @t_border;
-    border-radius: 10px;
+    border-radius: 5px;
 }}
 .tchiko-code-head {{
     border-bottom: 1px solid @t_border;
@@ -311,13 +316,13 @@ button.tchiko-tile:active {{ background-color: @t_hover; }}
 .tchiko-composer {{
     background-color: @t_surface;
     border: 1px solid @t_border_strong;
-    border-radius: 16px;
+    border-radius: 6px;
     padding: 5px 6px 5px 8px;
     transition: border-color 160ms ease, box-shadow 160ms ease;
 }}
 .tchiko-composer.focused {{
     border-color: alpha(@t_accent, 0.75);
-    box-shadow: 0 0 0 3px alpha(@t_accent, 0.14);
+    box-shadow: 0 0 0 2px alpha(@t_accent, 0.18);
 }}
 entry.tchiko-entry {{
     background-image: none;
@@ -337,7 +342,7 @@ entry.tchiko-entry placeholder, entry.tchiko-entry .placeholder {{ color: @t_mut
 .tchiko-banner {{
     background-color: alpha(@t_warning, 0.08);
     border: 1px solid alpha(@t_warning, 0.38);
-    border-radius: 12px;
+    border-radius: 6px;
     padding: 10px 12px 10px 14px;
 }}
 
@@ -350,10 +355,11 @@ list.tchiko-timeline row {{
 }}
 list.tchiko-timeline row:hover {{ background-color: alpha(@t_text, 0.025); }}
 .tchiko-badge {{
-    border-radius: 6px;
-    padding: 1px 7px;
+    border-radius: 3px;
+    padding: 1px 6px;
     font-size: 7.8pt;
     font-weight: 700;
+    font-family: {FONT_MONO};
     letter-spacing: 0.5px;
     background-color: @t_hover;
     color: @t_text2;

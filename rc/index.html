@@ -16,14 +16,16 @@
   <main id="pair-screen" class="pair-screen">
     <section class="card pair-card">
       <div class="pair-brand">
-        <div id="pair-boopface"></div>
+        <div class="specimen-bay">
+          <div id="pair-boopface"></div>
+        </div>
         <span class="rc-badge">
           <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
           Tchiko RC
         </span>
-        <h1 class="display">Connect to Tchiko Desktop</h1>
+        <h1 class="display">Tele-Command Link</h1>
         <p class="pair-subtitle">
-          Scan the personalized Tchiko Sigil on your desktop to open a private, encrypted remote session.
+          Optical cryptographic handshake. Scan the active Tchiko Sigil from your desktop companion to establish an isolated E2E session.
         </p>
       </div>
 
@@ -42,15 +44,15 @@
         <div class="pair-actions">
           <button id="btn-scan-sigil" type="button" class="btn btn-primary">
             <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-            Scan Tchiko Sigil
+            Scan Optical Sigil
           </button>
           <button id="btn-upload-sigil" type="button" class="btn">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            Upload Sigil Image
+            Load Sigil Image
           </button>
         </div>
         <input id="sigil-file-input" type="file" accept="image/*" hidden />
-        <p class="pair-hint">Or drag &amp; drop a sigil screenshot here, or press <kbd>Ctrl+V</kbd></p>
+        <p class="pair-hint">Drop cryptographic sigil token or press <kbd>Ctrl+V</kbd></p>
       </div>
 
       <div id="pair-busy" class="pair-busy" hidden>
@@ -122,10 +124,12 @@
         <div id="chat-scroll" class="chat-scroll">
           <div class="chat-column">
             <div id="chat-welcome" class="chat-welcome">
-              <div id="welcome-boopface"></div>
-              <h2 class="display">What needs doing?</h2>
+              <div class="welcome-crt">
+                <div id="welcome-boopface"></div>
+              </div>
+              <h2 class="display">Tchiko // Linux Sysadmin Companion</h2>
               <p class="sub">
-                I'm Tchiko. Tell me in plain words and I'll do it on your desktop — install, configure, diagnose, fix.
+                Autonomous desktop operations &amp; encrypted remote control. Direct shell diagnostics, system maintenance, and workload management.
               </p>
               <div id="starter-grid" class="starter-grid"></div>
             </div>
@@ -139,13 +143,13 @@
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
             </span>
             <div class="approval-body">
-              <div class="approval-title">Tchiko wants to run a command</div>
+              <div class="approval-title">PRIVILEGED COMMAND AUTHORIZATION</div>
               <div id="approval-cmd" class="approval-cmd mono"></div>
             </div>
             <div class="approval-actions">
               <button id="btn-approve-deny" type="button" class="btn btn-sm">Deny</button>
-              <button id="btn-approve-always" type="button" class="btn btn-sm">Always allow</button>
-              <button id="btn-approve-run" type="button" class="btn btn-primary btn-sm">Run</button>
+              <button id="btn-approve-always" type="button" class="btn btn-sm">Authorize All</button>
+              <button id="btn-approve-run" type="button" class="btn btn-primary btn-sm">Authorize</button>
             </div>
           </div>
         </div>
@@ -163,7 +167,7 @@
                 id="prompt-input"
                 class="prompt-input"
                 rows="1"
-                placeholder="Ask Tchiko to check, fix or set up anything on your desktop"
+                placeholder="Execute sysadmin command, runbook or prompt… (e.g. /doctor, /sysinfo, /run)"
               ></textarea>
               <button id="btn-mood-menu" type="button" class="icon-btn" title="Make Tchiko do a trick">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>

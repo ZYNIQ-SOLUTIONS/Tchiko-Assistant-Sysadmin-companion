@@ -11,19 +11,19 @@ const STORAGE_KEY = 'tchiko_rc_pair_v1';
 const SSH_KEY_PROMPT = 'create an ssh key for my remote hetzner server in OpenSSH format';
 
 const STARTERS = [
-  { icon: 'monitor', title: 'Run a health check', desc: 'CPU, memory, disk, services and ports', prompt: '/doctor' },
-  { icon: 'network', title: "See what's listening", desc: 'Open ports and the processes behind them', prompt: 'check listening ports' },
-  { icon: 'key', title: 'Create an SSH key', desc: 'Ed25519 keypair, public key copied for you', prompt: SSH_KEY_PROMPT },
-  { icon: 'memory', title: 'What do you remember?', desc: 'Working directory, notes and last results', prompt: '/memory' },
+  { code: 'DIAG // SYS_HEALTH', icon: 'monitor', title: 'System Health Audit', desc: '/doctor · cpu, ram, storage, systemd', prompt: '/doctor' },
+  { code: 'NET // PORT_AUDIT', icon: 'network', title: 'Open Socket Radar', desc: 'ss -tulpn · inspect listening daemon ports', prompt: 'check listening ports' },
+  { code: 'SEC // SSH_KEYSMITH', icon: 'key', title: 'Ed25519 Key Forge', desc: 'generate hardened OpenSSH auth keypair', prompt: SSH_KEY_PROMPT },
+  { code: 'MEM // CONTEXT_LEDGER', icon: 'memory', title: 'Active State & Ledger', desc: '/memory · session notes & active runbooks', prompt: '/memory' },
 ];
 
 const QUICK_ACTIONS = [
-  { icon: 'monitor', title: 'System doctor', desc: 'Full health audit', prompt: '/doctor' },
-  { icon: 'list', title: 'Top processes', desc: 'By CPU and memory', prompt: '/procs' },
-  { icon: 'network', title: 'Listening ports', desc: 'Sockets and owners', prompt: 'check listening ports' },
-  { icon: 'package', title: 'Docker containers', desc: 'Running and stopped', prompt: 'check docker containers' },
-  { icon: 'wrench', title: 'Dev tool versions', desc: 'python, node, git and more', prompt: 'check installed tools versions' },
-  { icon: 'key', title: 'New SSH key', desc: 'Ed25519, OpenSSH format', prompt: SSH_KEY_PROMPT },
+  { code: 'SYS // DOCTOR', icon: 'monitor', title: 'Doctor Audit', desc: 'Full systemd & hardware diagnosis', prompt: '/doctor' },
+  { code: 'PROC // TOP_LOAD', icon: 'list', title: 'Process Telemetry', desc: 'Active CPU/RSS memory hogs', prompt: '/procs' },
+  { code: 'NET // SOCKETS', icon: 'network', title: 'Listening Ports', desc: 'Inspect listening sockets & bindings', prompt: 'check listening ports' },
+  { code: 'CONT // DOCKER', icon: 'package', title: 'Docker Containers', desc: 'Daemon container fleet status', prompt: 'check docker containers' },
+  { code: 'ENV // TOOLCHAINS', icon: 'wrench', title: 'Runtime Manifest', desc: 'python, node, git, rust toolchains', prompt: 'check installed tools versions' },
+  { code: 'SEC // SSH_KEY', icon: 'key', title: 'Generate SSH Key', desc: 'Hardened Ed25519 OpenSSH pair', prompt: SSH_KEY_PROMPT },
 ];
 
 const SLASH_MENU = [
@@ -638,13 +638,14 @@ class TchikoRCApp {
     $('btn-settings-unpair').addEventListener('click', () => this._unpairDevice());
   }
 
-  _makeTile({ icon, title, desc, prompt }) {
+  _makeTile({ icon, title, desc, prompt, code }) {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'action-tile';
     btn.innerHTML = `
       <span class="tile-icon">${iconSvg(icon, 16)}</span>
       <span class="tile-text">
+        ${code ? `<span class="tile-code">${code}</span>` : ''}
         <span class="tile-title">${title}</span>
         <span class="tile-desc">${desc}</span>
       </span>
