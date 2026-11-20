@@ -22,13 +22,14 @@
 
 1. [Executive Summary](#1-executive-summary)
 2. [System Architecture & Execution Pipeline](#2-system-architecture--execution-pipeline)
-3. [Repository Structure](#3-repository-structure)
-4. [Deep-Dive: Core Engineering Subsystems](#4-deep-dive-core-engineering-subsystems)
-5. [Desktop Interaction Matrix](#5-desktop-interaction-matrix)
-6. [Installation, Self-Test & Usage](#6-installation-self-test--usage)
-7. [Built-In Slash Commands & Natural-Language Sysadmin Playbook](#7-built-in-slash-commands--natural-language-sysadmin-playbook)
-8. [Security & Permission Governance (`ConfigManager`)](#8-security--permission-governance-configmanager)
-9. [Contributing, Governance & License](#9-contributing-governance--license)
+3. [Tchiko RC — Encrypted Remote Control & Tchiko Sigil](#3-tchiko-rc--encrypted-remote-control--tchiko-sigil)
+4. [Repository Structure](#4-repository-structure)
+5. [Deep-Dive: Core Engineering Subsystems](#5-deep-dive-core-engineering-subsystems)
+6. [Desktop Interaction Matrix](#6-desktop-interaction-matrix)
+7. [Installation, Self-Test & Usage](#7-installation-self-test--usage)
+8. [Built-In Slash Commands & Natural-Language Sysadmin Playbook](#8-built-in-slash-commands--natural-language-sysadmin-playbook)
+9. [Security & Permission Governance (`ConfigManager`)](#9-security--permission-governance-configmanager)
+10. [Contributing, Governance & License](#10-contributing-governance--license)
 
 ---
 
@@ -39,6 +40,7 @@
 1. **A 5-Tier Autonomous Agent Engine (`tchiko/agent_engine.py`)** capable of multi-step root-cause investigation, log & stack-trace analysis, X.509 certificate auditing, automated binary/source patching with `.bak` rollback safety, OpenSSH key lifecycle management, and real-time NDJSON IPC streaming with `agy`.
 2. **A Deterministic & ReAct Linux System Toolkit (`tchiko/system_tools.py`)** providing direct `/proc` telemetry, line-numbered file inspection (`view_file_lines`), minified-bundle-aware regex search (`grep_files`), atomic file patching (`patch_file_content`), and a 6-step **Autonomous Application Crash Doctor (`diagnose_and_heal_app`)**.
 3. **A 60 FPS Parametric Cairo Vector & Spring-Jelly Physics Renderer (`tchiko/svg_ghost_renderer.py`)** that renders Tchiko procedurally using closed cubic Bézier splines (32 fur puffs, 4 articulated multi-layered wings, 6 animated paws) with area-conserving Hooke's law squash-and-stretch dynamics (`squish_x`, `squish_y`), exported identically to both `GdkPixbuf` surfaces and standalone SVG assets.
+4. **Tchiko RC (`rc/`, `tchiko/remote/`)**: A pure HTML5/CSS/vanilla JS remote control web app that brings full Tchiko Desktop parity to any browser or phone over an end-to-end encrypted channel (`ECDH P-256 + HKDF + HMAC + AES-256-GCM` with 6-digit visual Safety Code), paired in one step via the circular **Tchiko Sigil** pattern or one-step link.
 
 ---
 
@@ -119,11 +121,38 @@ sequenceDiagram
 
 ---
 
-## 3. Repository Structure
+## 3. Tchiko RC — Encrypted Remote Control & Tchiko Sigil
+
+**Tchiko RC** (`rc/`, `tchiko/remote/`) is a pure HTML5, CSS, and vanilla ES-module web application allowing you to control Tchiko Desktop remotely from any smartphone, tablet, or browser on your local network with **full desktop parity**.
+
+```text
+┌─────────────────────────────────┐           WebSocket / TLS           ┌─────────────────────────────────┐
+│         Tchiko Desktop          │  ◄────────────────────────────────► │            Tchiko RC            │
+│       (tchiko/remote/)          │     ECDH P-256 + HKDF + HMAC       │         (rc/ pure JS)           │
+│  • HTTPS/WSS asyncio server     │         AES-256-GCM Frames          │  • Zero-framework web app       │
+│  • Single-use Tchiko Sigil (120s│      Monotonic 64-bit Counters      │  • Tchiko Sigil camera scanner  │
+│  • Single active client rule    │       6-Digit Visual Safety Code    │  • WebCrypto SubtleChannel      │
+└─────────────────────────────────┘                                     └─────────────────────────────────┘
+```
+
+### Key Engineering Features
+1. **One-Step Tchiko Sigil Pairing**: A 192-bit circular data pattern drawn around the Tchiko mascot face (16-byte payload + CRC-16 + 6-byte Reed-Solomon parity over GF(256)) that fixes up to 3 corrupted bytes. Pair by scanning with your camera, uploading/dropping a screenshot, or copying the `#pair=<token>` one-step link.
+2. **Zero-Trust End-to-End Encryption**:
+   - Ephemeral **ECDH P-256** key exchange on every connection.
+   - **HKDF-SHA256** session key derivation with mutual HMAC-SHA256 transcript binding.
+   - **AES-256-GCM** authenticated framing with strict monotonic 64-bit per-direction counters (replays, drops, and reordering instantly terminate the session).
+   - **6-Digit Visual Safety Code** displayed simultaneously on both the desktop window and remote client to verify against MITM attacks.
+3. **Single Active Client Enforcement**: Strictly **one** client can be connected at a time. Authenticating a new client immediately disconnects the previous one with close code `4009`. Unpairing on desktop or remote invalidates saved credentials permanently.
+4. **Full Feature Parity**: Real-time streaming Chat with inline command approvals, live `/proc` CPU/RAM/Disk telemetry with SVG ring gauges, Activity timeline, RBAC permissions toggle, and an animated SVG BoopFace companion matching all desktop coat themes and moods.
+5. **Headless Server Mode**: Run on headless Linux servers via `python3 main.py --remote --rc-port 8765`.
+
+---
+
+## 4. Repository Structure
 
 ```text
 Tchiko-Assistant-Sysadmin-companion/
-├── main.py                        # CLI entry point, X11/Wayland bootstrap, --self-test runner & GTK lifecycle
+├── main.py                        # CLI entry point, X11/Wayland bootstrap, --remote mode & GTK lifecycle
 ├── run_tchiko.sh                  # Zero-config launcher (provisions .venv with --system-site-packages)
 ├── pyproject.toml                 # PEP 621 package metadata, console_scripts, ruff/mypy/pytest config
 ├── Makefile                       # Developer workflow targets (run, test, doctor, export-svg, clean)
@@ -143,7 +172,30 @@ Tchiko-Assistant-Sysadmin-companion/
 │   ├── settings_window.py         # RBAC permission control panel & visual physics customizer
 │   ├── ui_theme.py                # Unified graphite/crimson GTK3 design system, tokens & Markdown->Pango renderer
 │   ├── skills_loader.py           # Pluggable Markdown/YAML-frontmatter skills & runbooks loader
-│   └── watchdog.py                # Proactive background anomaly detector (RAM/Disk/systemd)
+│   ├── watchdog.py                # Proactive background anomaly detector (RAM/Disk/systemd)
+│   └── remote/                    # Tchiko RC Encrypted Remote Control Subsystem
+│       ├── __init__.py            # Protocol constants (PROTOCOL_VERSION = 1)
+│       ├── crypto.py              # ECDH P-256, HKDF-SHA256, AES-256-GCM SecureChannel (native + pure-Python fallback)
+│       ├── sigil.py               # Tchiko Sigil generator, GF(256) Reed-Solomon FEC, CRC-16 & SVG renderer
+│       ├── server.py              # Zero-dependency asyncio HTTPS + WebSocket RFC 6455 server & self-signed TLS
+│       ├── service.py             # RemoteControlService: 120s sigil sessions, single-connection manager & engine bridge
+│       └── pair_window.py         # GTK3 pairing window with live countdown, HiDPI Sigil, Safety Code & controls
+│
+├── rc/                            # Pure HTML/CSS/Vanilla JS Remote Web App
+│   ├── index.html                 # Single Page Application container
+│   ├── manifest.webmanifest       # PWA manifest
+│   ├── css/
+│   │   └── rc.css                 # Responsive stylesheet matching Tchiko Desktop design tokens
+│   ├── js/
+│   │   ├── app.js                 # SPA controller (Chat, System Studio, Activity, Settings, Security Modal)
+│   │   ├── boopface.js            # Animated SVG BoopFace mascot (all 4 coats & 9 moods)
+│   │   ├── channel.js             # WebCrypto SubtleChannel & TchikoChannel WebSocket client
+│   │   ├── markdown.js            # XSS-safe DOM markdown streaming renderer
+│   │   ├── scanner.js             # Camera scanner, drag-and-drop/paste image decoder & #pair= token consumer
+│   │   ├── sigil.js               # Circular Tchiko Sigil decoder (affine fit, rotation search, Berlekamp-Massey)
+│   │   └── ui.js                  # SVG icon registry, RingGauge, copy toast & status banners
+│   └── assets/
+│       └── tchiko-icon.svg        # App icon
 │
 ├── skills/                        # Domain-specific sysadmin runbooks (auto-matched & /skills)
 │   ├── nginx-tls-audit.md         # Nginx reverse-proxy, TLS 1.3 & HSTS audit runbook
@@ -153,13 +205,21 @@ Tchiko-Assistant-Sysadmin-companion/
 │
 ├── config/
 │   ├── settings.json              # Persisted runtime settings, RBAC capabilities & window coordinates
+│   ├── rc_pair.json               # Paired client credentials (0600, single device, gitignored)
 │   └── agent_memory.json          # Auto-managed conversational memory, cwd, notes & agy_conversation_id
 │
 ├── docs/
 │   └── ARCHITECTURE.md            # Deep engineering specification (physics math, IPC schema, security model)
 │
 ├── tests/
-│   └── test_engine_and_tools.py   # Automated unit & integration test suite (unittest / pytest compatible)
+│   ├── test_engine_and_tools.py   # Unit & integration test suite (toolkit, agent, skills, watchdog)
+│   ├── test_remote_crypto.py      # Crypto unit tests (native vs pure-Python, curve validation, replay rejection)
+│   ├── test_remote_sigil.py       # Sigil encoding, SVG structure & Reed-Solomon error correction tests
+│   ├── test_remote_e2e.py         # Full-stack HTTPS/WSS + Node.js WebCrypto E2E integration test
+│   └── rc/
+│       ├── e2e_channel.test.mjs   # Real JS TchikoChannel <-> Python RemoteControlService E2E suite
+│       ├── render_sigils.py       # Sigil test image generator (warped, rotated, noisy, sheared)
+│       └── sigil_decode.test.mjs  # Visual decoder accuracy suite (14/14 warped cases)
 │
 ├── assets/                        # Procedurally exported desktop SVGs & raster previews
 │   ├── tchiko-logo.svg            # Canonical idle pose vector exported directly by SvgGhostRenderer
@@ -173,7 +233,7 @@ Tchiko-Assistant-Sysadmin-companion/
 
 ---
 
-## 4. Deep-Dive: Core Engineering Subsystems
+## 5. Deep-Dive: Core Engineering Subsystems
 
 ### 4.1. Antigravity CLI (`agy`) Real-Time NDJSON Stream Bridge
 When `~/.local/bin/agy` (or `agy` in `PATH`) is available, [`TchikoAgentEngine._run_agy_cli_stream_json()`](tchiko/agent_engine.py) spawns a non-blocking subprocess:
@@ -209,7 +269,7 @@ Unlike sprite-based desktop pets that rely on static PNG frames, [`SvgGhostRende
 
 ---
 
-## 5. Desktop Interaction Matrix
+## 6. Desktop Interaction Matrix
 
 | Input / Gesture | Target Surface | System Behavior |
 | :--- | :--- | :--- |
@@ -219,14 +279,14 @@ Unlike sprite-based desktop pets that rely on static PNG frames, [`SvgGhostRende
 | **Left-Click + Drag** | Floating Tchiko Avatar | Repositions Tchiko across the X11/XWayland root window with velocity-coupled leg-dangle physics and persists `(position_x, position_y)` to `config/settings.json`. |
 | **Cursor Hover / Rubbing** | Floating Tchiko Avatar | Accumulates `_pet_rub_energy`; transitions Tchiko into the `love` state with musical chirp particles (`♪`) once rub threshold is reached. |
 | **Scroll Wheel Up / Down** | Floating Tchiko Avatar | Cycles deterministically through all procedural emotion states. |
-| **Double Left-Click / Right-Click** | Floating Tchiko Avatar | Opens **Tchiko Settings & System Permissions** (`⚙️`), **Diagnose Clipboard**, or the quick sysadmin context menu. |
+| **Double Left-Click / Right-Click** | Floating Tchiko Avatar | Opens **Tchiko Settings & System Permissions** (`⚙️`), **Remote Control (Tchiko RC)…**, **Diagnose Clipboard**, or the quick sysadmin context menu. |
 | **Drag & Drop (File / Dir / Text)** | Floating Tchiko Avatar | Dropping a `.log`/`.dmp` analyzes crash traces; dropping a script audits it; dropping a directory switches `cwd`. |
 
 ---
 
-## 6. Installation, Self-Test & Usage
+## 7. Installation, Self-Test & Usage
 
-### 6.1. System Requirements (Ubuntu 22.04 / 24.04 / 25.10)
+### 7.1. System Requirements (Ubuntu 22.04 / 24.04 / 25.10)
 Tchiko uses Ubuntu's native system `python3-gi` and `python3-cairo` bindings for zero-overhead GTK3 compositing:
 
 ```bash
@@ -234,7 +294,7 @@ sudo apt update && sudo apt install -y \
     python3 python3-venv python3-gi python3-gi-cairo gir1.2-gtk-3.0 xclip
 ```
 
-### 6.2. Clone, Verify & Launch
+### 7.2. Clone, Verify & Launch
 
 ```bash
 # 1. Clone the repository
@@ -244,14 +304,14 @@ cd Tchiko-Assistant-Sysadmin-companion
 # 2. Run the automated verification suite (ConfigManager, LinuxSystemToolkit, AgentEngine, Cairo SVG pipeline)
 python3 main.py --self-test
 
-# 3. Run the unit & integration test suite
+# 3. Run the unit & integration test suite (including Tchiko RC crypto, sigil & E2E channel tests)
 python3 -m unittest discover -s tests -v
 
 # 4. Launch the floating desktop companion
 ./run_tchiko.sh
 ```
 
-### 6.3. Command-Line Interface Flags
+### 7.3. Command-Line Interface Flags
 
 ```bash
 python3 main.py --help
@@ -259,11 +319,16 @@ python3 main.py --help
 #   --self-test      Run automated self-tests, verify Linux toolkit, and export canonical SVGs without opening GUI
 #   --open-chat      Open the full Tchiko Chat & System Studio window alongside the floating companion on startup
 #   --open-settings  Open the Tchiko Settings & RBAC Permissions window on startup
+#   --open-remote    Open the Tchiko RC pairing window on startup
+#   --remote         Run Tchiko RC in headless server mode without launching the GTK desktop UI
+#   --rc-port PORT   TCP port for the Tchiko RC HTTPS/WSS server (default: 8765)
+#   --rc-no-tls      Disable TLS in headless --remote mode (only for localhost / reverse-proxy setups)
+#   --sigil-out PATH Optional path to write the Tchiko Sigil SVG in --remote mode
 ```
 
 ---
 
-## 7. Built-In Slash Commands & Natural-Language Sysadmin Playbook
+## 8. Built-In Slash Commands & Natural-Language Sysadmin Playbook
 
 | Command / Natural Prompt | Execution Tier | Action Performed |
 | :--- | :--- | :--- |
@@ -283,7 +348,7 @@ python3 main.py --help
 
 ---
 
-## 8. Security & Permission Governance (`ConfigManager`)
+## 9. Security & Permission Governance (`ConfigManager`)
 
 All host interactions in [`LinuxSystemToolkit`](tchiko/system_tools.py) are gated by [`ConfigManager`](tchiko/config_manager.py), which maintains bi-directional synchronization between [`config/settings.json`](config/settings.json) and [`antigravity.yaml`](antigravity.yaml):
 
@@ -294,7 +359,7 @@ All host interactions in [`LinuxSystemToolkit`](tchiko/system_tools.py) are gate
 
 ---
 
-## 9. Contributing, Governance & License
+## 10. Contributing, Governance & License
 
 Contributions are warmly welcomed! Please review our community & engineering guides before opening a Pull Request:
 
