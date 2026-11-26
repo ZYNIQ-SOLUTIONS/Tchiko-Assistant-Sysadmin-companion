@@ -3,7 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#0d0e11" />
+  <meta name="theme-color" content="#08090d" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <title>Tchiko RC — Encrypted Remote Control</title>
   <link rel="icon" type="image/svg+xml" href="assets/tchiko-icon.svg" />
   <link rel="manifest" href="manifest.webmanifest" />
@@ -20,12 +23,12 @@
           <div id="pair-boopface"></div>
         </div>
         <span class="rc-badge">
-          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
           Tchiko RC
         </span>
-        <h1 class="display">Tele-Command Link</h1>
+        <h1 class="display">Tchiko Companion</h1>
         <p class="pair-subtitle">
-          Optical cryptographic handshake. Scan the active Tchiko Sigil from your desktop companion to establish an isolated E2E session.
+          Scan the live Tchiko Sigil on your desktop to open a direct, end-to-end encrypted control session.
         </p>
       </div>
 
@@ -36,23 +39,8 @@
         </div>
         <div class="saved-pair-actions">
           <button id="btn-resume-saved" type="button" class="btn btn-primary btn-sm">Reconnect</button>
-          <button id="btn-forget-saved" type="button" class="btn btn-sm">Forget</button>
+          <button id="btn-forget-saved" type="button" class="btn btn-ghost btn-sm">Forget</button>
         </div>
-      </div>
-
-      <div id="pair-dropzone" class="pair-dropzone">
-        <div class="pair-actions">
-          <button id="btn-scan-sigil" type="button" class="btn btn-primary">
-            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-            Scan Optical Sigil
-          </button>
-          <button id="btn-upload-sigil" type="button" class="btn">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            Load Sigil Image
-          </button>
-        </div>
-        <input id="sigil-file-input" type="file" accept="image/*" hidden />
-        <p class="pair-hint">Drop cryptographic sigil token or press <kbd>Ctrl+V</kbd></p>
       </div>
 
       <div id="pair-busy" class="pair-busy" hidden>
@@ -62,25 +50,57 @@
 
       <div id="pair-error" class="pair-error" role="alert" hidden></div>
 
+      <div id="pair-dropzone" class="pair-dropzone">
+        <div class="pair-actions">
+          <button id="btn-scan-sigil" type="button" class="btn btn-primary btn-lg">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            Scan Optical Sigil
+          </button>
+          <button id="btn-upload-sigil" type="button" class="btn btn-lg">
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Upload Sigil Image
+          </button>
+        </div>
+        <input id="sigil-file-input" type="file" accept="image/*" hidden />
+        <p class="pair-hint">Drop a sigil image here or press <kbd>Ctrl+V</kbd> to paste</p>
+      </div>
+
       <div class="pair-security-strip">
         <span>
-          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></svg>
-          ECDH P-256 + AES-256-GCM
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></svg>
+          ECDH P-256 · AES-256-GCM
         </span>
-        <span>Single active connection</span>
-        <span>One-time sigil</span>
+        <span>Exclusive 1:1 link</span>
+        <span>Zero cloud relay</span>
       </div>
     </section>
   </main>
 
   <!-- Live Camera Viewfinder Overlay -->
   <div id="scanner-overlay" class="scanner-overlay" hidden>
+    <div class="scanner-top">
+      <button id="btn-close-scanner" type="button" class="scanner-pill-btn" aria-label="Close scanner">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        Close
+      </button>
+      <span class="scanner-live-pill">
+        <span class="scanner-live-dot"></span>
+        Optical Sigil
+      </span>
+    </div>
+
     <div class="scanner-viewport">
       <video id="scanner-video" class="scanner-video" muted playsinline></video>
-      <div class="scanner-reticle"></div>
+      <div class="scanner-scrim"></div>
+      <div class="scanner-reticle" aria-hidden="true">
+        <span class="reticle-ring"></span>
+      </div>
     </div>
-    <p id="scanner-state" class="scanner-caption">Align the Tchiko Sigil inside the ring</p>
-    <button id="btn-close-scanner" type="button" class="btn">Cancel</button>
+
+    <div class="scanner-bottom">
+      <p id="scanner-state" class="scanner-caption">Align the Tchiko Sigil inside the ring</p>
+      <span class="scanner-subcaption">Auto-detects · ECDH P-256 handshake</span>
+    </div>
   </div>
 
   <!-- ═══════════════════════════════════════════════════════════════════════
@@ -100,20 +120,39 @@
       </div>
 
       <nav class="segmented" aria-label="Workspace views">
-        <button type="button" data-nav="chat" class="active">Chat</button>
-        <button type="button" data-nav="system">System</button>
-        <button type="button" data-nav="activity">Activity</button>
-        <button type="button" data-nav="settings">Settings</button>
+        <button type="button" data-nav="chat" class="active">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <span>Chat</span>
+        </button>
+        <button type="button" data-nav="system">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h4l3-9 4 18 3-9h4"/></svg>
+          <span>System</span>
+        </button>
+        <button type="button" data-nav="experiences">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          <span>Experiences</span>
+        </button>
+        <button type="button" data-nav="activity">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          <span>Activity</span>
+        </button>
+        <button type="button" data-nav="settings">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span>Settings</span>
+        </button>
       </nav>
 
       <div class="topbar-right">
-        <button id="btn-security-pill" type="button" class="pill security-pill" title="Encrypted channel details &amp; safety code">
-          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          E2E
+        <button id="btn-perm-pill" type="button" class="pill ok" title="Permission mode">
+          <span class="perm-dot"></span>
+          <span class="perm-label">Full</span>
         </button>
-        <button id="btn-perm-pill" type="button" class="pill ok" title="Permission mode">●  Full access</button>
-        <button id="btn-new-chat" type="button" class="icon-btn" title="New chat">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <button id="btn-security-pill" type="button" class="pill security-pill" title="Encrypted channel details &amp; safety code">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <span class="sec-label">E2E</span>
+        </button>
+        <button id="btn-new-chat" type="button" class="icon-btn" title="New chat" aria-label="New chat">
+          <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         </button>
       </div>
     </header>
@@ -127,9 +166,9 @@
               <div class="welcome-crt">
                 <div id="welcome-boopface"></div>
               </div>
-              <h2 class="display">Tchiko // Linux Sysadmin Companion</h2>
+              <h2 class="display">Ready on your desktop</h2>
               <p class="sub">
-                Autonomous desktop operations &amp; encrypted remote control. Direct shell diagnostics, system maintenance, and workload management.
+                Direct Linux diagnostics, shell automation, and live workload control over an encrypted tunnel.
               </p>
               <div id="starter-grid" class="starter-grid"></div>
             </div>
@@ -139,47 +178,52 @@
 
         <div id="approval-banner" class="approval-wrap" hidden>
           <div class="approval-banner">
-            <span class="approval-icon">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-            </span>
-            <div class="approval-body">
-              <div class="approval-title">PRIVILEGED COMMAND AUTHORIZATION</div>
-              <div id="approval-cmd" class="approval-cmd mono"></div>
+            <div class="approval-head">
+              <span class="approval-icon">
+                <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              </span>
+              <div class="approval-title">Command Approval Required</div>
             </div>
+            <div id="approval-cmd" class="approval-cmd mono"></div>
             <div class="approval-actions">
               <button id="btn-approve-deny" type="button" class="btn btn-sm">Deny</button>
-              <button id="btn-approve-always" type="button" class="btn btn-sm">Authorize All</button>
-              <button id="btn-approve-run" type="button" class="btn btn-primary btn-sm">Authorize</button>
+              <button id="btn-approve-always" type="button" class="btn btn-sm">Allow All</button>
+              <button id="btn-approve-run" type="button" class="btn btn-primary btn-sm">Approve</button>
             </div>
           </div>
         </div>
+
+        <div id="sheet-backdrop" class="sheet-backdrop" hidden></div>
 
         <div class="composer-dock">
           <div class="composer-inner">
             <div id="slash-popover" class="popover left" hidden></div>
             <div id="mood-popover" class="popover right" hidden></div>
 
+            <div class="composer-meta-row">
+              <span class="cwd-chip">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                <span id="composer-cwd" class="composer-cwd mono">~</span>
+              </span>
+              <span class="hint-shortcuts"><strong>Enter</strong> send · <strong>$</strong> shell · <strong>/help</strong></span>
+            </div>
+
             <div id="composer-box" class="composer-box">
-              <button id="btn-slash-menu" type="button" class="icon-btn" title="Quick commands">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+              <button id="btn-slash-menu" type="button" class="icon-btn composer-tool-btn" title="Quick commands" aria-label="Quick commands">
+                <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
               </button>
               <textarea
                 id="prompt-input"
                 class="prompt-input"
                 rows="1"
-                placeholder="Execute sysadmin command, runbook or prompt… (e.g. /doctor, /sysinfo, /run)"
+                placeholder="Ask Tchiko or run a command…"
               ></textarea>
-              <button id="btn-mood-menu" type="button" class="icon-btn" title="Make Tchiko do a trick">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+              <button id="btn-mood-menu" type="button" class="icon-btn composer-tool-btn" title="Companion moods" aria-label="Companion moods">
+                <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
               </button>
-              <button id="btn-send" type="button" class="send-btn" title="Send (Enter)" disabled>
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+              <button id="btn-send" type="button" class="send-btn" title="Send (Enter)" aria-label="Send message" disabled>
+                <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
               </button>
-            </div>
-
-            <div class="composer-hints">
-              <span class="hint-shortcuts"><strong>Enter</strong> to send · <strong>$</strong> runs a shell command · <strong>/help</strong> lists commands</span>
-              <span id="composer-cwd" class="composer-cwd mono">~</span>
             </div>
           </div>
         </div>
@@ -189,51 +233,162 @@
       <section id="view-system" class="view-panel" hidden>
         <div class="page-scroll">
           <div class="page-column">
-            <div>
-              <h2 id="sys-hostname" class="display">—</h2>
-              <p id="sys-sub" class="dim">—</p>
+            <div class="page-head">
+              <div class="page-head-text">
+                <h2 id="sys-hostname" class="display">—</h2>
+                <p id="sys-sub" class="dim">—</p>
+              </div>
+              <button id="btn-refresh-telemetry" type="button" class="icon-btn refresh-btn" title="Refresh telemetry" aria-label="Refresh telemetry">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg>
+              </button>
             </div>
 
             <div class="gauges-grid">
-              <div class="card card-pad gauge-card">
-                <div id="gauge-cpu"></div>
+              <div class="card gauge-card">
+                <div id="gauge-cpu" class="gauge-ring-wrap"></div>
                 <div class="gauge-meta">
-                  <span class="caption">CPU LOAD</span>
+                  <span class="caption">CPU</span>
                   <span id="val-cpu" class="gauge-val">—</span>
-                  <span id="det-cpu" class="dim"></span>
+                  <span id="det-cpu" class="gauge-det dim"></span>
                 </div>
               </div>
-              <div class="card card-pad gauge-card">
-                <div id="gauge-ram"></div>
+              <div class="card gauge-card">
+                <div id="gauge-ram" class="gauge-ring-wrap"></div>
                 <div class="gauge-meta">
-                  <span class="caption">MEMORY</span>
+                  <span class="caption">RAM</span>
                   <span id="val-ram" class="gauge-val">—</span>
-                  <span id="det-ram" class="dim"></span>
+                  <span id="det-ram" class="gauge-det dim"></span>
                 </div>
               </div>
-              <div class="card card-pad gauge-card">
-                <div id="gauge-disk"></div>
+              <div class="card gauge-card">
+                <div id="gauge-disk" class="gauge-ring-wrap"></div>
                 <div class="gauge-meta">
-                  <span class="caption">DISK · HOME</span>
+                  <span class="caption">DISK</span>
                   <span id="val-disk" class="gauge-val">—</span>
-                  <span id="det-disk" class="dim"></span>
+                  <span id="det-disk" class="gauge-det dim"></span>
                 </div>
               </div>
             </div>
 
             <label class="card card-pad access-card">
-              <span class="tile-icon">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></svg>
+              <span class="tile-icon accent-ico">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></svg>
               </span>
               <span class="access-card-text">
                 <span class="pref-title">Full system access</span>
-                <span class="pref-desc">Run commands, edit files and manage services without asking each time.</span>
+                <span class="pref-desc">Run commands, edit files, and manage services without prompting.</span>
               </span>
               <input id="sys-full-access" type="checkbox" class="tchiko-switch" />
             </label>
 
-            <span class="caption">QUICK ACTIONS</span>
+            <div class="section-label-row">
+              <span class="caption">Quick Actions</span>
+            </div>
             <div id="quick-actions-grid" class="quick-actions-grid"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── EXPERIENCES VIEW ────────────────────────────────────────────── -->
+      <section id="view-experiences" class="view-panel" hidden>
+        <div class="page-scroll">
+          <div class="page-column">
+            <div class="page-head">
+              <div class="page-head-text">
+                <h2 class="display">Experiences</h2>
+                <p class="dim">Self-learned Python tools distilled from tasks and verified in sandbox.</p>
+              </div>
+              <div class="exp-head-actions">
+                <button id="btn-exp-learn" type="button" class="btn btn-primary btn-sm">Learn Last Task</button>
+                <button id="btn-exp-refresh" type="button" class="icon-btn" title="Refresh experiences" aria-label="Refresh experiences">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="exp-kpi-grid">
+              <div class="card exp-kpi-card">
+                <span class="caption">Learned Tools</span>
+                <span id="exp-kpi-total" class="gauge-val">0</span>
+                <span id="exp-kpi-breakdown" class="gauge-det dim">0 hardened · 0 verified</span>
+              </div>
+              <div class="card exp-kpi-card">
+                <span class="caption">Total Runs</span>
+                <span id="exp-kpi-runs" class="gauge-val">0</span>
+                <span id="exp-kpi-recoveries" class="gauge-det dim">0 self-recoveries</span>
+              </div>
+              <div class="card exp-kpi-card exp-kpi-rate-card">
+                <div id="exp-rate-gauge" class="exp-rate-wrap"></div>
+                <div class="gauge-meta">
+                  <span class="caption">Success Rate</span>
+                  <span id="exp-kpi-rate" class="gauge-val">100%</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="card exp-curve-card">
+              <div class="exp-curve-head">
+                <span class="caption">Learning Curve</span>
+                <div class="exp-legend">
+                  <span><i class="dot dot-accent"></i>Tools</span>
+                  <span><i class="dot dot-success"></i>Success %</span>
+                </div>
+              </div>
+              <div id="exp-curve-svg" class="exp-curve-svg"></div>
+            </div>
+
+            <div class="exp-filter-bar">
+              <input id="exp-search" type="search" class="exp-search" placeholder="Search experiences, slugs, triggers…" />
+              <div class="exp-filter-pills" role="tablist" aria-label="Filter experiences by maturity">
+                <button type="button" class="exp-filter-btn active" data-exp-filter="ALL">All</button>
+                <button type="button" class="exp-filter-btn" data-exp-filter="HARDENED">Hardened</button>
+                <button type="button" class="exp-filter-btn" data-exp-filter="VERIFIED">Verified</button>
+                <button type="button" class="exp-filter-btn" data-exp-filter="DRAFT">Draft</button>
+                <button type="button" class="exp-filter-btn" data-exp-filter="NEEDS_REPAIR">Repair</button>
+              </div>
+            </div>
+
+            <div class="exp-split">
+              <div id="exp-list" class="card exp-list-card"></div>
+
+              <div class="exp-inspector-col">
+                <div class="card card-pad exp-detail-card">
+                  <div class="exp-detail-head">
+                    <span id="exp-insp-title" class="section-title">Select an Experience</span>
+                    <span id="exp-insp-badge" class="exp-badge"></span>
+                  </div>
+                  <p id="exp-insp-desc" class="pref-desc">Pick a learned Python tool to inspect its script, runs, and evolution.</p>
+                  <div id="exp-insp-meta" class="exp-meta mono"></div>
+                  <div class="exp-actions-bar">
+                    <button id="btn-exp-run" type="button" class="btn btn-primary btn-sm" disabled>Run</button>
+                    <button id="btn-exp-dry" type="button" class="btn btn-sm" disabled>Dry-Run</button>
+                    <button id="btn-exp-approve" type="button" class="btn btn-sm" disabled>Harden</button>
+                    <button id="btn-exp-toggle" type="button" class="btn btn-sm" disabled>Disable</button>
+                    <button id="btn-exp-rollback" type="button" class="btn btn-sm" disabled>Rollback</button>
+                    <button id="btn-exp-delete" type="button" class="btn btn-danger btn-sm" disabled>Delete</button>
+                  </div>
+                  <div id="exp-run-output" class="exp-output-box" hidden>
+                    <span id="exp-run-output-title" class="caption"></span>
+                    <pre id="exp-run-output-body" class="mono"></pre>
+                  </div>
+                </div>
+
+                <div class="card exp-code-card">
+                  <div class="exp-code-head">
+                    <span id="exp-code-path" class="caption">PYTHON SCRIPT · tool.py</span>
+                    <button id="btn-exp-copy" type="button" class="icon-btn code-copy-btn" title="Copy script" aria-label="Copy script" disabled>
+                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                    </button>
+                  </div>
+                  <pre id="exp-code-view" class="exp-code-view mono"></pre>
+                </div>
+
+                <div class="card card-pad">
+                  <span class="caption">Execution History</span>
+                  <div id="exp-history-list" class="exp-history-list mono">No executions recorded yet.</div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -241,19 +396,29 @@
       <!-- ── ACTIVITY VIEW ───────────────────────────────────────────────── -->
       <section id="view-activity" class="view-panel" hidden>
         <div class="page-scroll">
-          <div class="page-column">
-            <div class="page-head">
-              <div>
-                <h2 class="display">Activity</h2>
-                <p class="dim">Every step the agent takes on your desktop, as it happens.</p>
+          <div class="activity-sticky-head">
+            <div class="activity-head-inner">
+              <div class="page-head">
+                <div class="page-head-text">
+                  <h2 class="display">Activity</h2>
+                  <p class="dim">Live trace of every step Tchiko executes on your host.</p>
+                </div>
+                <button id="btn-clear-activity" type="button" class="btn btn-sm">Clear</button>
               </div>
-              <button id="btn-clear-activity" type="button" class="btn btn-sm">Clear</button>
+              <div class="filter-bar" role="tablist" aria-label="Filter activity events">
+                <button type="button" class="filter-chip active" data-activity-filter="all">All</button>
+                <button type="button" class="filter-chip" data-activity-filter="tool">Tools</button>
+                <button type="button" class="filter-chip" data-activity-filter="think">Thoughts</button>
+              </div>
             </div>
+          </div>
+
+          <div class="page-column activity-column">
             <div class="card timeline-card">
               <div id="activity-empty" class="timeline-empty">
-                Nothing yet. Ask Tchiko something and its steps will show up here.
+                No activity yet. Send a command or prompt and live execution steps will appear here.
               </div>
-              <div id="activity-list"></div>
+              <div id="activity-list" class="timeline-list"></div>
             </div>
           </div>
         </div>
@@ -262,22 +427,22 @@
       <!-- ── SETTINGS VIEW ───────────────────────────────────────────────── -->
       <section id="view-settings" class="view-panel" hidden>
         <div class="settings-layout">
-          <aside class="settings-sidebar">
+          <aside class="settings-sidebar" aria-label="Settings sections">
             <button type="button" class="settings-nav-btn active" data-settings-tab="access">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></svg>
-              Access
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></svg>
+              <span>Access</span>
             </button>
             <button type="button" class="settings-nav-btn" data-settings-tab="agent">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/></svg>
-              Agent
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/></svg>
+              <span>Agent</span>
             </button>
             <button type="button" class="settings-nav-btn" data-settings-tab="companion">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
-              Companion
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+              <span>Companion</span>
             </button>
             <button type="button" class="settings-nav-btn" data-settings-tab="remote">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-              Remote
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <span>Remote</span>
             </button>
             <div class="settings-sidebar-note">Changes sync live with Tchiko Desktop</div>
           </aside>
@@ -285,13 +450,13 @@
           <div class="settings-content">
             <!-- Access panel -->
             <div id="settings-panel-access" class="settings-panel">
-              <div>
+              <div class="panel-intro">
                 <h2 class="display">Access</h2>
-                <p class="dim">Decide how much of your desktop Tchiko may touch, and whether it asks first.</p>
+                <p class="dim">Control what Tchiko can touch on your desktop and when it asks first.</p>
               </div>
               <label id="settings-access-hero" class="card card-pad access-card hero-ok">
-                <span class="tile-icon">
-                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></svg>
+                <span class="tile-icon accent-ico">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></svg>
                 </span>
                 <span class="access-card-text">
                   <span id="settings-hero-title" class="section-title">Full access is on</span>
@@ -300,29 +465,29 @@
                 <input id="set-master-switch" type="checkbox" class="tchiko-switch" />
               </label>
 
-              <span class="caption">CAPABILITIES</span>
+              <span class="caption">Capabilities</span>
               <div id="settings-caps-card" class="card pref-card"></div>
 
-              <span class="caption">EXECUTION POLICY</span>
+              <span class="caption">Execution Policy</span>
               <div class="card pref-card">
-                <div class="pref-row">
+                <div class="pref-row pref-row-select">
                   <span class="pref-text">
-                    <span class="pref-title">When Tchiko wants to run a tool</span>
-                    <span class="pref-desc">Applies to commands and file edits</span>
+                    <span class="pref-title">Tool execution</span>
+                    <span class="pref-desc">Applies to shell commands and file edits</span>
                   </span>
                   <select id="set-tool-policy" class="tchiko-select"></select>
                 </div>
-                <div class="pref-row">
+                <div class="pref-row pref-row-select">
                   <span class="pref-text">
-                    <span class="pref-title">Files outside the workspace</span>
-                    <span class="pref-desc">Anything beyond the working directory</span>
+                    <span class="pref-title">Outside workspace</span>
+                    <span class="pref-desc">Files beyond the active directory</span>
                   </span>
                   <select id="set-file-access" class="tchiko-select"></select>
                 </div>
-                <div class="pref-row">
+                <div class="pref-row pref-row-select">
                   <span class="pref-text">
                     <span class="pref-title">Internet access</span>
-                    <span class="pref-desc">Downloads, package indexes and web requests</span>
+                    <span class="pref-desc">Downloads, package indexes, and web calls</span>
                   </span>
                   <select id="set-net-access" class="tchiko-select"></select>
                 </div>
@@ -338,13 +503,13 @@
 
             <!-- Agent panel -->
             <div id="settings-panel-agent" class="settings-panel" hidden>
-              <div>
+              <div class="panel-intro">
                 <h2 class="display">Agent</h2>
-                <p class="dim">The model that plans and carries out your requests.</p>
+                <p class="dim">Choose the reasoning model powering your desktop companion.</p>
               </div>
-              <span class="caption">MODEL</span>
+              <span class="caption">Model</span>
               <div class="card pref-card">
-                <div class="pref-row">
+                <div class="pref-row pref-row-select">
                   <span class="pref-text">
                     <span class="pref-title">Preferred model</span>
                     <span class="pref-desc">Used by the Antigravity backend</span>
@@ -352,36 +517,68 @@
                   <select id="set-model" class="tchiko-select"></select>
                 </div>
               </div>
+
+              <span class="caption">Learning &amp; Autonomy</span>
+              <div class="card pref-card">
+                <label class="pref-row">
+                  <span class="pref-text">
+                    <span class="pref-title">Clarify ambiguous requests</span>
+                    <span class="pref-desc">Ask a quick multiple-choice question before acting when intent is unclear</span>
+                  </span>
+                  <input id="set-ask-ambiguous" type="checkbox" class="tchiko-switch" />
+                </label>
+                <label class="pref-row">
+                  <span class="pref-text">
+                    <span class="pref-title">Auto-learn experiences</span>
+                    <span class="pref-desc">Distill reusable Python tools from completed tasks automatically</span>
+                  </span>
+                  <input id="set-auto-learn" type="checkbox" class="tchiko-switch" />
+                </label>
+                <label class="pref-row">
+                  <span class="pref-text">
+                    <span class="pref-title">Auto-promote verified tools</span>
+                    <span class="pref-desc">Promote reliably passing experiences to Hardened status</span>
+                  </span>
+                  <input id="set-auto-promote" type="checkbox" class="tchiko-switch" />
+                </label>
+                <label class="pref-row">
+                  <span class="pref-text">
+                    <span class="pref-title">Auto-rollback on failure</span>
+                    <span class="pref-desc">Restore previous known-good version if a learned tool fails</span>
+                  </span>
+                  <input id="set-auto-rollback" type="checkbox" class="tchiko-switch" />
+                </label>
+              </div>
             </div>
 
             <!-- Companion panel -->
             <div id="settings-panel-companion" class="settings-panel" hidden>
-              <div>
+              <div class="panel-intro">
                 <h2 class="display">Companion</h2>
-                <p class="dim">How the floating Tchiko looks and behaves on your desktop and in Tchiko RC.</p>
+                <p class="dim">Customize how Tchiko appears on your desktop and in Tchiko RC.</p>
               </div>
-              <span class="caption">COAT</span>
+              <span class="caption">Coat</span>
               <div id="settings-coat-grid" class="coat-grid"></div>
 
-              <span class="caption">APPEARANCE</span>
+              <span class="caption">Appearance</span>
               <div class="card pref-card">
-                <div class="pref-row">
-                  <span class="pref-text"><span class="pref-title">Size</span></span>
-                  <div class="range-wrap">
-                    <input id="set-size" type="range" class="tchiko-range" min="90" max="220" step="5" value="140" />
+                <div class="pref-row pref-row-range">
+                  <div class="range-head">
+                    <span class="pref-title">Widget size</span>
                     <span id="set-size-val" class="range-val mono">140 px</span>
                   </div>
+                  <input id="set-size" type="range" class="tchiko-range" min="90" max="220" step="5" value="140" />
                 </div>
-                <div class="pref-row">
-                  <span class="pref-text"><span class="pref-title">Opacity</span></span>
-                  <div class="range-wrap">
-                    <input id="set-opacity" type="range" class="tchiko-range" min="0.4" max="1" step="0.02" value="0.96" />
+                <div class="pref-row pref-row-range">
+                  <div class="range-head">
+                    <span class="pref-title">Opacity</span>
                     <span id="set-opacity-val" class="range-val mono">96%</span>
                   </div>
+                  <input id="set-opacity" type="range" class="tchiko-range" min="0.4" max="1" step="0.02" value="0.96" />
                 </div>
               </div>
 
-              <span class="caption">BEHAVIOUR</span>
+              <span class="caption">Behaviour</span>
               <div class="card pref-card">
                 <label class="pref-row">
                   <span class="pref-text">
@@ -393,7 +590,7 @@
                 <label class="pref-row">
                   <span class="pref-text">
                     <span class="pref-title">Speech bubble</span>
-                    <span class="pref-desc">Show replies in a bubble above the desktop companion</span>
+                    <span class="pref-desc">Show replies above the desktop companion</span>
                   </span>
                   <input id="set-bubble" type="checkbox" class="tchiko-switch" />
                 </label>
@@ -402,7 +599,7 @@
 
             <!-- Remote panel -->
             <div id="settings-panel-remote" class="settings-panel" hidden>
-              <div>
+              <div class="panel-intro">
                 <h2 class="display">Remote Channel</h2>
                 <p class="dim">End-to-end encrypted single-device tunnel to Tchiko Desktop.</p>
               </div>
@@ -410,26 +607,26 @@
                 <div class="pref-row">
                   <span class="pref-text">
                     <span class="pref-title">Connected host</span>
-                    <span class="pref-desc">Verified via Tchiko Sigil mutual handshake</span>
+                    <span class="pref-desc">Verified via Tchiko Sigil handshake</span>
                   </span>
-                  <span id="remote-host-name" class="mono">—</span>
+                  <span id="remote-host-name" class="mono pref-val">—</span>
                 </div>
                 <div class="pref-row">
                   <span class="pref-text">
                     <span class="pref-title">Safety code</span>
-                    <span class="pref-desc">Should match the 6 digits shown on Tchiko Desktop</span>
+                    <span class="pref-desc">Matches the 6 digits on Tchiko Desktop</span>
                   </span>
-                  <span id="remote-safety-code" class="mono section-title">—</span>
+                  <span id="remote-safety-code" class="mono safety-inline">—</span>
                 </div>
                 <div class="pref-row">
                   <span class="pref-text">
                     <span class="pref-title">Cipher suite</span>
                     <span class="pref-desc">Ephemeral key exchange + authenticated framing</span>
                   </span>
-                  <span class="mono dim">ECDH P-256 · AES-256-GCM</span>
+                  <span class="mono dim pref-val">ECDH P-256 · AES-256-GCM</span>
                 </div>
               </div>
-              <div style="display:flex;gap:10px;flex-wrap:wrap">
+              <div class="remote-actions-row">
                 <button id="btn-settings-disconnect" type="button" class="btn">Disconnect</button>
                 <button id="btn-settings-unpair" type="button" class="btn btn-danger">Unpair this device</button>
               </div>
@@ -438,30 +635,67 @@
         </div>
       </section>
     </div>
+
+    <!-- Mobile Bottom Navigation Bar (< 768px) -->
+    <nav class="bottom-tabbar" aria-label="Mobile navigation">
+      <button type="button" class="tab-btn active" data-nav="chat">
+        <span class="tab-ico">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </span>
+        <span class="tab-label">Chat</span>
+      </button>
+      <button type="button" class="tab-btn" data-nav="system">
+        <span class="tab-ico">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h4l3-9 4 18 3-9h4"/></svg>
+        </span>
+        <span class="tab-label">System</span>
+      </button>
+      <button type="button" class="tab-btn" data-nav="experiences">
+        <span class="tab-ico">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        </span>
+        <span class="tab-label">Learn</span>
+      </button>
+      <button type="button" class="tab-btn" data-nav="activity">
+        <span class="tab-ico">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        </span>
+        <span class="tab-label">Activity</span>
+      </button>
+      <button type="button" class="tab-btn" data-nav="settings">
+        <span class="tab-ico">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </span>
+        <span class="tab-label">Settings</span>
+      </button>
+    </nav>
   </div>
 
-  <!-- Session / Safety Code Modal -->
+  <!-- Session / Safety Code Modal (Bottom Sheet on Mobile) -->
   <div id="session-modal" class="modal-backdrop" hidden>
     <div class="card modal-card" role="dialog" aria-modal="true" aria-label="Encrypted session details">
+      <div class="sheet-handle" aria-hidden="true"></div>
       <div class="modal-head">
         <span class="section-title">Encrypted Channel</span>
-        <button id="btn-close-session-modal" type="button" class="icon-btn" title="Close">✕</button>
+        <button id="btn-close-session-modal" type="button" class="icon-btn" title="Close" aria-label="Close">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
       </div>
       <div class="safety-box">
-        <div class="caption">VERIFICATION SAFETY CODE</div>
+        <div class="caption">Verification Safety Code</div>
         <div id="safety-code-value" class="safety-digits mono">—</div>
-        <div class="dim" style="font-size:12px;margin-top:4px">Confirm these 6 digits match Tchiko Desktop</div>
+        <div class="dim safety-hint">Confirm these 6 digits match Tchiko Desktop</div>
       </div>
       <div class="kv-list">
         <div class="kv-row"><span class="dim">Desktop host</span><span id="session-host-label" class="mono">—</span></div>
         <div class="kv-row"><span class="dim">Agent engine</span><span id="session-engine-label" class="mono">—</span></div>
-        <div class="kv-row"><span class="dim">Cipher</span><span class="mono">ECDH P-256 + AES-256-GCM</span></div>
+        <div class="kv-row"><span class="dim">Cipher</span><span class="mono">ECDH P-256 · AES-256-GCM</span></div>
         <div class="kv-row"><span class="dim">Channel mode</span><span class="mono">Exclusive (1 client)</span></div>
         <div class="kv-row"><span class="dim">Latency</span><span id="session-latency" class="mono">—</span></div>
       </div>
       <div class="modal-actions">
-        <button id="btn-modal-unpair" type="button" class="btn btn-danger btn-sm">Unpair</button>
-        <button id="btn-modal-disconnect" type="button" class="btn btn-sm">Disconnect</button>
+        <button id="btn-modal-disconnect" type="button" class="btn">Disconnect</button>
+        <button id="btn-modal-unpair" type="button" class="btn btn-danger">Unpair</button>
       </div>
     </div>
   </div>

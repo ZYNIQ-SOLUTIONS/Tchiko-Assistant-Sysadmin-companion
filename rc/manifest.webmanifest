@@ -4,8 +4,8 @@
   "description": "Encrypted Remote Control for Tchiko Assistant",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0d0e11",
-  "theme_color": "#0d0e11",
+  "background_color": "#08090d",
+  "theme_color": "#08090d",
   "icons": [
     {
       "src": "assets/tchiko-icon.svg",

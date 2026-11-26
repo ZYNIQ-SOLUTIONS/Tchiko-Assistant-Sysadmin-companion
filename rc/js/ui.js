@@ -26,29 +26,28 @@ export const ICONS = {
   plus: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
   warn: '<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
   disconnect: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>',
+  refresh: '<path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/>',
 };
 
 export function iconSvg(name, size = 16) {
-  return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name] || ''}</svg>`;
+  return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name] || ''}</svg>`;
 }
 
 export function levelColor(fraction) {
-  if (fraction >= 0.9) return '#e5484d';
-  if (fraction >= 0.75) return '#f5a524';
-  return '#3ecf8e';
+  if (fraction >= 0.88) return '#f43f5e';
+  if (fraction >= 0.72) return '#f59e0b';
+  return '#10b981';
 }
 
-/** Circular utilisation ring gauge matching `tchiko/ui_theme.py` RingGauge. */
+/** Responsive circular utilisation ring gauge styled for the Obsidian Glass theme. */
 export class RingGauge {
-  constructor(container, size = 76) {
+  constructor(container, size = 84) {
     const stroke = 6.5;
     const r = (size - stroke * 2) / 2;
     const c = size / 2;
     this._circ = 2 * Math.PI * r;
 
     const svg = document.createElementNS(SVG_NS, 'svg');
-    svg.setAttribute('width', String(size));
-    svg.setAttribute('height', String(size));
     svg.setAttribute('viewBox', `0 0 ${size} ${size}`);
     svg.classList.add('ring-gauge');
 
@@ -57,7 +56,7 @@ export class RingGauge {
     track.setAttribute('cy', String(c));
     track.setAttribute('r', String(r));
     track.setAttribute('fill', 'none');
-    track.setAttribute('stroke', '#262a32');
+    track.setAttribute('stroke', 'rgba(255, 255, 255, 0.08)');
     track.setAttribute('stroke-width', String(stroke));
 
     const arc = document.createElementNS(SVG_NS, 'circle');
@@ -65,22 +64,23 @@ export class RingGauge {
     arc.setAttribute('cy', String(c));
     arc.setAttribute('r', String(r));
     arc.setAttribute('fill', 'none');
-    arc.setAttribute('stroke', '#3ecf8e');
+    arc.setAttribute('stroke', '#10b981');
     arc.setAttribute('stroke-width', String(stroke));
     arc.setAttribute('stroke-linecap', 'round');
     arc.setAttribute('stroke-dasharray', String(this._circ));
     arc.setAttribute('stroke-dashoffset', String(this._circ));
     arc.setAttribute('transform', `rotate(-90 ${c} ${c})`);
-    arc.style.transition = 'stroke-dashoffset 360ms ease, stroke 260ms ease';
+    arc.style.transition = 'stroke-dashoffset 420ms cubic-bezier(0.2, 0.8, 0.2, 1), stroke 260ms ease';
 
     const txt = document.createElementNS(SVG_NS, 'text');
     txt.setAttribute('x', String(c));
     txt.setAttribute('y', String(c));
     txt.setAttribute('text-anchor', 'middle');
     txt.setAttribute('dominant-baseline', 'central');
-    txt.setAttribute('fill', '#eceef2');
-    txt.setAttribute('font-size', String(Math.round(r * 0.56)));
-    txt.setAttribute('font-weight', '700');
+    txt.setAttribute('fill', '#f4f5f8');
+    txt.setAttribute('font-size', String(Math.round(r * 0.54)));
+    txt.setAttribute('font-weight', '650');
+    txt.setAttribute('class', 'ring-gauge-text');
     txt.textContent = '0%';
 
     svg.append(track, arc, txt);
@@ -92,8 +92,10 @@ export class RingGauge {
 
   setFraction(fraction) {
     const shown = Math.max(0, Math.min(1, Number(fraction) || 0));
-    this._arc.setAttribute('stroke', levelColor(shown));
+    const col = levelColor(shown);
+    this._arc.setAttribute('stroke', col);
     this._arc.setAttribute('stroke-dashoffset', String(this._circ * (1 - shown)));
+    this._arc.style.filter = `drop-shadow(0 0 6px ${col}55)`;
     this._txt.textContent = `${Math.round(shown * 100)}%`;
   }
 }

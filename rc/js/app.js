@@ -32,6 +32,8 @@ const SLASH_MENU = [
   ['Top processes', '/procs'],
   ['Listening ports', 'check listening ports'],
   ['Desktop files', '/files ~/Desktop'],
+  ['Learned experiences', '/experiences'],
+  ['Learn from last task', '/learn'],
   ['Memory and notes', '/memory'],
   ['Permission policy', '/permissions'],
   ['Help', '/help'],
@@ -62,6 +64,16 @@ const ACCESS_CHOICES = [
 const MODELS = ['gemini-2.5-pro', 'gemini-2.5-flash', 'gemini-next', 'antigravity-default'];
 
 const $ = (id) => document.getElementById(id);
+const isDesktopPointer = () => Boolean(window.matchMedia && window.matchMedia('(pointer: fine)').matches);
+
+function syncRangeFill(input) {
+  if (!input) return;
+  const min = Number(input.min) || 0;
+  const max = Number(input.max) || 100;
+  const val = Number(input.value) || 0;
+  const pct = max > min ? ((val - min) / (max - min)) * 100 : 0;
+  input.style.setProperty('--range-pct', `${Math.max(0, Math.min(100, pct))}%`);
+}
 
 function wsEndpoint() {
   const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -100,6 +112,7 @@ class TchikoRCApp {
     this.state = {
       view: 'chat',
       settingsTab: 'access',
+      activityFilter: 'all',
       busy: false,
       host: '',
       safetyCode: '',
@@ -108,11 +121,19 @@ class TchikoRCApp {
       cwd: '~',
       pendingApprovalId: null,
       latencyMs: null,
+      experiences: [],
+      learningMetrics: null,
+      selectedExpSlug: '',
+      expFilter: 'ALL',
+      expQuery: '',
     };
     this._stream = null;
     this._pingTimer = null;
+    this._blurTimer = null;
     this._updatingSettings = false;
     this._coatPreviews = {};
+    this._pendingClarification = null;
+    this._pendingExpEvents = [];
   }
 
   init() {
@@ -342,7 +363,7 @@ class TchikoRCApp {
     $('session-host-label').textContent = host || 'Tchiko Desktop';
     this._startPing();
     showToast(`Encrypted channel active · ${safetyCode}`, 'success');
-    $('prompt-input').focus();
+    if (isDesktopPointer()) $('prompt-input').focus();
   }
 
   _showPairScreen(reason) {
@@ -375,9 +396,9 @@ class TchikoRCApp {
   // ── App shell setup ────────────────────────────────────────────────────────
   _initAppShell() {
     this.avatars.mini = new BoopFaceAvatar($('header-boopface'), { size: 34, coat: 'phantom_cyan' });
-    this.avatars.welcome = new BoopFaceAvatar($('welcome-boopface'), { size: 112, coat: 'phantom_cyan' });
+    this.avatars.welcome = new BoopFaceAvatar($('welcome-boopface'), { size: 88, coat: 'phantom_cyan' });
 
-    // Segmented nav switcher
+    // Segmented nav switcher (desktop topbar + mobile bottom tabbar)
     document.querySelectorAll('[data-nav]').forEach((btn) => {
       btn.addEventListener('click', () => this._switchView(btn.dataset.nav));
     });
@@ -425,10 +446,23 @@ class TchikoRCApp {
     qaGrid.innerHTML = '';
     for (const a of QUICK_ACTIONS) qaGrid.append(this._makeTile(a));
 
-    // Ring gauges
-    this.gauges.cpu = new RingGauge($('gauge-cpu'), 76);
-    this.gauges.ram = new RingGauge($('gauge-ram'), 76);
-    this.gauges.disk = new RingGauge($('gauge-disk'), 76);
+    // Ring gauges (SVG viewBox scales cleanly via CSS)
+    this.gauges.cpu = new RingGauge($('gauge-cpu'), 84);
+    this.gauges.ram = new RingGauge($('gauge-ram'), 84);
+    this.gauges.disk = new RingGauge($('gauge-disk'), 84);
+    if ($('exp-rate-gauge')) {
+      this.gauges.expRate = new RingGauge($('exp-rate-gauge'), 64);
+    }
+
+    // Manual telemetry refresh
+    const refreshBtn = $('btn-refresh-telemetry');
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', () => {
+        this._send({ type: 'request_telemetry' });
+        refreshBtn.classList.add('spinning');
+        setTimeout(() => refreshBtn.classList.remove('spinning'), 620);
+      });
+    }
 
     // System page Full Access toggle
     $('sys-full-access').addEventListener('change', (e) => {
@@ -441,19 +475,29 @@ class TchikoRCApp {
     $('btn-approve-always').addEventListener('click', () => this._sendApproval('always'));
     $('btn-approve-deny').addEventListener('click', () => this._sendApproval('deny'));
 
-    // Chat composer
+    // Chat composer + mobile bottom-bar auto-hide on keyboard focus
     const input = $('prompt-input');
     const composer = $('composer-box');
+    const shell = $('app-shell');
     const syncSend = () => {
       $('btn-send').disabled = this.state.busy || !input.value.trim();
     };
     input.addEventListener('input', () => {
       input.style.height = 'auto';
-      input.style.height = `${Math.min(input.scrollHeight, 140)}px`;
+      input.style.height = `${Math.min(input.scrollHeight, 132)}px`;
       syncSend();
     });
-    input.addEventListener('focus', () => composer.classList.add('focused'));
-    input.addEventListener('blur', () => composer.classList.remove('focused'));
+    input.addEventListener('focus', () => {
+      if (this._blurTimer) clearTimeout(this._blurTimer);
+      composer.classList.add('focused');
+      shell.classList.add('composer-focused');
+    });
+    input.addEventListener('blur', () => {
+      composer.classList.remove('focused');
+      this._blurTimer = setTimeout(() => {
+        shell.classList.remove('composer-focused');
+      }, 160);
+    });
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
@@ -463,56 +507,95 @@ class TchikoRCApp {
     $('btn-send').addEventListener('click', () => this._submitComposer());
     this._syncSend = syncSend;
 
-    // Activity clear
+    // Activity clear & client-side filter chips
     $('btn-clear-activity').addEventListener('click', () => {
       this._send({ type: 'clear_activity' });
     });
+    document.querySelectorAll('[data-activity-filter]').forEach((chip) => {
+      chip.addEventListener('click', () => {
+        this.state.activityFilter = chip.dataset.activityFilter || 'all';
+        document.querySelectorAll('[data-activity-filter]').forEach((c) => {
+          c.classList.toggle('active', c.dataset.activityFilter === this.state.activityFilter);
+        });
+        this._applyActivityFilter();
+      });
+    });
 
+    this._initExperiencesPage();
     this._buildSettingsPage();
   }
 
   _initPopovers() {
     const slashPop = $('slash-popover');
-    slashPop.innerHTML = '';
+    const moodPop = $('mood-popover');
+    const backdrop = $('sheet-backdrop');
+
+    const closeSheets = () => {
+      slashPop.hidden = true;
+      moodPop.hidden = true;
+      if (backdrop) backdrop.hidden = true;
+    };
+
+    slashPop.innerHTML = '<div class="sheet-handle" aria-hidden="true"></div><div class="popover-title">Quick Commands</div><div class="popover-list"></div>';
+    const slashList = slashPop.querySelector('.popover-list');
     for (const [label, cmd] of SLASH_MENU) {
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'popover-item';
       btn.innerHTML = `<span>${label}</span><span class="mono muted">${cmd}</span>`;
       btn.addEventListener('click', () => {
-        slashPop.hidden = true;
+        closeSheets();
         this._submitPrompt(cmd);
       });
-      slashPop.append(btn);
+      slashList.append(btn);
     }
 
-    const moodPop = $('mood-popover');
-    moodPop.innerHTML = '';
+    moodPop.innerHTML = '<div class="sheet-handle" aria-hidden="true"></div><div class="popover-title">Companion Mood</div><div class="popover-mood-grid"></div>';
+    const moodGrid = moodPop.querySelector('.popover-mood-grid');
     for (const [key, label] of MOODS) {
       const btn = document.createElement('button');
       btn.type = 'button';
-      btn.className = 'popover-item';
+      btn.className = 'popover-item mood-pill';
       btn.textContent = label;
       btn.addEventListener('click', () => {
-        moodPop.hidden = true;
+        closeSheets();
         this._triggerMood(key);
       });
-      moodPop.append(btn);
+      moodGrid.append(btn);
     }
 
     $('btn-slash-menu').addEventListener('click', (e) => {
       e.stopPropagation();
-      moodPop.hidden = true;
-      slashPop.hidden = !slashPop.hidden;
+      const willOpen = slashPop.hidden;
+      closeSheets();
+      if (willOpen) {
+        slashPop.hidden = false;
+        if (backdrop) backdrop.hidden = false;
+      }
     });
     $('btn-mood-menu').addEventListener('click', (e) => {
       e.stopPropagation();
-      slashPop.hidden = true;
-      moodPop.hidden = !moodPop.hidden;
+      const willOpen = moodPop.hidden;
+      closeSheets();
+      if (willOpen) {
+        moodPop.hidden = false;
+        if (backdrop) backdrop.hidden = false;
+      }
     });
-    document.addEventListener('click', () => {
-      slashPop.hidden = true;
-      moodPop.hidden = true;
+    if (backdrop) {
+      backdrop.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeSheets();
+      });
+    }
+    slashPop.addEventListener('click', (e) => e.stopPropagation());
+    moodPop.addEventListener('click', (e) => e.stopPropagation());
+    document.addEventListener('click', closeSheets);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeSheets();
+        $('session-modal').hidden = true;
+      }
     });
   }
 
@@ -611,10 +694,32 @@ class TchikoRCApp {
       this._send({ type: 'update_config', patch: { agent: { model: e.target.value } } });
     });
 
+    const sendLearningPatch = () => {
+      if (this._updatingSettings) return;
+      this._send({
+        type: 'update_config',
+        patch: {
+          learning: {
+            ask_before_ambiguous: $('set-ask-ambiguous').checked,
+            auto_learn_experiences: $('set-auto-learn').checked,
+            auto_promote_verified: $('set-auto-promote').checked,
+            auto_rollback_on_failure: $('set-auto-rollback').checked,
+          },
+        },
+      });
+    };
+    for (const id of ['set-ask-ambiguous', 'set-auto-learn', 'set-auto-promote', 'set-auto-rollback']) {
+      if ($(id)) $(id).addEventListener('change', sendLearningPatch);
+    }
+
     const sendGhostPatch = () => {
       if (this._updatingSettings) return;
-      const size = Number($('set-size').value);
-      const opacity = Number($('set-opacity').value);
+      const sizeEl = $('set-size');
+      const opacityEl = $('set-opacity');
+      syncRangeFill(sizeEl);
+      syncRangeFill(opacityEl);
+      const size = Number(sizeEl.value);
+      const opacity = Number(opacityEl.value);
       $('set-size-val').textContent = `${size} px`;
       $('set-opacity-val').textContent = `${Math.round(opacity * 100)}%`;
       this._send({
@@ -633,6 +738,8 @@ class TchikoRCApp {
       $(id).addEventListener('input', sendGhostPatch);
       $(id).addEventListener('change', sendGhostPatch);
     }
+    syncRangeFill($('set-size'));
+    syncRangeFill($('set-opacity'));
 
     $('btn-settings-disconnect').addEventListener('click', () => this._disconnectManual());
     $('btn-settings-unpair').addEventListener('click', () => this._unpairDevice());
@@ -662,11 +769,16 @@ class TchikoRCApp {
     document.querySelectorAll('[data-nav]').forEach((btn) => {
       btn.classList.toggle('active', btn.dataset.nav === view);
     });
-    for (const v of ['chat', 'system', 'activity', 'settings']) {
-      $(`view-${v}`).hidden = v !== view;
+    for (const v of ['chat', 'system', 'experiences', 'activity', 'settings']) {
+      const panel = $(`view-${v}`);
+      if (panel) panel.hidden = v !== view;
     }
     if (view === 'system') this._send({ type: 'request_telemetry' });
-    if (view === 'chat') $('prompt-input').focus();
+    if (view === 'experiences') {
+      this._renderExperiencesPage();
+      this._send({ type: 'experiences_list' });
+    }
+    if (view === 'chat' && isDesktopPointer()) $('prompt-input').focus();
   }
 
   _switchSettingsTab(tab) {
@@ -701,6 +813,14 @@ class TchikoRCApp {
     this._syncSend();
     this._setStatus('thinking', 'Thinking…');
     this._send({ type: 'prompt', text: text.trim() });
+  }
+
+  _submitClarificationReply(text) {
+    if (!text.trim() || this.state.busy) return;
+    this.state.busy = true;
+    this._syncSend();
+    this._setStatus('thinking', 'Continuing…');
+    this._send({ type: 'clarification_reply', text: text.trim() });
   }
 
   _sendApproval(decision) {
@@ -749,12 +869,45 @@ class TchikoRCApp {
       case 'config_updated':
         this._applyConfig(msg.config);
         break;
+      case 'experiences_sync':
+        this._applyExperiencesSync(msg.experiences, msg.learning_metrics);
+        break;
+      case 'experience_result':
+        this._showExperienceResult(msg);
+        break;
+      case 'experience_event':
+        this._pendingExpEvents.push(msg);
+        this._appendActivity(
+          'learn',
+          `${(msg.event || msg.kind) === 'used' ? 'Used' : 'Learned'} Experience ${msg.slug || ''}${msg.maturity ? ` (${msg.maturity})` : ''}`,
+          msg.ts
+        );
+        if (!this._stream && this.state.view === 'chat') {
+          const feed = $('chat-feed');
+          if (feed && feed.lastElementChild) {
+            feed.lastElementChild.append(this._buildExperienceBanner(msg));
+            this._pendingExpEvents.pop();
+            this._scrollChatToBottom(false);
+          }
+        }
+        break;
+      case 'clarification_needed':
+        this._pendingClarification = msg;
+        this._appendActivity('ask_user', msg.question || 'Clarification requested', msg.ts);
+        this._setStreamChip('Waiting for your clarification…');
+        break;
+      case 'phase':
+        this._appendActivity((msg.phase || 'think').toLowerCase(), msg.text || '', msg.ts);
+        if (msg.text) this._setStreamChip(msg.text);
+        break;
       case 'chat_user':
         this._hideWelcome();
         this._appendUserBubble(msg.text);
         break;
       case 'reply_start':
         this.state.busy = true;
+        this._pendingClarification = null;
+        this._pendingExpEvents = [];
         this._syncSend();
         this._startStreamingReply(msg.ts);
         break;
@@ -827,6 +980,9 @@ class TchikoRCApp {
     if (sync.cwd) this._setCwd(sync.cwd);
     if (sync.telemetry) this._applyTelemetry(sync.telemetry);
     if (sync.config) this._applyConfig(sync.config);
+    if (Array.isArray(sync.experiences) || sync.learning_metrics) {
+      this._applyExperiencesSync(sync.experiences || [], sync.learning_metrics || null);
+    }
     this._applyAgentState(sync.status || 'idle', sync.mood || 'idle');
 
     // Restore chat history
@@ -893,7 +1049,7 @@ class TchikoRCApp {
       const pill = $('btn-perm-pill');
       pill.classList.toggle('ok', allOk);
       pill.classList.toggle('review', !allOk);
-      pill.textContent = allOk ? '●  Full access' : '●  Review mode';
+      pill.innerHTML = `<span class="perm-dot"></span><span class="perm-label">${allOk ? 'Full access' : 'Review'}</span>`;
 
       $('sys-full-access').checked = allOk;
       $('set-master-switch').checked = allOk;
@@ -917,6 +1073,12 @@ class TchikoRCApp {
       $('set-sandbox').checked = Boolean(perms.terminal_sandbox);
       $('set-model').value = (cfg.agent && cfg.agent.model) || 'gemini-2.5-pro';
 
+      const learn = cfg.learning || {};
+      if ($('set-ask-ambiguous')) $('set-ask-ambiguous').checked = learn.ask_before_ambiguous !== false;
+      if ($('set-auto-learn')) $('set-auto-learn').checked = learn.auto_learn_experiences !== false;
+      if ($('set-auto-promote')) $('set-auto-promote').checked = learn.auto_promote_verified !== false;
+      if ($('set-auto-rollback')) $('set-auto-rollback').checked = learn.auto_rollback_on_failure !== false;
+
       const gw = cfg.ghost_widget || {};
       const coat = gw.theme || 'phantom_cyan';
       this.avatars.mini.setCoat(coat);
@@ -933,6 +1095,8 @@ class TchikoRCApp {
       $('set-size-val').textContent = `${size} px`;
       $('set-opacity').value = String(opacity);
       $('set-opacity-val').textContent = `${Math.round(opacity * 100)}%`;
+      syncRangeFill($('set-size'));
+      syncRangeFill($('set-opacity'));
       $('set-always-top').checked = Boolean(gw.always_on_top);
       $('set-bubble').checked = Boolean(gw.show_speech_bubble);
     } finally {
@@ -975,6 +1139,8 @@ class TchikoRCApp {
     $('chat-feed').innerHTML = '';
     $('chat-welcome').hidden = false;
     this._stream = null;
+    this._pendingClarification = null;
+    this._pendingExpEvents = [];
     this._switchView('chat');
     showToast('Started a fresh chat');
   }
@@ -1015,6 +1181,7 @@ class TchikoRCApp {
 
     this._stream = {
       raw: '',
+      wrap,
       chip,
       chipText: chip.querySelector('.chip-text'),
       content,
@@ -1051,14 +1218,34 @@ class TchikoRCApp {
     }
     const meta = parts.join('  ·  ');
 
+    let targetWrap = null;
+    let targetFooter = null;
+
     if (this._stream) {
       if (this._stream.flushTimer) clearTimeout(this._stream.flushTimer);
       this._stream.chip.remove();
       renderMarkdownInto(this._stream.content, full || '(no reply)', copyText);
       this._populateFooter(this._stream.footer, full, meta);
+      targetWrap = this._stream.wrap;
+      targetFooter = this._stream.footer;
       this._stream = null;
     } else {
-      this._appendFinishedReply(full, msg.ts || '', meta);
+      const built = this._appendFinishedReply(full, msg.ts || '', meta);
+      targetWrap = built.wrap;
+      targetFooter = built.footer;
+    }
+
+    if (targetWrap && this._pendingClarification) {
+      const card = this._buildClarificationCard(this._pendingClarification);
+      targetWrap.insertBefore(card, targetFooter);
+      this._pendingClarification = null;
+    }
+
+    if (targetWrap && this._pendingExpEvents.length > 0) {
+      for (const ev of this._pendingExpEvents) {
+        targetWrap.insertBefore(this._buildExperienceBanner(ev), targetFooter);
+      }
+      this._pendingExpEvents = [];
     }
 
     this.state.busy = false;
@@ -1082,6 +1269,90 @@ class TchikoRCApp {
     this._populateFooter(footer, text, meta);
     wrap.append(head, content, footer);
     $('chat-feed').append(wrap);
+    return { wrap, footer };
+  }
+
+  _buildClarificationCard(payload) {
+    const card = document.createElement('div');
+    card.className = 'clarify-card';
+
+    const head = document.createElement('div');
+    head.className = 'clarify-head';
+    head.innerHTML = `<span class="tl-badge ask">CLARIFY</span><strong style="font-size:13px;">Quick question before I proceed</strong>`;
+    card.append(head);
+
+    const detail = payload.context || payload.reason;
+    if (detail) {
+      const reason = document.createElement('div');
+      reason.className = 'dim';
+      reason.style.fontSize = '12px';
+      reason.textContent = detail;
+      card.append(reason);
+    }
+
+    const options = Array.isArray(payload.options) ? payload.options.filter(Boolean) : [];
+    if (options.length > 0) {
+      const row = document.createElement('div');
+      row.className = 'clarify-options';
+      const buttons = [];
+      for (const opt of options) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'option-chip';
+        btn.textContent = opt;
+        btn.addEventListener('click', () => {
+          buttons.forEach((b) => { b.disabled = true; });
+          this._submitClarificationReply(opt);
+        });
+        buttons.push(btn);
+        row.append(btn);
+      }
+      card.append(row);
+    }
+
+    const hint = document.createElement('div');
+    hint.className = 'dim';
+    hint.style.fontSize = '11.5px';
+    hint.textContent = 'Pick an option above or type your own details in the chat box.';
+    card.append(hint);
+    return card;
+  }
+
+  _buildExperienceBanner(payload) {
+    const bar = document.createElement('div');
+    bar.className = 'exp-banner';
+
+    const left = document.createElement('div');
+    left.className = 'exp-banner-left';
+
+    const evKind = payload.event || payload.kind;
+    const badge = document.createElement('span');
+    badge.className = `exp-badge ${(payload.maturity || 'verified').toLowerCase()}`;
+    badge.textContent = evKind === 'used' ? 'REUSED TOOL' : 'LEARNED TOOL';
+
+    const txt = document.createElement('span');
+    txt.style.fontSize = '12.5px';
+    const label = payload.title || payload.name || payload.slug || 'Experience';
+    txt.textContent =
+      evKind === 'used'
+        ? `Used learned Python Experience "${label}"`
+        : `Distilled new Experience "${label}" (${payload.maturity || 'VERIFIED'})`;
+
+    left.append(badge, txt);
+    bar.append(left);
+
+    if (payload.slug) {
+      const inspectBtn = document.createElement('button');
+      inspectBtn.type = 'button';
+      inspectBtn.className = 'btn btn-sm';
+      inspectBtn.textContent = 'Inspect';
+      inspectBtn.addEventListener('click', () => {
+        this.state.selectedExpSlug = payload.slug;
+        this._switchView('experiences');
+      });
+      bar.append(inspectBtn);
+    }
+    return bar;
   }
 
   _populateFooter(footer, rawText, meta) {
@@ -1119,30 +1390,402 @@ class TchikoRCApp {
     }
   }
 
+  // ── Experiences & Learning Dashboard ───────────────────────────────────────
+  _initExperiencesPage() {
+    if (!$('view-experiences')) return;
+
+    $('btn-exp-learn').addEventListener('click', () => {
+      this._send({ type: 'experience_learn' });
+      showToast('Distilling Python Experience from last task…');
+    });
+
+    $('btn-exp-refresh').addEventListener('click', () => {
+      this._send({ type: 'experiences_list' });
+    });
+
+    $('exp-search').addEventListener('input', (e) => {
+      this.state.expQuery = e.target.value.trim().toLowerCase();
+      this._renderExperiencesList();
+    });
+
+    document.querySelectorAll('[data-exp-filter]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        this.state.expFilter = btn.dataset.expFilter;
+        document.querySelectorAll('[data-exp-filter]').forEach((b) => {
+          b.classList.toggle('active', b.dataset.expFilter === this.state.expFilter);
+        });
+        this._renderExperiencesList();
+      });
+    });
+
+    $('btn-exp-run').addEventListener('click', () => {
+      const slug = this.state.selectedExpSlug;
+      if (!slug) return;
+      this._send({ type: 'experience_run', slug, dry_run: false });
+      showToast(`Running ${slug}…`);
+    });
+
+    $('btn-exp-dry').addEventListener('click', () => {
+      const slug = this.state.selectedExpSlug;
+      if (!slug) return;
+      this._send({ type: 'experience_test', slug, dry_run: true });
+      showToast(`Dry-running ${slug}…`);
+    });
+
+    $('btn-exp-approve').addEventListener('click', () => {
+      const slug = this.state.selectedExpSlug;
+      if (slug) this._send({ type: 'experience_approve', slug });
+    });
+
+    $('btn-exp-toggle').addEventListener('click', () => {
+      const exp = this._getSelectedExperience();
+      if (!exp) return;
+      this._send({ type: 'experience_toggle', slug: exp.slug, enabled: !exp.enabled });
+    });
+
+    $('btn-exp-rollback').addEventListener('click', () => {
+      const slug = this.state.selectedExpSlug;
+      if (slug) this._send({ type: 'experience_rollback', slug });
+    });
+
+    $('btn-exp-delete').addEventListener('click', () => {
+      const slug = this.state.selectedExpSlug;
+      if (!slug) return;
+      this._send({ type: 'experience_delete', slug });
+    });
+
+    $('btn-exp-copy').addEventListener('click', () => {
+      const exp = this._getSelectedExperience();
+      if (exp && exp.code) {
+        copyText(exp.code, $('btn-exp-copy'));
+      }
+    });
+  }
+
+  _applyExperiencesSync(experiences, metrics) {
+    this.state.experiences = Array.isArray(experiences) ? experiences : [];
+    if (metrics) this.state.learningMetrics = metrics;
+
+    if (
+      this.state.selectedExpSlug &&
+      !this.state.experiences.some((e) => e.slug === this.state.selectedExpSlug)
+    ) {
+      this.state.selectedExpSlug = '';
+    }
+    if (!this.state.selectedExpSlug && this.state.experiences.length > 0) {
+      this.state.selectedExpSlug = this.state.experiences[0].slug;
+    }
+    this._renderExperiencesPage();
+  }
+
+  _getSelectedExperience() {
+    return this.state.experiences.find((e) => e.slug === this.state.selectedExpSlug) || null;
+  }
+
+  _renderExperiencesPage() {
+    if (!$('view-experiences')) return;
+    const m = this.state.learningMetrics || {};
+    const bm = m.by_maturity || {};
+    const total = m.total ?? this.state.experiences.length;
+    const hardened = bm.HARDENED ?? 0;
+    const verified = bm.VERIFIED ?? 0;
+    const draft = bm.DRAFT ?? 0;
+    const runs = m.total_runs ?? 0;
+    const recoveries = m.total_recoveries ?? 0;
+    const rate = Math.max(0, Math.min(1, Number(m.overall_success_rate ?? (total > 0 ? 1 : 0))));
+
+    $('exp-kpi-total').textContent = String(total);
+    $('exp-kpi-breakdown').textContent = `${hardened} hardened · ${verified} verified · ${draft} draft`;
+    $('exp-kpi-runs').textContent = String(runs);
+    $('exp-kpi-recoveries').textContent = `${recoveries} self-recoveries`;
+
+    $('exp-kpi-rate').textContent = `${Math.round(rate * 100)}%`;
+    if (this.gauges.expRate) this.gauges.expRate.setFraction(rate);
+
+    this._renderLearningCurveSvg(m.curve_points || []);
+    this._renderExperiencesList();
+    this._renderExperienceInspector();
+  }
+
+  _renderLearningCurveSvg(points) {
+    const host = $('exp-curve-svg');
+    if (!host) return;
+    const W = 680;
+    const H = 150;
+    const padL = 34;
+    const padR = 34;
+    const padT = 14;
+    const padB = 22;
+    const plotW = W - padL - padR;
+    const plotH = H - padT - padB;
+
+    const pts = Array.isArray(points) && points.length > 0
+      ? points
+      : [{ label: 'Now', cumulative: this.state.experiences.length, success_rate: 1.0 }];
+    const series = pts.length === 1 ? [pts[0], { ...pts[0], label: 'Now' }] : pts;
+
+    const toolVal = (p) => Number(p.cumulative ?? p.tools ?? 0);
+    const maxTools = Math.max(4, ...series.map(toolVal));
+    const xAt = (i) => padL + (plotW * i) / Math.max(1, series.length - 1);
+    const yTool = (t) => padT + plotH * (1 - Math.max(0, Number(t) || 0) / maxTools);
+    const yRate = (r) => padT + plotH * (1 - Math.max(0, Math.min(1, Number(r) ?? 1)));
+
+    const toolCoords = series.map((p, i) => [xAt(i), yTool(toolVal(p))]);
+    const rateCoords = series.map((p, i) => [xAt(i), yRate(p.success_rate)]);
+
+    const toolLine = toolCoords.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(' ');
+    const toolArea = `${padL},${padT + plotH} ${toolLine} ${xAt(series.length - 1).toFixed(1)},${padT + plotH}`;
+    const rateLine = rateCoords.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(' ');
+
+    const gridLines = [0, 0.25, 0.5, 0.75, 1]
+      .map((f) => {
+        const y = (padT + plotH * (1 - f)).toFixed(1);
+        const pct = Math.round(f * 100);
+        return `<line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+                <text x="${W - padR + 5}" y="${Number(y) + 3}" fill="#6e7681" font-size="9" font-family="monospace">${pct}%</text>`;
+      })
+      .join('');
+
+    const toolDots = toolCoords
+      .map(([x, y]) => `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2.8" fill="#f43f5e"/>`)
+      .join('');
+    const rateDots = rateCoords
+      .map(([x, y]) => `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2.8" fill="#10b981"/>`)
+      .join('');
+
+    const step = Math.max(1, Math.floor(series.length / 6));
+    const xLabels = series
+      .map((p, i) => {
+        if (i !== 0 && i !== series.length - 1 && i % step !== 0) return '';
+        const x = xAt(i).toFixed(1);
+        const lbl = String(p.label || '').slice(0, 12).replace(/[<>&]/g, '');
+        return `<text x="${x}" y="${H - 6}" text-anchor="middle" fill="#687086" font-size="9" font-family="monospace">${lbl}</text>`;
+      })
+      .join('');
+
+    host.innerHTML = `
+      <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-label="Learning curve chart">
+        <defs>
+          <linearGradient id="expToolFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#f43f5e" stop-opacity="0.28"/>
+            <stop offset="100%" stop-color="#f43f5e" stop-opacity="0.01"/>
+          </linearGradient>
+        </defs>
+        ${gridLines}
+        <text x="${padL - 6}" y="${padT + 4}" text-anchor="end" fill="#687086" font-size="9" font-family="monospace">${maxTools}</text>
+        <text x="${padL - 6}" y="${padT + plotH + 3}" text-anchor="end" fill="#687086" font-size="9" font-family="monospace">0</text>
+        <polygon points="${toolArea}" fill="url(#expToolFill)"/>
+        <polyline points="${toolLine}" fill="none" stroke="#f43f5e" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <polyline points="${rateLine}" fill="none" stroke="#10b981" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        ${toolDots}
+        ${rateDots}
+        ${xLabels}
+      </svg>
+    `;
+  }
+
+  _renderExperiencesList() {
+    const list = $('exp-list');
+    if (!list) return;
+    list.innerHTML = '';
+
+    const q = this.state.expQuery;
+    const filt = this.state.expFilter;
+
+    const filtered = this.state.experiences.filter((exp) => {
+      if (filt !== 'ALL' && exp.maturity !== filt) return false;
+      if (q) {
+        const hay = `${exp.slug} ${exp.title || ''} ${exp.description || ''} ${exp.category || ''} ${(exp.triggers || []).join(' ')}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+
+    if (filtered.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'timeline-empty';
+      empty.textContent = 'No Experiences match this filter.';
+      list.append(empty);
+      return;
+    }
+
+    for (const exp of filtered) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = `exp-item ${exp.slug === this.state.selectedExpSlug ? 'selected' : ''}`;
+
+      const top = document.createElement('div');
+      top.className = 'exp-item-top';
+
+      const title = document.createElement('span');
+      title.className = 'exp-item-title';
+      title.textContent = exp.title || exp.name || exp.slug;
+
+      const badge = document.createElement('span');
+      badge.className = `exp-badge ${(exp.maturity || 'draft').toLowerCase()}`;
+      badge.textContent = exp.maturity || 'DRAFT';
+
+      top.append(title, badge);
+
+      const sub = document.createElement('span');
+      sub.className = 'exp-item-sub';
+      const runs = Number(exp.stats && exp.stats.runs) || 0;
+      const ok = Number(exp.stats && exp.stats.successes) || 0;
+      const pct = runs > 0 ? Math.round((ok / runs) * 100) : 100;
+      sub.textContent = `${exp.slug} · v${exp.version || 1} · ${runs} runs (${pct}%)${exp.enabled === false ? ' · disabled' : ''}`;
+
+      btn.append(top, sub);
+      btn.addEventListener('click', () => {
+        this.state.selectedExpSlug = exp.slug;
+        this._renderExperiencesList();
+        this._renderExperienceInspector();
+        $('exp-run-output').hidden = true;
+      });
+      list.append(btn);
+    }
+  }
+
+  _renderExperienceInspector() {
+    const exp = this._getSelectedExperience();
+    const hasExp = Boolean(exp);
+
+    for (const id of ['btn-exp-run', 'btn-exp-dry', 'btn-exp-approve', 'btn-exp-toggle', 'btn-exp-rollback', 'btn-exp-delete', 'btn-exp-copy']) {
+      if ($(id)) $(id).disabled = !hasExp;
+    }
+
+    if (!exp) {
+      $('exp-insp-title').textContent = 'Select an Experience';
+      $('exp-insp-badge').textContent = '';
+      $('exp-insp-badge').className = 'exp-badge';
+      $('exp-insp-desc').textContent = 'Pick a learned Python tool to inspect its script, runs, and evolution.';
+      $('exp-insp-meta').textContent = '';
+      $('exp-code-path').textContent = 'PYTHON SCRIPT · tool.py';
+      $('exp-code-view').textContent = '';
+      $('exp-history-list').textContent = 'No executions recorded yet.';
+      return;
+    }
+
+    const st = exp.stats || {};
+    const runs = Number(st.runs) || 0;
+    const ok = Number(st.successes) || 0;
+    const pct = runs > 0 ? Math.round((ok / runs) * 100) : 100;
+
+    $('exp-insp-title').textContent = exp.title || exp.name || exp.slug;
+    const badge = $('exp-insp-badge');
+    badge.textContent = exp.maturity || 'DRAFT';
+    badge.className = `exp-badge ${(exp.maturity || 'draft').toLowerCase()}`;
+    $('exp-insp-desc').textContent = exp.description || '';
+    $('exp-insp-meta').textContent = [
+      `slug: ${exp.slug}   ·   v${exp.version || 1}   ·   category: ${exp.category || 'general'}   ·   risk: ${exp.risk_tier || 'SAFE_READONLY'}`,
+      `runs: ${runs} (${pct}% ok)   ·   enabled: ${exp.enabled !== false ? 'yes' : 'no'}   ·   triggers: ${(exp.triggers || []).join(', ') || '—'}`,
+    ].join('\n');
+
+    $('btn-exp-toggle').textContent = exp.enabled === false ? 'Enable' : 'Disable';
+    $('btn-exp-approve').disabled = exp.maturity === 'HARDENED';
+    $('btn-exp-rollback').disabled = !(Array.isArray(exp.versions) && exp.versions.length > 0);
+
+    $('exp-code-path').textContent = `experiences/${exp.slug}/tool.py`;
+    $('exp-code-view').textContent = exp.code || '# Script source unavailable';
+
+    const hist = Array.isArray(exp.history) ? exp.history : [];
+    const vers = Array.isArray(exp.versions) ? exp.versions : [];
+    const lines = [];
+    if (vers.length > 0) {
+      lines.push(`Archived versions: ${vers.map((v) => `v${v}`).join(', ')}`);
+    }
+    if (hist.length === 0) {
+      lines.push('No executions recorded yet. Click Run or Dry-Run to verify.');
+    } else {
+      for (const h of hist.slice(-8).reverse()) {
+        const rawTs = h.ts;
+        const ts =
+          typeof rawTs === 'number' && rawTs > 0
+            ? new Date(rawTs * 1000).toISOString().replace('T', ' ').slice(0, 19)
+            : String(rawTs || '').replace('T', ' ').slice(0, 19);
+        const icon = h.ok ? 'OK' : 'ERR';
+        const dur = h.duration_ms != null ? ` ${h.duration_ms}ms` : '';
+        lines.push(`${ts}  [${icon}]${dur}  ${String(h.summary || '').replace(/\s+/g, ' ').slice(0, 120)}`);
+      }
+    }
+    $('exp-history-list').textContent = lines.join('\n');
+  }
+
+  _showExperienceResult(msg) {
+    if (msg.slug) this.state.selectedExpSlug = msg.slug;
+    const box = $('exp-run-output');
+    if (box) {
+      box.hidden = false;
+      const mode = msg.dry_run ? 'DRY-RUN' : 'EXECUTION';
+      const dur = msg.duration_ms != null ? ` · ${msg.duration_ms}ms` : '';
+      $('exp-run-output-title').textContent = `${mode} · ${msg.ok ? 'SUCCESS' : 'FAILED'}${dur} · ${msg.title || msg.slug || ''}`;
+      $('exp-run-output-body').textContent = msg.output || '(no output)';
+    }
+    showToast(msg.title || (msg.ok ? 'Experience succeeded' : 'Experience failed'), msg.ok ? 'success' : 'warn');
+  }
+
   // ── Activity timeline ──────────────────────────────────────────────────────
   _clearActivityUi() {
     $('activity-list').innerHTML = '';
-    $('activity-empty').hidden = false;
+    this._applyActivityFilter();
+  }
+
+  _applyActivityFilter() {
+    const list = $('activity-list');
+    const empty = $('activity-empty');
+    if (!list || !empty) return;
+    const filt = this.state.activityFilter || 'all';
+    let visible = 0;
+    for (const row of list.children) {
+      const show = filt === 'all' || row.dataset.filterGroup === filt;
+      row.hidden = !show;
+      if (show) visible += 1;
+    }
+    empty.hidden = visible > 0;
   }
 
   _appendActivity(kind, text, ts) {
-    $('activity-empty').hidden = true;
     const row = document.createElement('div');
     row.className = 'timeline-row';
+
+    const k = String(kind || 'think').toLowerCase();
+    const isAction = ['tool', 'recover', 'rollback', 'verify', 'learn', 'experience'].includes(k);
+    row.dataset.filterGroup = isAction ? 'tool' : 'think';
+
+    const meta = document.createElement('div');
+    meta.className = 'tl-meta';
+
+    const badgeMap = {
+      tool: ['tool', 'TOOL'],
+      recover: ['recover', 'RECOVER'],
+      rollback: ['recover', 'ROLLBACK'],
+      verify: ['verify', 'VERIFY'],
+      learn: ['learn', 'LEARN'],
+      experience: ['learn', 'EXP'],
+      ask_user: ['ask', 'ASK'],
+      ask: ['ask', 'ASK'],
+      think: ['', 'THINK'],
+    };
+    const [cls, lbl] = badgeMap[k] || ['', k.toUpperCase().slice(0, 8)];
+
+    const badge = document.createElement('span');
+    badge.className = `tl-badge ${cls}`;
+    badge.textContent = lbl;
+
     const timeEl = document.createElement('span');
     timeEl.className = 'tl-time mono';
     timeEl.textContent = ts || new Date().toTimeString().slice(0, 8);
-    const badge = document.createElement('span');
-    badge.className = `tl-badge ${kind === 'tool' ? 'tool' : ''}`;
-    badge.textContent = kind === 'tool' ? 'TOOL' : 'THINK';
+
+    meta.append(badge, timeEl);
+
     const body = document.createElement('span');
-    body.className = kind === 'tool' ? 'tl-body mono' : 'tl-body dim';
+    body.className = ['tool', 'recover', 'rollback'].includes(k) ? 'tl-body mono' : 'tl-body dim';
     body.textContent = text;
-    row.append(timeEl, badge, body);
+
+    row.append(meta, body);
     const list = $('activity-list');
     list.append(row);
     while (list.children.length > 300) list.firstElementChild.remove();
-    list.parentElement.scrollTop = list.parentElement.scrollHeight;
+    this._applyActivityFilter();
   }
 }
 
