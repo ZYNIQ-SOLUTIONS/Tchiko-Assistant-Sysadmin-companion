@@ -41,7 +41,16 @@ import urllib.request
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
+from .agent_loop import ResilientAgentLoop
 from .config_manager import ConfigManager, PROJECT_ROOT
+from .conversation import (
+    ClarificationRequest,
+    ConversationAnalyzer,
+    PendingTask,
+    extract_suggested_command,
+    is_anaphoric_run_target,
+)
+from .experiences import EXPERIENCES_DIR, ExperienceRegistry
 from .skills_loader import SkillsLoader
 from .system_tools import LinuxSystemToolkit, ToolResult
 
@@ -66,22 +75,27 @@ AGY_SESSION_MAX_IDLE_SEC = 45 * 60
 AGY_EVENT_IDLE_TIMEOUT_SEC = 900.0
 # Shell timeout for commands issued by the local-LLM tool loop (installs, clones, builds).
 LLM_TOOL_BASH_TIMEOUT_SEC = 300
-LLM_MAX_TOOL_STEPS = 12
+LLM_MAX_TOOL_STEPS = 14
 
 OPERATING_RULES = (
     "How to work:\n"
-    "- You are called from Tchiko, a small desktop companion. The user reads your reply in a chat "
-    "bubble and cannot answer interactive terminal prompts, so carry the task through end to end "
-    "in this turn. Only stop to ask when an action is destructive or the request is ambiguous in a "
-    "way that changes what you would do.\n"
-    "- The user types fast, often with typos or shorthand. Infer the obvious intent.\n"
+    "- You are Tchiko, a warm, perceptive, natural-sounding desktop companion. Talk like a helpful human "
+    "sysadmin colleague — concise, clear, and honest.\n"
+    "- The user types fast, often casually or with typos. If their intent is clear, carry the task through "
+    "end to end in this turn. If a request is ambiguous, has an unrecognized/misspelled target, or involves "
+    "a choice that materially changes what you would do (e.g. destructive cleanup, install source, ambiguous "
+    "service/file), pause and ask 1–2 brief clarifying questions using `<ask_user question=\"...\"><option>...</option></ask_user>` "
+    "instead of guessing.\n"
+    "- If the user is just chatting or asking a conceptual question, answer warmly and naturally without running unnecessary tools.\n"
     "- Look before acting (is it already installed, which version, does the path exist) and verify "
     "after (run it, check the exit code or version). Report only what you observed; never invent "
     "command output.\n"
-    "- For root actions prefer `pkexec`, which shows a graphical password dialog; plain `sudo` has "
-    "no terminal to prompt on here.\n"
-    "- Start long-running services in the background and confirm they are listening instead of "
-    "blocking on them.\n"
+    "- When a command fails, read the error carefully, adapt your strategy (e.g. `pkexec` for root, check locks/paths/releases), "
+    "and avoid repeating the exact same failing command.\n"
+    "- For root actions prefer `pkexec` inside `<bash>pkexec ...</bash>`, which shows a graphical password dialog; "
+    "plain `sudo` has no terminal to prompt on here.\n"
+    "- Reuse matching learned Python Experience tools (`<experience name=\"...\" params='...' />`) whenever they fit.\n"
+    "- Start long-running services in the background and confirm they are listening instead of blocking on them.\n"
     "- Skip session-start routines such as inbox watchers or listeners and go straight to the request.\n"
     "- Keep the reply short: what you did, the result, and the next step if there is one. Use only "
     "`###` headings, `-` bullets, **bold** and fenced code blocks; that is all the UI renders."
@@ -104,12 +118,23 @@ DIRECT_SHELL_SUBCOMMANDS = {
 
 
 class TchikoAgentEngine:
-    """Orchestrates Antigravity SDK sessions, persistent memory, and multi-step Linux actions."""
+    """Orchestrates Antigravity SDK sessions, persistent memory, resilient loops, and learned Experiences."""
 
-    def __init__(self, config: ConfigManager, toolkit: LinuxSystemToolkit) -> None:
+    def __init__(
+        self,
+        config: ConfigManager,
+        toolkit: LinuxSystemToolkit,
+        experiences_dir: Optional[Path] = None,
+    ) -> None:
         self.config = config
         self.toolkit = toolkit
         self.skills = SkillsLoader()
+        self.experiences = ExperienceRegistry(
+            experiences_dir=experiences_dir or EXPERIENCES_DIR,
+            config=self.config,
+        )
+        self.conversation = ConversationAnalyzer()
+        self.last_episode: Optional[Dict[str, Any]] = None
         self.agy_bin = shutil.which("agy") or (
             "/home/level-78/.local/bin/agy"
             if os.path.exists("/home/level-78/.local/bin/agy")
@@ -162,8 +187,8 @@ class TchikoAgentEngine:
         self._machine_profile_cache = "\n".join(lines)
         return self._machine_profile_cache
 
-    def _build_context_brief(self, include_history: bool = True) -> str:
-        """Persona + machine facts + user memory + working rules, sent with a session's first request."""
+    def _build_context_brief(self, include_history: bool = True, prompt_hint: str = "") -> str:
+        """Persona + machine facts + user memory + matching Experiences + working rules."""
         persona = (self.config.data.get("agent", {}).get("system_instructions", "") or "").strip()
         parts: List[str] = []
         if persona:
@@ -176,6 +201,17 @@ class TchikoAgentEngine:
                 "Things the user asked you to remember:\n"
                 + "\n".join(f"- {k}: {v}" for k, v in notes.items())
             )
+        if prompt_hint:
+            matched_exps = self.experiences.match_experiences(prompt_hint, max_matches=3)
+            if matched_exps:
+                exp_lines = [
+                    f"- `{e.slug}` (v{e.version}, {e.maturity}, script `{e.script_path}`): {e.description} "
+                    f"(params: {json.dumps(e.parameters)})"
+                    for e in matched_exps
+                ]
+                parts.append(
+                    "Learned Python Experiences available for this request:\n" + "\n".join(exp_lines)
+                )
         if include_history:
             # history[-1] is the request being handled right now, so leave it out.
             earlier = self.memory.get("history", [])[:-1][-4:]
@@ -191,10 +227,12 @@ class TchikoAgentEngine:
         return "\n\n".join(parts)
 
     def reset_conversation(self) -> None:
-        """Forget the running conversation (agent session + chat turns); saved notes are kept."""
+        """Forget the running conversation (agent session + chat turns + pending clarification); saved notes are kept."""
         self.memory["agy_conversation_id"] = ""
         self.memory["agy_conversation_ts"] = 0
         self.memory["history"] = []
+        self.memory["pending_task"] = None
+        self.memory["last_suggested_command"] = ""
         self._save_memory()
 
     def _resolve_user_path(self, raw_path: str) -> str:
@@ -288,6 +326,9 @@ class TchikoAgentEngine:
         on_complete: Callable[[str], None],
         on_state_change: Callable[[str], None],
         on_approval_needed: Optional[Callable[[str, Callable[[], None], Callable[[], None]], None]] = None,
+        on_clarification_needed: Optional[Callable[[Dict[str, Any]], None]] = None,
+        on_experience_event: Optional[Callable[[str, Dict[str, Any]], None]] = None,
+        on_phase: Optional[Callable[[str, str], None]] = None,
     ) -> None:
         """Run prompt handling on a background thread with streaming UI callbacks."""
 
@@ -297,6 +338,10 @@ class TchikoAgentEngine:
 
                 def _wrapped_complete(final_text: str) -> None:
                     self.record_turn("assistant", final_text)
+                    suggested = extract_suggested_command(final_text)
+                    if suggested:
+                        self.memory["last_suggested_command"] = suggested
+                        self._save_memory()
                     on_complete(final_text)
 
                 with self._prompt_lock:
@@ -311,6 +356,9 @@ class TchikoAgentEngine:
                             _wrapped_complete,
                             on_state_change,
                             on_approval_needed,
+                            on_clarification_needed,
+                            on_experience_event,
+                            on_phase,
                         )
                     )
             except Exception as exc:
@@ -330,10 +378,13 @@ class TchikoAgentEngine:
         on_complete: Callable[[str], None],
         on_state_change: Callable[[str], None],
         on_approval_needed: Optional[Callable[[str, Callable[[], None], Callable[[], None]], None]],
+        on_clarification_needed: Optional[Callable[[Dict[str, Any]], None]] = None,
+        on_experience_event: Optional[Callable[[str, Dict[str, Any]], None]] = None,
+        on_phase: Optional[Callable[[str, str], None]] = None,
     ) -> None:
         on_state_change("thinking")
 
-        # 1. Check built-in Slash Commands (/doctor, /memory, /sysinfo, /run, etc.)
+        # 1. Check built-in Slash Commands (/doctor, /experiences, /learn, /memory, /sysinfo, /run, etc.)
         slash_handled = await self._try_handle_slash_commands(
             prompt,
             on_thought,
@@ -342,9 +393,85 @@ class TchikoAgentEngine:
             on_complete,
             on_state_change,
             on_approval_needed,
+            on_experience_event=on_experience_event,
         )
         if slash_handled:
             return
+
+        # 1B. Humanized Conversation & Clarification Gate (casual chat, pending clarification, anaphora, ambiguity)
+        ask_ambig = bool(self.config.data.get("learning", {}).get("ask_before_ambiguous", True))
+        conv = self.conversation.analyze(prompt, self.memory, ask_before_ambiguous=ask_ambig)
+
+        if conv.kind == "casual_chat":
+            await self._stream_markdown(conv.reply_text, on_token)
+            on_state_change("happy")
+            on_complete(conv.reply_text)
+            return
+
+        if conv.kind == "cancel_pending":
+            self.memory["pending_task"] = None
+            self._save_memory()
+            await self._stream_markdown(conv.reply_text, on_token)
+            on_state_change("idle")
+            on_complete(conv.reply_text)
+            return
+
+        if conv.kind == "needs_clarification" and conv.clarification is not None:
+            clar = conv.clarification
+            self.memory["pending_task"] = PendingTask(
+                id=clar.id,
+                original_prompt=clar.original_prompt or prompt,
+                question=clar.question,
+                options=list(clar.options),
+                context=clar.context,
+            ).to_dict()
+            self._save_memory()
+            if on_phase is not None:
+                on_phase("ASK_USER", clar.question[:120])
+            md = clar.format_markdown()
+            await self._stream_markdown(md, on_token)
+            if on_clarification_needed is not None:
+                try:
+                    on_clarification_needed(clar.to_dict())
+                except Exception:
+                    pass
+            on_state_change("thinking")
+            on_complete(md)
+            return
+
+        if conv.kind == "anaphora_command" and conv.suggested_command:
+            on_thought(f"Resolved reference to suggested command: `{conv.suggested_command}`")
+            await self._run_and_report(
+                f"Running the suggested command (`{conv.suggested_command}`):",
+                conv.suggested_command,
+                on_thought,
+                on_tool_call,
+                on_token,
+                on_complete,
+                on_state_change,
+                on_approval_needed,
+            )
+            return
+
+        if conv.kind == "clarification_reply":
+            self.memory["pending_task"] = None
+            self._save_memory()
+            prompt = conv.resolved_prompt
+            on_thought("Merged your clarification into the pending task; proceeding...")
+            # Check if the user selected a built-in slash shortcut inside the option text
+            m_slash_opt = re.search(r"(/[a-z][a-z0-9_-]*)", prompt.splitlines()[-1].lower())
+            if m_slash_opt and m_slash_opt.group(1) in ("/doctor", "/procs", "/net", "/disk", "/gpu", "/experiences"):
+                if await self._try_handle_slash_commands(
+                    m_slash_opt.group(1),
+                    on_thought,
+                    on_tool_call,
+                    on_token,
+                    on_complete,
+                    on_state_change,
+                    on_approval_needed,
+                    on_experience_event=on_experience_event,
+                ):
+                    return
 
         # 2. Check Contextual Memory & Follow-up Actions ("copy it", "remember ...", "cd ...")
         context_handled = await self._try_contextual_followup(
@@ -393,7 +520,7 @@ class TchikoAgentEngine:
             caps_enabled = all_perms or (
                 self.config.data.get("permissions", {}).get("tool_execution_policy") == "always-proceed"
             )
-            sys_instructions = self._build_context_brief()
+            sys_instructions = self._build_context_brief(prompt_hint=prompt)
 
             sdk_config = LocalAgentConfig(
                 system_instructions=sys_instructions,
@@ -438,11 +565,13 @@ class TchikoAgentEngine:
                 on_token,
                 on_complete,
                 on_state_change,
+                on_experience_event=on_experience_event,
+                on_phase=on_phase,
             )
             if agy_handled:
                 return
 
-        # 5. Try Optional Gemini API / Local Ollama LLM with Multi-Turn Memory & Multi-Tool ReAct Loop
+        # 5. Try Optional Gemini API / Local Ollama LLM with Resilient Do->Try/Catch->Verify Loop
         llm_reply = await self._try_external_llm_with_tools(
             prompt,
             on_thought,
@@ -451,6 +580,9 @@ class TchikoAgentEngine:
             on_complete,
             on_state_change,
             on_approval_needed,
+            on_clarification_needed=on_clarification_needed,
+            on_experience_event=on_experience_event,
+            on_phase=on_phase,
         )
         if llm_reply:
             return
@@ -766,7 +898,7 @@ class TchikoAgentEngine:
             )
 
             on_thought(f"Generating OpenSSH keypair `{key_file}` for `{key_label}`...")
-            if self.config.requires_manual_review(cmd) and on_approval_needed is not None:
+            if self.config.requires_manual_review(gen_cmd) and on_approval_needed is not None:
                 await self._execute_command_with_policy(
                     gen_cmd,
                     on_thought,
@@ -967,7 +1099,8 @@ class TchikoAgentEngine:
         m_cmd = re.search(r"^(?:tchiko\s+)?(?:please\s+)?(?:run|execute)\s+[`'\"]?(.+?)[`'\"]?$", prompt.strip(), re.IGNORECASE)
         if m_cmd:
             cmd = m_cmd.group(1).strip()
-            return (f"Executing command `{cmd}`:", cmd)
+            if not is_anaphoric_run_target(cmd):
+                return (f"Executing command `{cmd}`:", cmd)
 
         # Do not intercept complex or multi-step action requests (install, configure, update, start, debug, fix, etc.)
         complex_action_verbs = (
@@ -1266,6 +1399,8 @@ class TchikoAgentEngine:
         on_token: Callable[[str], None],
         on_complete: Callable[[str], None],
         on_state_change: Callable[[str], None],
+        on_experience_event: Optional[Callable[[str, Dict[str, Any]], None]] = None,
+        on_phase: Optional[Callable[[str, str], None]] = None,
     ) -> bool:
         """Answer via the Antigravity CLI (`agy -p --output-format stream-json`).
 
@@ -1283,10 +1418,16 @@ class TchikoAgentEngine:
 
         last_error = "no response"
         for conv_id in attempts:
-            status, text, error = await self._agy_turn(
+            status, text, error, episode = await self._agy_turn(
                 prompt, conv_id, on_thought, on_tool_call, on_token, on_state_change
             )
             if status == "ok":
+                if episode.get("steps"):
+                    self.last_episode = episode
+                    learned_note = await self._maybe_auto_learn(episode, on_phase, on_experience_event)
+                    if learned_note:
+                        await self._stream_markdown("\n\n" + learned_note, on_token)
+                        text = (text + "\n\n" + learned_note).strip()
                 on_state_change("happy")
                 on_complete(text)
                 return True
@@ -1315,8 +1456,8 @@ class TchikoAgentEngine:
         on_tool_call: Callable[[str, str], None],
         on_token: Callable[[str], None],
         on_state_change: Callable[[str], None],
-    ) -> Tuple[str, str, str]:
-        """Run one `agy` turn. Returns (status, text, error) with status ok | partial | failed.
+    ) -> Tuple[str, str, str, Dict[str, Any]]:
+        """Run one `agy` turn. Returns (status, text, error, episode) with status ok | partial | failed.
 
         `partial` means the agent already streamed text or ran tools before failing.
         """
@@ -1325,8 +1466,12 @@ class TchikoAgentEngine:
             active_cwd = str(Path.home())
 
         # A resumed conversation already holds the briefing; a new one gets it up front so the
-        # first request lands with the machine, memory and working rules already known.
-        agent_prompt = prompt if conv_id else f"{self._build_context_brief()}\n\nUser request:\n{prompt}"
+        # first request lands with the machine, memory, matching Experiences, and rules already known.
+        agent_prompt = (
+            prompt
+            if conv_id
+            else f"{self._build_context_brief(prompt_hint=prompt)}\n\nUser request:\n{prompt}"
+        )
         cmd_args = [
             str(self.agy_bin), "-p", agent_prompt,
             "--output-format", "stream-json",
@@ -1341,11 +1486,13 @@ class TchikoAgentEngine:
         tokens: List[str] = []
         final_response_text = ""
         tools_ran = 0
+        captured_steps: List[Dict[str, Any]] = []
         last_text_step: Any = None
         error = ""
         denied: List[str] = []
         proc = None
         stderr_task: Optional["asyncio.Task[bytes]"] = None
+        started = time.monotonic()
 
         try:
             proc = await asyncio.create_subprocess_exec(
@@ -1388,19 +1535,36 @@ class TchikoAgentEngine:
                     if step_type == "tool":
                         t_info = su.get("tool_info", {})
                         t_name = su.get("tool_name") or t_info.get("name", "tool")
-                        param_str = json.dumps(t_info.get("parameters", {}))[:160]
+                        params_obj = t_info.get("parameters", {}) or {}
+                        param_str = json.dumps(params_obj)[:160]
                         t_out = t_info.get("output", "")
                         if state == "ACTIVE":
                             tools_ran += 1
                             on_state_change("executing")
                             on_tool_call(t_name, param_str)
                             on_thought(f"Executing `{t_name}`: {param_str}")
-                        elif state == "DONE" and t_out:
-                            on_thought(f"Completed `{t_name}` → {str(t_out)[:120]}")
+                        elif state == "DONE":
+                            if t_out:
+                                on_thought(f"Completed `{t_name}` → {str(t_out)[:120]}")
+                            cmd_val = ""
+                            if isinstance(params_obj, dict):
+                                cmd_val = str(
+                                    params_obj.get("CommandLine")
+                                    or params_obj.get("command")
+                                    or params_obj.get("cmd")
+                                    or ""
+                                ).strip()
+                            if cmd_val:
+                                captured_steps.append({
+                                    "step_index": len(captured_steps) + 1,
+                                    "phase": "ACT",
+                                    "tool": "bash",
+                                    "args_summary": cmd_val,
+                                    "ok": "exit code 0" in str(t_out).lower() or "error" not in str(t_out).lower()[:120],
+                                })
                     elif step_type == "agent_response":
                         delta = su.get("text_delta", "")
                         if delta:
-                            # Separate the text of distinct agent steps so they don't run together.
                             step_idx = su.get("step_index")
                             if tokens and step_idx != last_text_step and not tokens[-1].endswith("\n"):
                                 tokens.append("\n\n")
@@ -1447,15 +1611,60 @@ class TchikoAgentEngine:
             )
 
         combined = "".join(tokens).strip() or final_response_text.strip()
+        episode = {
+            "prompt": prompt,
+            "steps": captured_steps,
+            "succeeded": bool(combined and not error),
+            "verified": bool(combined and not error and len(captured_steps) >= 2),
+            "recoveries_succeeded": 0,
+            "duration_ms": int((time.monotonic() - started) * 1000),
+        }
         if combined and not error:
             if not tokens:
                 await self._stream_markdown(final_response_text, on_token)
             self.memory["agy_conversation_ts"] = int(time.time())
             self._save_memory()
-            return "ok", combined, ""
+            return "ok", combined, "", episode
         if combined or tools_ran:
-            return "partial", combined, error or stderr_tail or "it returned no final answer"
-        return "failed", "", error or stderr_tail or "it returned an empty response"
+            return "partial", combined, error or stderr_tail or "it returned no final answer", episode
+        return "failed", "", error or stderr_tail or "it returned an empty response", episode
+
+    async def _maybe_auto_learn(
+        self,
+        episode: Dict[str, Any],
+        on_phase: Optional[Callable[[str, str], None]] = None,
+        on_experience_event: Optional[Callable[[Dict[str, Any]], None]] = None,
+    ) -> Optional[str]:
+        """Distill a verified multi-step episode into a reusable Python Experience when auto-learning is enabled."""
+        learning_cfg = self.config.data.get("learning", {})
+        if not bool(learning_cfg.get("auto_learn_experiences", True)):
+            return None
+        exp, msg = await asyncio.to_thread(self.experiences.learn_from_episode, episode)
+        if exp is None:
+            return None
+        if on_phase is not None:
+            try:
+                on_phase("LEARN", f"Distilled Python experience `{exp.slug}` v{exp.version} ({exp.maturity})")
+            except Exception:
+                pass
+        if on_experience_event is not None:
+            try:
+                on_experience_event({
+                    "event": "learned",
+                    "slug": exp.slug,
+                    "title": exp.title,
+                    "version": exp.version,
+                    "maturity": exp.maturity,
+                    "risk_tier": exp.risk_tier,
+                    "message": msg,
+                })
+            except Exception:
+                pass
+        return (
+            f"🧠 **Learned Reusable Experience:** `{exp.slug}` `v{exp.version}` "
+            f"[{exp.maturity}] — saved as Python tool in `experiences/{exp.slug}/tool.py`. "
+            f"Inspect or run it anytime in the **Experiences** tab or via `/exp run {exp.slug}`."
+        )
 
     @staticmethod
     def _strip_think_blocks(raw_text: str) -> Tuple[str, List[str]]:
@@ -1499,7 +1708,7 @@ class TchikoAgentEngine:
 
     @classmethod
     def _extract_tool_actions(cls, clean_text: str) -> List[Dict[str, Any]]:
-        """Extract multi-tool calls (<view_file>, <grep>, <patch_file>, <write_file>, <bash>) from LLM output."""
+        """Extract multi-tool calls (`view_file`, `grep`, `patch_file`, `write_file`, `experience`, `bash`, etc.) from LLM output."""
         actions: List[Dict[str, Any]] = []
 
         # 1. <view_file path="..." start="1" end="120" /> or <view_file path="...">
@@ -1610,7 +1819,24 @@ class TchikoAgentEngine:
         ):
             actions.append({"tool": "git", "path": (m.group(1) or ".").strip()})
 
-        # 12. <bash>...</bash>
+        # 12. <experience name="slug" params='{"k":"v"}' /> or <experience name="slug">{...}</experience>
+        for m in re.finditer(
+            r'<experience\s+name=["\']([^"\']+)["\'](?:\s+params=(?:"([^"]*)"|\'([^\']*)\'))?\s*(?:/>|>(.*?)</experience>)',
+            clean_text,
+            flags=re.DOTALL | re.IGNORECASE,
+        ):
+            raw_params = (m.group(2) or m.group(3) or m.group(4) or "").strip()
+            parsed_params: Dict[str, Any] = {}
+            if raw_params:
+                try:
+                    loaded = json.loads(raw_params)
+                    if isinstance(loaded, dict):
+                        parsed_params = loaded
+                except Exception:
+                    parsed_params = {}
+            actions.append({"tool": "experience", "name": m.group(1).strip(), "params": parsed_params})
+
+        # 13. <bash>...</bash>
         for cmd in cls._extract_valid_bash_commands(clean_text):
             actions.append({"tool": "bash", "command": cmd})
 
@@ -1625,9 +1851,11 @@ class TchikoAgentEngine:
         on_complete: Callable[[str], None],
         on_state_change: Callable[[str], None],
         on_approval_needed: Optional[Callable[[str, Callable[[], None], Callable[[], None]], None]],
+        on_clarification_needed: Optional[Callable[[Dict[str, Any]], None]] = None,
+        on_experience_event: Optional[Callable[[Dict[str, Any]], None]] = None,
+        on_phase: Optional[Callable[[str, str], None]] = None,
     ) -> bool:
-        """Run an autonomous multi-tool ReAct loop (`view_file`, `grep`, `patch_file`, `write_file`, `bash`)
-        against Gemini or a local Ollama model, keeping the full step-by-step transcript in context."""
+        """Run the resilient Do -> Observe -> Try/Catch & Recover -> Verify loop against Gemini or Ollama."""
         matched_skills = self.skills.match_skills(prompt)
         skills_block = ""
         if matched_skills:
@@ -1636,10 +1864,13 @@ class TchikoAgentEngine:
             )
 
         sys_prompt = (
-            self._build_context_brief(include_history=False) + skills_block + "\n\n"
+            self._build_context_brief(include_history=False, prompt_hint=prompt) + skills_block + "\n\n"
             "Tools. To act, end your message with tool tags, then stop and wait. "
             "Read-only tools can be batched together; mutating tools run one at a time.\n"
-            "- Run a shell command: <bash>ls -la ~/.config</bash>\n"
+            "- Run a shell command: <bash>ls -la ~/.config</bash> (use `<bash>pkexec ...</bash>` for root, never `<pkexec>`)\n"
+            "- Run a learned Python Experience tool: <experience name=\"port-socket-inspector\" params='{\"port\": 8000}' />\n"
+            "- Ask the user a concise clarifying question before acting (when ambiguous/underspecified):\n"
+            "  <ask_user question=\"Which target should I operate on?\" reason=\"Short reason\"><option>Option A</option><option>Option B</option></ask_user>\n"
             "- View file lines: <view_file path=\"/path/to/file\" start=\"1\" end=\"120\" />\n"
             "- Search logs/code: <grep pattern=\"error\" path=\"/path/to/dir\" />\n"
             "- Patch a file (snapshot saved for /undo): <patch_file path=\"/path/to/file\"><search>old</search><replace>new</replace></patch_file>\n"
@@ -1651,9 +1882,11 @@ class TchikoAgentEngine:
             "- GPU & Ollama/vLLM health: <gpu />\n"
             "- DNS & TLS cert check: <tls host=\"example.com\" />\n"
             "- Git repo status: <git path=\".\" />\n\n"
-            "Tool rules:\n"
+            "Tool & Recovery rules:\n"
             "- Use real values, never placeholders, and never place tool tags inside <think> blocks.\n"
             "- Never write a command's output yourself (no <output> blocks, no pretend logs). Only tool results are real.\n"
+            "- If a tool returns a `[TRY/CATCH]` error block, follow its recovery guidance instead of repeating the same command.\n"
+            "- After making a change, run a quick read-only verification check before declaring success.\n"
             "- Use absolute paths or paths starting with `~`.\n"
             "- When the task is finished or cannot proceed, reply with a short summary and no tool tag."
         )
@@ -1675,14 +1908,15 @@ class TchikoAgentEngine:
             messages.append({"role": "user", "content": prompt})
 
         agent_cfg = self.config.data.get("agent", {})
+        learning_cfg = self.config.data.get("learning", {})
         gemini_key = (os.getenv("GEMINI_API_KEY") or agent_cfg.get("gemini_api_key", "")).strip()
         has_gemini = bool(gemini_key) and gemini_key != "your_gemini_api_key_here"
         ollama_target: List[Any] = []  # [port, model] once a local server has been found
 
-        async def _query_llm() -> Optional[str]:
+        async def _query_llm(cur_messages: List[Dict[str, str]]) -> Optional[str]:
             if has_gemini:
                 on_thought("Thinking with Gemini 2.5 Flash...")
-                res_txt = await asyncio.to_thread(self._call_gemini_rest, gemini_key, sys_prompt, messages)
+                res_txt = await asyncio.to_thread(self._call_gemini_rest, gemini_key, sys_prompt, cur_messages)
                 if res_txt:
                     return res_txt
                 self._backend_notes.append("**Gemini API:** request failed or returned nothing.")
@@ -1700,167 +1934,197 @@ class TchikoAgentEngine:
                 return None
             port, model = ollama_target
             on_thought(f"Thinking with local model `{model}`...")
-            res_txt = await asyncio.to_thread(self._call_local_ollama, port, model, sys_prompt, messages)
+            res_txt = await asyncio.to_thread(self._call_local_ollama, port, model, sys_prompt, cur_messages)
             if not res_txt:
                 self._backend_notes.append(f"**Local Ollama (`{model}`):** no reply (timed out or errored).")
             return res_txt
 
-        accumulated_markdown: List[str] = []
-
-        for _step in range(LLM_MAX_TOOL_STEPS):
-            llm_text = await _query_llm()
-            if not llm_text:
-                if not accumulated_markdown:
-                    return False
-                note = "⚠️ **The model stopped responding before the task was finished.**"
-                accumulated_markdown.append(note)
-                await self._stream_markdown(note, on_token)
-                on_state_change("alert")
-                on_complete("\n\n".join(accumulated_markdown).strip())
-                return True
-
-            visible_text, thoughts = self._strip_think_blocks(llm_text)
-            for th in thoughts:
-                first_line = next((ln.strip() for ln in th.splitlines() if ln.strip()), "Reasoning...")
-                on_thought(first_line[:140])
-
-            actions = self._extract_tool_actions(visible_text)
-            clean_reply = re.sub(
-                r"(<bash>.*?</bash>|<view_file[^>]*/?>|<grep[^>]*/?>|<patch_file.*?</patch_file>|<write_file.*?</write_file>|<containers[^>]*/?>|<systemd[^>]*/?>|<network_audit[^>]*/?>|<disk\s*/?>|<gpu\s*/?>|<tls[^>]*/?>|<git[^>]*/?>)",
-                "",
-                visible_text,
-                flags=re.DOTALL | re.IGNORECASE,
-            ).strip()
-
-            if clean_reply:
-                accumulated_markdown.append(clean_reply)
-                await self._stream_markdown(clean_reply + "\n\n", on_token)
-
-            messages.append({"role": "assistant", "content": visible_text or "(no visible reply)"})
-            if not actions:
-                break
-
-            active_cwd = self.memory.get("cwd", str(Path.home()))
-            on_state_change("executing")
-
-            readonly_kinds = {
-                "view_file", "grep", "containers", "systemd", "network_audit", "disk", "gpu", "tls", "git"
-            }
-
-            async def _run_single_action(
-                act: Dict[str, Any], cwd_snap: str = active_cwd
-            ) -> Tuple[str, ToolResult]:
-                tk = act["tool"]
-                if tk == "view_file":
-                    path = self._resolve_user_path(act["path"])
-                    on_tool_call("view_file", f"{{'path': {path!r}, 'lines': '{act['start']}-{act['end']}'}}")
-                    return tk, await asyncio.to_thread(self.toolkit.view_file_lines, path, act["start"], act["end"])
-                if tk == "grep":
-                    path = self._resolve_user_path(act["path"])
-                    on_tool_call("grep_files", f"{{'pattern': {act['pattern']!r}, 'path': {path!r}}}")
-                    return tk, await asyncio.to_thread(self.toolkit.grep_files, act["pattern"], path)
-                if tk == "patch_file":
-                    path = self._resolve_user_path(act["path"])
-                    on_tool_call("patch_file_content", f"{{'path': {path!r}}}")
-                    return tk, await asyncio.to_thread(
-                        self.toolkit.patch_file_content, path, act["search"], act["replace"], True
+        async def _run_single_action(act: Dict[str, Any]) -> Tuple[str, ToolResult]:
+            cwd_snap = self.memory.get("cwd", str(Path.home()))
+            tk = act["tool"]
+            if tk == "view_file":
+                path = self._resolve_user_path(act["path"])
+                on_tool_call("view_file", f"{{'path': {path!r}, 'lines': '{act['start']}-{act['end']}'}}")
+                return tk, await asyncio.to_thread(self.toolkit.view_file_lines, path, act["start"], act["end"])
+            if tk == "grep":
+                path = self._resolve_user_path(act["path"])
+                on_tool_call("grep_files", f"{{'pattern': {act['pattern']!r}, 'path': {path!r}}}")
+                return tk, await asyncio.to_thread(self.toolkit.grep_files, act["pattern"], path)
+            if tk == "patch_file":
+                path = self._resolve_user_path(act["path"])
+                on_tool_call("patch_file_content", f"{{'path': {path!r}}}")
+                return tk, await asyncio.to_thread(
+                    self.toolkit.patch_file_content, path, act["search"], act["replace"], True
+                )
+            if tk == "write_file":
+                path = self._resolve_user_path(act["path"])
+                on_tool_call("write_file_content", f"{{'path': {path!r}}}")
+                return tk, await asyncio.to_thread(self.toolkit.write_file_content, path, act["content"], True)
+            if tk == "containers":
+                on_tool_call("diagnose_containers", f"{{'target': {act['target']!r}}}")
+                return tk, await asyncio.to_thread(self.toolkit.diagnose_containers, act["target"])
+            if tk == "systemd":
+                on_tool_call("inspect_systemd_unit", f"{{'unit': {act['unit']!r}, 'lines': {act['lines']}}}")
+                return tk, await asyncio.to_thread(self.toolkit.inspect_systemd_unit, act["unit"], act["lines"])
+            if tk == "network_audit":
+                on_tool_call("audit_network_security", "{}")
+                return tk, await asyncio.to_thread(self.toolkit.audit_network_security)
+            if tk == "disk":
+                on_tool_call("audit_disk_and_inodes", "{}")
+                return tk, await asyncio.to_thread(self.toolkit.audit_disk_and_inodes)
+            if tk == "gpu":
+                on_tool_call("diagnose_gpu_and_ai", "{}")
+                return tk, await asyncio.to_thread(self.toolkit.diagnose_gpu_and_ai)
+            if tk == "tls":
+                on_tool_call("diagnose_dns_and_tls", f"{{'host': {act['host']!r}}}")
+                return tk, await asyncio.to_thread(self.toolkit.diagnose_dns_and_tls, act["host"])
+            if tk == "git":
+                path = self._resolve_user_path(act["path"])
+                on_tool_call("inspect_git_repo", f"{{'path': {path!r}}}")
+                return tk, await asyncio.to_thread(self.toolkit.inspect_git_repo, path)
+            if tk == "experience":
+                exp_slug = act["name"]
+                exp_params = act.get("params") or {}
+                exp = self.experiences.get_experience(exp_slug)
+                if exp is None:
+                    return tk, ToolResult(
+                        ok=False,
+                        title="Experience Not Found",
+                        output=f"No experience named `{exp_slug}` exists.",
+                        exit_code=127,
                     )
-                if tk == "write_file":
-                    path = self._resolve_user_path(act["path"])
-                    on_tool_call("write_file_content", f"{{'path': {path!r}}}")
-                    return tk, await asyncio.to_thread(self.toolkit.write_file_content, path, act["content"], True)
-                if tk == "containers":
-                    on_tool_call("diagnose_containers", f"{{'target': {act['target']!r}}}")
-                    return tk, await asyncio.to_thread(self.toolkit.diagnose_containers, act["target"])
-                if tk == "systemd":
-                    on_tool_call("inspect_systemd_unit", f"{{'unit': {act['unit']!r}, 'lines': {act['lines']}}}")
-                    return tk, await asyncio.to_thread(self.toolkit.inspect_systemd_unit, act["unit"], act["lines"])
-                if tk == "network_audit":
-                    on_tool_call("audit_network_security", "{}")
-                    return tk, await asyncio.to_thread(self.toolkit.audit_network_security)
-                if tk == "disk":
-                    on_tool_call("audit_disk_and_inodes", "{}")
-                    return tk, await asyncio.to_thread(self.toolkit.audit_disk_and_inodes)
-                if tk == "gpu":
-                    on_tool_call("diagnose_gpu_and_ai", "{}")
-                    return tk, await asyncio.to_thread(self.toolkit.diagnose_gpu_and_ai)
-                if tk == "tls":
-                    on_tool_call("diagnose_dns_and_tls", f"{{'host': {act['host']!r}}}")
-                    return tk, await asyncio.to_thread(self.toolkit.diagnose_dns_and_tls, act["host"])
-                if tk == "git":
-                    path = self._resolve_user_path(act["path"])
-                    on_tool_call("inspect_git_repo", f"{{'path': {path!r}}}")
-                    return tk, await asyncio.to_thread(self.toolkit.inspect_git_repo, path)
-
-                cmd = act["command"]
-                if self.config.requires_manual_review(cmd) and on_approval_needed is not None:
+                needs_review = (
+                    exp.risk_tier != "SAFE_READONLY"
+                    and not self.config.is_all_permissions_approved()
+                    and self.config.data.get("permissions", {}).get("tool_execution_policy") != "always-proceed"
+                )
+                if needs_review and on_approval_needed is not None:
                     loop = asyncio.get_running_loop()
                     approval_fut: asyncio.Future[bool] = loop.create_future()
                     on_state_change("thinking")
-                    on_token(f"🔒 **Approval Required** for `{cmd}`...\n")
+                    label = f"experience:{exp.slug} ({exp.risk_tier})"
+                    on_token(f"🔒 **Approval Required** for Python Experience `{exp.slug}` (`{exp.risk_tier}`)...\n")
 
-                    def _approve() -> None:
+                    def _approve_exp() -> None:
                         if not approval_fut.done():
                             loop.call_soon_threadsafe(approval_fut.set_result, True)
 
-                    def _deny() -> None:
+                    def _deny_exp() -> None:
                         if not approval_fut.done():
                             loop.call_soon_threadsafe(approval_fut.set_result, False)
 
-                    on_approval_needed(cmd, _approve, _deny)
-                    approved = await approval_fut
-                    if not approved:
+                    on_approval_needed(label, _approve_exp, _deny_exp)
+                    if not await approval_fut:
                         return tk, ToolResult(
                             ok=False,
-                            title="Command Cancelled",
-                            output=f"User denied execution of `{cmd}`.",
+                            title="Experience Cancelled",
+                            output=f"User denied execution of experience `{exp.slug}`.",
                             exit_code=126,
                         )
                     on_state_change("executing")
-                    res_cmd = await asyncio.to_thread(
-                        self.toolkit.run_shell_command, cmd, cwd_snap, LLM_TOOL_BASH_TIMEOUT_SEC, True
-                    )
-                else:
-                    on_tool_call("run_shell_command", f"{{'command': {cmd!r}, 'cwd': {cwd_snap!r}}}")
-                    res_cmd = await asyncio.to_thread(
-                        self.toolkit.run_shell_command, cmd, cwd_snap, LLM_TOOL_BASH_TIMEOUT_SEC
-                    )
-                self.memory["last_command"] = cmd
-                self.memory["last_output"] = res_cmd.output
-                self._save_memory()
-                return tk, res_cmd
 
-            # Run consecutive leading read-only tools in parallel; otherwise run the first mutating action
-            ro_batch = [a for a in actions if a["tool"] in readonly_kinds]
-            if ro_batch and len(ro_batch) == len(actions) and len(actions) > 1:
-                results = list(await asyncio.gather(*[_run_single_action(a) for a in ro_batch]))
-            else:
-                results = [await _run_single_action(actions[0])]
+                on_tool_call("run_experience", f"{{'slug': {exp.slug!r}, 'params': {exp_params!r}}}")
+                res_exp = await asyncio.to_thread(self.experiences.run_experience, exp.slug, exp_params)
+                if on_experience_event is not None:
+                    try:
+                        updated_exp = self.experiences.get_experience(exp.slug) or exp
+                        on_experience_event({
+                            "event": "used",
+                            "slug": updated_exp.slug,
+                            "title": updated_exp.title,
+                            "version": updated_exp.version,
+                            "maturity": updated_exp.maturity,
+                            "ok": res_exp.ok,
+                        })
+                    except Exception:
+                        pass
+                return tk, res_exp
 
-            obs_blocks: List[str] = []
-            for t_kind, res in results:
-                status_icon = "✅" if res.ok else "⚠️"
-                cmd_card = (
-                    f"{status_icon} **{res.title}**\n"
-                    f"```text\n{res.output[:1800]}\n```\n\n"
+            cmd = act["command"]
+            if self.config.requires_manual_review(cmd) and on_approval_needed is not None:
+                loop = asyncio.get_running_loop()
+                approval_fut = loop.create_future()
+                on_state_change("thinking")
+                on_token(f"🔒 **Approval Required** for `{cmd}`...\n")
+
+                def _approve() -> None:
+                    if not approval_fut.done():
+                        loop.call_soon_threadsafe(approval_fut.set_result, True)
+
+                def _deny() -> None:
+                    if not approval_fut.done():
+                        loop.call_soon_threadsafe(approval_fut.set_result, False)
+
+                on_approval_needed(cmd, _approve, _deny)
+                approved = await approval_fut
+                if not approved:
+                    return tk, ToolResult(
+                        ok=False,
+                        title="Command Cancelled",
+                        output=f"User denied execution of `{cmd}`.",
+                        exit_code=126,
+                    )
+                on_state_change("executing")
+                res_cmd = await asyncio.to_thread(
+                    self.toolkit.run_shell_command, cmd, cwd_snap, LLM_TOOL_BASH_TIMEOUT_SEC, True
                 )
-                accumulated_markdown.append(cmd_card.strip())
-                await self._stream_markdown(cmd_card, on_token)
-                obs_blocks.append(f"Tool `{t_kind}` result (ok={res.ok}):\n{res.output[:3500]}")
+            else:
+                on_tool_call("run_shell_command", f"{{'command': {cmd!r}, 'cwd': {cwd_snap!r}}}")
+                res_cmd = await asyncio.to_thread(
+                    self.toolkit.run_shell_command, cmd, cwd_snap, LLM_TOOL_BASH_TIMEOUT_SEC
+                )
+            self.memory["last_command"] = cmd
+            self.memory["last_output"] = res_cmd.output
+            self._save_memory()
+            return tk, res_cmd
 
-            messages.append(
-                {
-                    "role": "user",
-                    "content": (
-                        "\n\n".join(obs_blocks) + "\n\n"
-                        "Continue with the next tool tag, or, if the request is fully handled, give the "
-                        "final summary with no tool tag."
-                    ),
-                }
-            )
+        agent_loop = ResilientAgentLoop(
+            query_llm=_query_llm,
+            strip_think=self._strip_think_blocks,
+            extract_actions=self._extract_tool_actions,
+            execute_action=_run_single_action,
+            rollback_tx=self.toolkit.rollback_transaction,
+            on_thought=on_thought,
+            on_token=on_token,
+            on_state_change=on_state_change,
+            on_phase=on_phase,
+            stream_markdown=self._stream_markdown,
+            max_steps=int(learning_cfg.get("max_loop_steps", LLM_MAX_TOOL_STEPS) or LLM_MAX_TOOL_STEPS),
+            auto_rollback=bool(learning_cfg.get("auto_rollback_on_failure", False)),
+        )
+        handled, trace = await agent_loop.run(prompt, messages)
+        if not handled:
+            return False
 
-        final_summary = "\n\n".join(accumulated_markdown).strip() or "Completed."
-        on_state_change("idle")
+        # Save structured episode for manual `/learn` or automatic Experience distillation
+        episode = trace.to_episode_dict()
+        self.last_episode = episode
+
+        if trace.asked_user is not None:
+            clar = trace.asked_user
+            self.memory["pending_task"] = PendingTask(
+                original_prompt=prompt,
+                question=clar.question,
+                options=clar.options,
+                reason=clar.reason,
+                created_at=time.time(),
+            ).to_dict()
+            self._save_memory()
+            if on_clarification_needed is not None:
+                try:
+                    on_clarification_needed(clar.to_dict())
+                except Exception:
+                    pass
+            on_complete(trace.final_text)
+            return True
+
+        final_summary = trace.final_text or "Completed."
+        if trace.succeeded:
+            learned_note = await self._maybe_auto_learn(episode, on_phase, on_experience_event)
+            if learned_note:
+                await self._stream_markdown("\n\n" + learned_note, on_token)
+                final_summary = (final_summary + "\n\n" + learned_note).strip()
+
         on_complete(final_summary)
         return True
 
@@ -1975,6 +2239,7 @@ class TchikoAgentEngine:
         on_complete: Callable[[str], None],
         on_state_change: Callable[[str], None],
         on_approval_needed: Optional[Callable[[str, Callable[[], None], Callable[[], None]], None]],
+        on_experience_event: Optional[Callable[[Dict[str, Any]], None]] = None,
     ) -> bool:
         lower = prompt.lower().strip()
 
@@ -1989,6 +2254,12 @@ class TchikoAgentEngine:
                 "  - *\"find files named *.py in ~/Desktop\"*\n"
                 "- **Context & Memory:**\n"
                 "  - *\"remember my hetzner ip is 95.216.10.20\"*, *\"copy it\"*, *\"retry\"*, *\"cd ~/Desktop\"*\n"
+                "- **Learning & Python Experiences:**\n"
+                "  - `/experiences` — List all learned Python Experience tools & maturity stats\n"
+                "  - `/exp run <slug> [json]` — Run a learned Python Experience script\n"
+                "  - `/exp test <slug>` — Dry-run / self-test an Experience without mutating the host\n"
+                "  - `/exp show <slug>` — View an Experience's Python script & manifest\n"
+                "  - `/learn [name]` — Distill the last completed task into a reusable Python Experience\n"
                 "- **Slash Commands:**\n"
                 "  - `/doctor` — Run 5-point Ubuntu System Doctor diagnostic\n"
                 "  - `/containers [name]` — Inspect Docker/Podman containers & crash logs\n"
@@ -2021,6 +2292,158 @@ class TchikoAgentEngine:
             await self._stream_markdown(msg, on_token)
             on_state_change("idle")
             on_complete(msg)
+            return True
+
+        if lower in ("/experiences", "/exp", "/exps"):
+            out = self.experiences.format_experiences_index()
+            await self._stream_markdown(out, on_token)
+            on_state_change("idle")
+            on_complete(out)
+            return True
+
+        if lower.startswith("/exp "):
+            rest = prompt.strip()[5:].strip()
+            parts = rest.split(None, 2)
+            sub = parts[0].lower() if parts else ""
+            slug = parts[1].strip() if len(parts) > 1 else ""
+            extra = parts[2].strip() if len(parts) > 2 else ""
+
+            if sub in ("run", "test", "dry-run") and slug:
+                dry = sub in ("test", "dry-run")
+                params: Dict[str, Any] = {}
+                if extra:
+                    try:
+                        loaded = json.loads(extra)
+                        if isinstance(loaded, dict):
+                            params = loaded
+                    except Exception:
+                        pass
+                on_thought(f"{'Dry-running' if dry else 'Running'} Python Experience `{slug}`...")
+                on_state_change("executing")
+                on_tool_call("run_experience", f"{{'slug': {slug!r}, 'dry_run': {dry}}}")
+                res = await asyncio.to_thread(self.experiences.run_experience, slug, params, dry)
+                if not dry and on_experience_event is not None:
+                    exp_obj = self.experiences.get_experience(slug)
+                    if exp_obj is not None:
+                        try:
+                            on_experience_event({
+                                "event": "used",
+                                "slug": exp_obj.slug,
+                                "title": exp_obj.title,
+                                "version": exp_obj.version,
+                                "maturity": exp_obj.maturity,
+                                "ok": res.ok,
+                            })
+                        except Exception:
+                            pass
+                icon = "✅" if res.ok else "⚠️"
+                out = f"{icon} **{res.title}** (`exit={res.exit_code}`, `{res.duration_ms}ms`)\n```text\n{res.output}\n```"
+                await self._stream_markdown(out, on_token)
+                on_state_change("happy" if res.ok else "alert")
+                on_complete(out)
+                return True
+
+            if sub == "show" and slug:
+                exp = self.experiences.get_experience(slug)
+                if exp is None:
+                    out = f"⚠️ Experience `{slug}` not found."
+                else:
+                    code = self.experiences.get_script_source(slug)
+                    out = (
+                        f"### 🧠 Experience: `{exp.slug}` `v{exp.version}` [{exp.maturity}]\n"
+                        f"- **Title:** {exp.title}\n"
+                        f"- **Description:** {exp.description}\n"
+                        f"- **Category:** `{exp.category}` · **Risk Tier:** `{exp.risk_tier}`\n"
+                        f"- **Stats:** `{exp.runs}` runs, `{int(round(exp.success_rate * 100))}%` success, `{exp.recoveries}` recoveries\n"
+                        f"- **Triggers:** {', '.join(f'`{t}`' for t in exp.triggers)}\n\n"
+                        f"```python\n{code[:4000]}\n```"
+                    )
+                await self._stream_markdown(out, on_token)
+                on_state_change("idle")
+                on_complete(out)
+                return True
+
+            if sub == "approve" and slug:
+                exp = self.experiences.approve_experience(slug)
+                out = (
+                    f"✅ Approved Experience `{exp.slug}` -> `{exp.maturity}`."
+                    if exp
+                    else f"⚠️ Experience `{slug}` not found."
+                )
+                await self._stream_markdown(out, on_token)
+                on_state_change("happy" if exp else "alert")
+                on_complete(out)
+                return True
+
+            if sub == "rollback" and slug:
+                ok_rb, msg_rb = self.experiences.rollback_version(slug)
+                out = ("↩️ " if ok_rb else "⚠️ ") + msg_rb
+                await self._stream_markdown(out, on_token)
+                on_state_change("happy" if ok_rb else "alert")
+                on_complete(out)
+                return True
+
+            out = "Usage: `/exp run <slug> [json]`, `/exp test <slug>`, `/exp show <slug>`, `/exp approve <slug>`, `/exp rollback <slug>`"
+            await self._stream_markdown(out, on_token)
+            on_state_change("idle")
+            on_complete(out)
+            return True
+
+        if lower == "/learn" or lower.startswith("/learn "):
+            custom_name = prompt.strip()[6:].strip()
+            ep = self.last_episode
+            if not ep and self.memory.get("last_command"):
+                ep = {
+                    "prompt": custom_name or self.memory.get("last_command", "learned-command"),
+                    "steps": [
+                        {
+                            "tool": "bash",
+                            "args_summary": self.memory.get("last_command", ""),
+                            "ok": True,
+                        }
+                    ],
+                    "succeeded": True,
+                    "verified": True,
+                    "recoveries_succeeded": 0,
+                }
+            if not ep:
+                out = "⚠️ No recent completed task to learn from yet. Run a task first, then call `/learn [name]`."
+                await self._stream_markdown(out, on_token)
+                on_state_change("idle")
+                on_complete(out)
+                return True
+
+            on_thought("Distilling last task into a validated Python Experience tool...")
+            exp, msg = await asyncio.to_thread(self.experiences.learn_from_episode, ep, custom_name, True)
+            if exp is None:
+                out = f"⚠️ Could not create Experience: {msg}"
+                await self._stream_markdown(out, on_token)
+                on_state_change("alert")
+                on_complete(out)
+                return True
+
+            if on_experience_event is not None:
+                try:
+                    on_experience_event({
+                        "event": "learned",
+                        "slug": exp.slug,
+                        "title": exp.title,
+                        "version": exp.version,
+                        "maturity": exp.maturity,
+                        "risk_tier": exp.risk_tier,
+                        "message": msg,
+                    })
+                except Exception:
+                    pass
+            out = (
+                f"🧠 **Experience Saved:** `{exp.slug}` `v{exp.version}` [{exp.maturity}]\n"
+                f"- **Script:** `experiences/{exp.slug}/tool.py`\n"
+                f"- **Risk Tier:** `{exp.risk_tier}`\n"
+                f"- **Run anytime:** `/exp run {exp.slug}` or open the **Experiences** tab."
+            )
+            await self._stream_markdown(out, on_token)
+            on_state_change("happy")
+            on_complete(out)
             return True
 
         if lower in ("/doctor", "doctor"):

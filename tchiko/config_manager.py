@@ -72,6 +72,13 @@ DEFAULT_SETTINGS: Dict[str, Any] = {
         "notifications_enabled": True,
         "keep_awake": False,
     },
+    "learning": {
+        "auto_learn_experiences": True,
+        "auto_promote_verified": True,
+        "ask_before_ambiguous": True,
+        "max_loop_steps": 14,
+        "auto_rollback_on_failure": False,
+    },
 }
 
 
@@ -177,7 +184,7 @@ class ConfigManager:
             return "SAFE_READONLY", "Empty command"
 
         destructive_patterns = (
-            r"(?:^|[;&|\s])sudo\b",
+            r"(?:^|[;&|\s])(?:sudo|pkexec)\b",
             r"\brm\s+-[a-zA-Z]*[rf][a-zA-Z]*\b",
             r"\bmkfs(?:\.[a-z0-9]+)?\b",
             r"\bdd\s+if=",

@@ -229,10 +229,40 @@ class TchikoSettingsWindow(Gtk.Window):
         return page
 
     def _build_agent_page(self) -> Gtk.Widget:
-        page = self._page("Agent", "The model that plans and carries out your requests.")
+        page = self._page("Agent", "The model, conversation clarity, and Python Experience learning behaviour.")
         card = self._group(page, "Model")
         self.model_combo = self._combo([(m, m) for m in MODELS])
         self._row(card, "Preferred model", "Used by the Antigravity backend", self.model_combo)
+
+        learn = self._group(page, "Learning & Conversation")
+        self.ask_ambiguous_switch = self._switch()
+        self._row(
+            learn,
+            "Ask clarifying questions",
+            "Pause and ask concise follow-up questions when a request is ambiguous or underspecified",
+            self.ask_ambiguous_switch,
+        )
+        self.auto_learn_switch = self._switch()
+        self._row(
+            learn,
+            "Auto-learn Python Experiences",
+            "Automatically distill verified multi-step tasks into reusable Python tool scripts",
+            self.auto_learn_switch,
+        )
+        self.auto_promote_switch = self._switch()
+        self._row(
+            learn,
+            "Auto-promote verified tools",
+            "Promote safe & local Python Experiences to VERIFIED when AST + self-test pass",
+            self.auto_promote_switch,
+        )
+        self.auto_rollback_switch = self._switch()
+        self._row(
+            learn,
+            "Auto-rollback on loop failure",
+            "Automatically restore file snapshots if an agentic loop aborts after repeated failures",
+            self.auto_rollback_switch,
+        )
         return page
 
     def _build_companion_page(self) -> Gtk.Widget:
@@ -317,6 +347,12 @@ class TchikoSettingsWindow(Gtk.Window):
                 )
 
             self.model_combo.set_active_id(data.get("agent", {}).get("model", "gemini-2.5-pro"))
+            learn_cfg = data.get("learning", {})
+            self.ask_ambiguous_switch.set_active(bool(learn_cfg.get("ask_before_ambiguous", True)))
+            self.auto_learn_switch.set_active(bool(learn_cfg.get("auto_learn_experiences", True)))
+            self.auto_promote_switch.set_active(bool(learn_cfg.get("auto_promote_verified", True)))
+            self.auto_rollback_switch.set_active(bool(learn_cfg.get("auto_rollback_on_failure", False)))
+
             self.policy_combo.set_active_id(perms.get("tool_execution_policy", "always-proceed"))
             self.file_access_combo.set_active_id(perms.get("non_workspace_file_access", "allow"))
             self.net_access_combo.set_active_id(perms.get("internet_access_policy", "allow"))
@@ -367,6 +403,12 @@ class TchikoSettingsWindow(Gtk.Window):
         )
 
         self.config.data.setdefault("agent", {})["model"] = self.model_combo.get_active_id() or "gemini-2.5-pro"
+
+        learn_cfg = self.config.data.setdefault("learning", {})
+        learn_cfg["ask_before_ambiguous"] = self.ask_ambiguous_switch.get_active()
+        learn_cfg["auto_learn_experiences"] = self.auto_learn_switch.get_active()
+        learn_cfg["auto_promote_verified"] = self.auto_promote_switch.get_active()
+        learn_cfg["auto_rollback_on_failure"] = self.auto_rollback_switch.get_active()
 
         ghost_cfg = self.config.data.setdefault("ghost_widget", {})
         ghost_cfg["theme"] = next(

@@ -1,0 +1,44 @@
+{
+  "slug": "port-socket-inspector",
+  "title": "Port & Socket Inspector",
+  "description": "Inspect listening TCP/UDP sockets or check which process owns a specific port.",
+  "category": "networking",
+  "triggers": [
+    "port",
+    "listening",
+    "socket",
+    "eaddrinuse",
+    "ss"
+  ],
+  "parameters": {
+    "port": {
+      "type": "string",
+      "description": "Optional port number to filter",
+      "default": ""
+    }
+  },
+  "maturity": "VERIFIED",
+  "risk_tier": "SAFE_READONLY",
+  "version": 1,
+  "enabled": true,
+  "source_prompt": "Built-in starter experience",
+  "created_at": 1795696145.9283314,
+  "updated_at": 1795696145.9283314,
+  "stats": {
+    "runs": 0,
+    "successes": 0,
+    "failures": 0,
+    "consecutive_failures": 0,
+    "recoveries": 0,
+    "avg_duration_ms": 0,
+    "last_run_at": 0.0,
+    "last_error": ""
+  },
+  "evolution_notes": [
+    {
+      "version": 1,
+      "ts": 1795696145.9283314,
+      "note": "Starter verified Python experience"
+    }
+  ]
+}

@@ -44,5 +44,12 @@
     "theme_mode": "dark",
     "notifications_enabled": true,
     "keep_awake": false
+  },
+  "learning": {
+    "auto_learn_experiences": true,
+    "auto_promote_verified": true,
+    "ask_before_ambiguous": true,
+    "max_loop_steps": 14,
+    "auto_rollback_on_failure": false
   }
 }

@@ -1,0 +1,39 @@
+{
+  "updated_at": 1795696145.9972258,
+  "count": 3,
+  "items": [
+    {
+      "slug": "disk-space-auditor",
+      "title": "Disk & Directory Space Auditor",
+      "category": "system",
+      "maturity": "VERIFIED",
+      "risk_tier": "SAFE_READONLY",
+      "version": 1,
+      "enabled": true,
+      "runs": 0,
+      "success_rate": 1.0
+    },
+    {
+      "slug": "port-socket-inspector",
+      "title": "Port & Socket Inspector",
+      "category": "networking",
+      "maturity": "VERIFIED",
+      "risk_tier": "SAFE_READONLY",
+      "version": 1,
+      "enabled": true,
+      "runs": 0,
+      "success_rate": 1.0
+    },
+    {
+      "slug": "systemd-service-doctor",
+      "title": "Systemd Service Doctor",
+      "category": "services",
+      "maturity": "VERIFIED",
+      "risk_tier": "SAFE_READONLY",
+      "version": 1,
+      "enabled": true,
+      "runs": 0,
+      "success_rate": 1.0
+    }
+  ]
+}

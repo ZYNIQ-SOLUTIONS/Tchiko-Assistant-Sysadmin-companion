@@ -345,6 +345,35 @@ entry.tchiko-entry placeholder, entry.tchiko-entry .placeholder {{ color: @t_mut
     border-radius: 6px;
     padding: 10px 12px 10px 14px;
 }}
+.tchiko-clarify-card {{
+    background-color: @t_surface;
+    border: 1px solid alpha(@t_accent, 0.45);
+    border-radius: 7px;
+    padding: 12px 14px;
+}}
+button.tchiko-option-chip {{
+    background-image: none;
+    box-shadow: none;
+    background-color: @t_raised;
+    color: @t_text;
+    border: 1px solid @t_border_strong;
+    border-radius: 5px;
+    padding: 6px 12px;
+    font-size: 9.2pt;
+    font-weight: 600;
+    transition: background-color 140ms ease, border-color 140ms ease;
+}}
+button.tchiko-option-chip:hover {{
+    background-color: alpha(@t_accent, 0.16);
+    border-color: @t_accent;
+    color: #ffffff;
+}}
+.tchiko-exp-banner {{
+    background-color: alpha(@t_success, 0.08);
+    border: 1px solid alpha(@t_success, 0.35);
+    border-radius: 6px;
+    padding: 8px 12px;
+}}
 
 /* ── Activity timeline ────────────────────────────────────────────────── */
 list.tchiko-timeline {{ background-color: transparent; }}
@@ -365,6 +394,73 @@ list.tchiko-timeline row:hover {{ background-color: alpha(@t_text, 0.025); }}
     color: @t_text2;
 }}
 .tchiko-badge.tool {{ background-color: alpha(@t_accent, 0.14); color: {ACCENT_TEXT}; }}
+.tchiko-badge.recover, .tchiko-badge.repair {{ background-color: alpha(@t_warning, 0.16); color: @t_warning; }}
+.tchiko-badge.verify, .tchiko-badge.hardened {{ background-color: alpha(@t_success, 0.16); color: @t_success; }}
+.tchiko-badge.verified {{ background-color: alpha(#60a5fa, 0.16); color: #93c5fd; }}
+.tchiko-badge.learn {{ background-color: alpha(#c084fc, 0.16); color: #d8b4fe; }}
+.tchiko-badge.ask {{ background-color: alpha(@t_accent, 0.18); color: {ACCENT_TEXT}; }}
+.tchiko-badge.draft {{ background-color: @t_hover; color: @t_text2; }}
+
+/* ── Experiences & Learning ───────────────────────────────────────────── */
+list.tchiko-exp-list {{ background-color: transparent; }}
+list.tchiko-exp-list row {{
+    background-color: transparent;
+    padding: 10px 12px;
+    border-bottom: 1px solid alpha(@t_border, 0.65);
+    border-left: 2px solid transparent;
+}}
+list.tchiko-exp-list row:hover {{ background-color: alpha(@t_text, 0.03); }}
+list.tchiko-exp-list row:selected {{
+    background-color: alpha(@t_accent, 0.10);
+    border-left: 2px solid @t_accent;
+}}
+button.tchiko-filter-btn {{
+    background-image: none;
+    box-shadow: none;
+    background-color: @t_surface;
+    color: @t_text2;
+    border: 1px solid @t_border;
+    border-radius: 4px;
+    padding: 4px 10px;
+    font-size: 8.4pt;
+    font-weight: 600;
+    font-family: {FONT_MONO};
+}}
+button.tchiko-filter-btn:hover {{ background-color: @t_hover; color: @t_text; }}
+button.tchiko-filter-btn:checked {{
+    background-color: alpha(@t_accent, 0.16);
+    border-color: alpha(@t_accent, 0.65);
+    color: @t_text;
+}}
+button.tchiko-danger-btn {{
+    background-image: none;
+    box-shadow: none;
+    background-color: alpha(@t_accent, 0.10);
+    color: {ACCENT_TEXT};
+    border: 1px solid alpha(@t_accent, 0.35);
+    border-radius: 5px;
+    padding: 5px 11px;
+    font-weight: 600;
+    font-size: 8.8pt;
+}}
+button.tchiko-danger-btn:hover {{ background-color: alpha(@t_accent, 0.22); border-color: @t_accent; color: #ffffff; }}
+textview.tchiko-code-view, textview.tchiko-code-view text {{
+    background-color: #07080a;
+    color: {CODE_TEXT};
+    font-family: {FONT_MONO};
+    font-size: 9pt;
+}}
+entry.tchiko-search {{
+    background-image: none;
+    box-shadow: none;
+    background-color: @t_surface;
+    color: @t_text;
+    border: 1px solid @t_border;
+    border-radius: 5px;
+    padding: 5px 10px;
+    font-size: 9.5pt;
+}}
+entry.tchiko-search:focus {{ border-color: alpha(@t_accent, 0.70); }}
 
 /* ── Settings ─────────────────────────────────────────────────────────── */
 .tchiko-sidebar {{

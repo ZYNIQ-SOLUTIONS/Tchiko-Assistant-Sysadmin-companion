@@ -29,6 +29,7 @@ from gi.repository import Gdk, GLib, Gtk, Pango
 from . import ui_theme as ui
 from .agent_engine import TchikoAgentEngine
 from .config_manager import ConfigManager
+from .experiences_view import ExperiencesView
 from .svg_ghost_renderer import SvgGhostRenderer
 from .system_tools import LinuxSystemToolkit
 
@@ -53,6 +54,8 @@ QUICK_ACTIONS: List[Tuple[str, str, str, str]] = [
 
 SLASH_MENU: List[Tuple[str, str]] = [
     ("System doctor", "/doctor"),
+    ("Learned experiences", "/experiences"),
+    ("Learn from last task", "/learn"),
     ("System report", "/sysinfo"),
     ("Top processes", "/procs"),
     ("Listening ports", "check listening ports"),
@@ -105,6 +108,8 @@ class TchikoAssistantWindow(Gtk.Window):
         self._welcome: Optional[Gtk.Widget] = None
         self._welcome_avatar: Optional[Gtk.Image] = None
         self._side_margin = -1
+        self._pending_clarification: Optional[Dict[str, Any]] = None
+        self._pending_exp_events: List[Dict[str, Any]] = []
 
         ui.apply_theme()
         self.get_style_context().add_class("tchiko-window")
@@ -203,6 +208,8 @@ class TchikoAssistantWindow(Gtk.Window):
         self.stack.set_transition_duration(160)
         self.stack.add_titled(self._build_chat_page(), "chat", "Chat")
         self.stack.add_titled(self._build_system_page(), "system", "System")
+        self.experiences_view = ExperiencesView(self.engine, on_run_in_chat=self.submit_external_command)
+        self.stack.add_titled(self.experiences_view, "experiences", "Experiences")
         self.stack.add_titled(self._build_activity_page(), "activity", "Activity")
         self.stack.connect("size-allocate", self._on_stack_allocate)
 
@@ -532,13 +539,24 @@ class TchikoAssistantWindow(Gtk.Window):
             f"<span font_family='{ui.PANGO_MONO}' size='small' foreground='{ui.TEXT_MUTED}'>"
             f"{datetime.now().strftime('%H:%M:%S')}</span>"
         )
-        badge = Gtk.Label(label="TOOL" if kind == "tool" else "THINK")
+        badge_map = {
+            "tool": ("TOOL", "tool"),
+            "think": ("THINK", ""),
+            "recover": ("RECOVER", "recover"),
+            "rollback": ("ROLLBACK", "recover"),
+            "verify": ("VERIFY", "verify"),
+            "learn": ("LEARN", "learn"),
+            "ask_user": ("ASK", "ask"),
+            "ask": ("ASK", "ask"),
+        }
+        b_label, b_class = badge_map.get(kind.lower(), (kind.upper()[:8], ""))
+        badge = Gtk.Label(label=b_label)
         badge.set_valign(Gtk.Align.START)
-        badge.set_size_request(46, -1)
+        badge.set_size_request(56, -1)
         badge.get_style_context().add_class("tchiko-badge")
-        if kind == "tool":
-            badge.get_style_context().add_class("tool")
-        body = ui.label(text, "tchiko-code-text" if kind == "tool" else "dim", wrap=True, selectable=True)
+        if b_class:
+            badge.get_style_context().add_class(b_class)
+        body = ui.label(text, "tchiko-code-text" if kind in ("tool", "recover") else "dim", wrap=True, selectable=True)
         row.pack_start(ts, False, False, 0)
         row.pack_start(badge, False, False, 0)
         row.pack_start(body, True, True, 0)
@@ -683,6 +701,9 @@ class TchikoAssistantWindow(Gtk.Window):
         self._scroll_feed_to_bottom(force=True)
         self._set_status("thinking", "Thinking…")
 
+        self._pending_clarification = None
+        self._pending_exp_events = []
+
         self.engine.process_prompt_async(
             prompt=prompt,
             on_thought=lambda th: GLib.idle_add(self._on_thought_update, th),
@@ -691,6 +712,9 @@ class TchikoAssistantWindow(Gtk.Window):
             on_complete=lambda _full: GLib.idle_add(self._on_response_complete),
             on_state_change=lambda st: GLib.idle_add(self._on_engine_state, st),
             on_approval_needed=lambda cmd, yes, no: GLib.idle_add(self._prompt_inline_approval, cmd, yes, no),
+            on_clarification_needed=lambda payload: GLib.idle_add(self._on_clarification_needed, payload),
+            on_experience_event=lambda payload: GLib.idle_add(self._on_experience_event, payload),
+            on_phase=lambda phase, text: GLib.idle_add(self._on_phase_update, phase, text),
         )
 
     def _append_user_bubble(self, text: str) -> None:
@@ -767,6 +791,105 @@ class TchikoAssistantWindow(Gtk.Window):
             self._mirror_to_bubble(f"*{thought_text}*")
         return False
 
+    def _on_phase_update(self, phase: str, text: str) -> bool:
+        self._append_activity(phase.lower(), text)
+        self._set_chip(f"[{phase}] {text}")
+        return False
+
+    def _on_clarification_needed(self, payload: Dict[str, Any]) -> bool:
+        self._pending_clarification = dict(payload)
+        return False
+
+    def _on_experience_event(self, payload: Dict[str, Any]) -> bool:
+        self._pending_exp_events.append(dict(payload))
+        return False
+
+    def _open_experience(self, slug: str) -> None:
+        self.experiences_view.select_slug(slug)
+        self.stack.set_visible_child_name("experiences")
+
+    def _render_clarification_card(self, container: Gtk.Box, clar: Dict[str, Any]) -> None:
+        card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        card.get_style_context().add_class("tchiko-clarify-card")
+
+        header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        badge = Gtk.Label(label="CLARIFY")
+        badge.get_style_context().add_class("tchiko-badge")
+        badge.get_style_context().add_class("ask")
+        header.pack_start(badge, False, False, 0)
+        header.pack_start(
+            ui.label(str(clar.get("question") or "Could you clarify before I proceed?"), "tchiko-row-title", wrap=True),
+            True,
+            True,
+            0,
+        )
+        card.pack_start(header, False, False, 0)
+
+        reason = str(clar.get("context") or clar.get("reason") or "").strip()
+        if reason:
+            card.pack_start(ui.label(reason, "dim", wrap=True), False, False, 0)
+
+        options = list(clar.get("options") or [])
+        btn_flow = Gtk.FlowBox()
+        btn_flow.set_selection_mode(Gtk.SelectionMode.NONE)
+        btn_flow.set_row_spacing(6)
+        btn_flow.set_column_spacing(6)
+        btn_flow.set_max_children_per_line(3)
+
+        def _pick(answer: str) -> None:
+            card.set_sensitive(False)
+            self._dispatch_prompt(answer)
+
+        for idx, opt in enumerate(options[:5], 1):
+            btn = Gtk.Button(label=f"{idx}. {opt}")
+            btn.get_style_context().add_class("tchiko-option-chip")
+            btn.connect("clicked", lambda _b, ans=str(opt): _pick(ans))
+            btn_flow.add(btn)
+
+        cancel_btn = Gtk.Button(label="Cancel")
+        cancel_btn.get_style_context().add_class("tchiko-ghost-btn")
+        cancel_btn.connect("clicked", lambda _b: _pick("cancel"))
+        btn_flow.add(cancel_btn)
+
+        card.pack_start(btn_flow, False, False, 0)
+        card.pack_start(
+            ui.label("Click an option above or type your own answer in the chat box.", "muted"),
+            False,
+            False,
+            0,
+        )
+        container.pack_start(card, False, False, 0)
+
+    def _render_experience_banner(self, container: Gtk.Box, ev: Dict[str, Any]) -> None:
+        slug = str(ev.get("slug") or "")
+        if not slug:
+            return
+        banner = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        banner.get_style_context().add_class("tchiko-exp-banner")
+
+        is_learned = ev.get("event") == "learned"
+        badge = Gtk.Label(label="LEARNED" if is_learned else "EXPERIENCE")
+        badge.get_style_context().add_class("tchiko-badge")
+        badge.get_style_context().add_class("learn" if is_learned else "verify")
+        badge.set_valign(Gtk.Align.CENTER)
+        banner.pack_start(badge, False, False, 0)
+
+        ver = ev.get("version", 1)
+        mat = ev.get("maturity", "")
+        summary = (
+            f"Saved Python tool `{slug}` v{ver} [{mat}]"
+            if is_learned
+            else f"Used Python tool `{slug}` v{ver} [{mat}]"
+        )
+        banner.pack_start(ui.label(summary, "dim", wrap=True), True, True, 0)
+
+        open_btn = Gtk.Button(label="Inspect")
+        open_btn.set_valign(Gtk.Align.CENTER)
+        open_btn.get_style_context().add_class("tchiko-btn")
+        open_btn.connect("clicked", lambda _b, s=slug: self._open_experience(s))
+        banner.pack_end(open_btn, False, False, 0)
+        container.pack_start(banner, False, False, 0)
+
     def _on_tool_update(self, name: str, args: str) -> bool:
         self._stream_tools += 1
         self._append_activity("tool", f"{name}  {args}")
@@ -812,6 +935,12 @@ class TchikoAssistantWindow(Gtk.Window):
         if self._stream_content is not None:
             self._stream_content._raw_text = full_raw
             self._render_reply(self._stream_content, full_raw or "*(no reply)*")
+            if self._pending_exp_events:
+                for ev in self._pending_exp_events:
+                    self._render_experience_banner(self._stream_content, ev)
+            if self._pending_clarification is not None:
+                self._render_clarification_card(self._stream_content, self._pending_clarification)
+            self._stream_content.show_all()
         if self._stream_chip is not None:
             # Destroy rather than hide: the window is re-shown with show_all() on every toggle.
             self._stream_chip.destroy()
@@ -826,14 +955,21 @@ class TchikoAssistantWindow(Gtk.Window):
         self._stream_label = None
         self._stream_chip = None
         self._stream_chip_label = None
+        has_clarification = self._pending_clarification is not None
+        self._pending_clarification = None
+        self._pending_exp_events = []
 
         if full_raw:
             self._mirror_to_bubble(full_raw)
         self._busy = False
         self._sync_send_state()
         self._refresh_cwd()
-        self._mini_renderer.set_emotion("happy", duration=4.0)
-        self._set_status("idle", "Ready")
+        if has_clarification:
+            self._mini_renderer.set_emotion("thinking", duration=4.0)
+            self._set_status("thinking", "Waiting for your answer")
+        else:
+            self._mini_renderer.set_emotion("happy", duration=4.0)
+            self._set_status("idle", "Ready")
         self._scroll_feed_to_bottom()
         return False
 

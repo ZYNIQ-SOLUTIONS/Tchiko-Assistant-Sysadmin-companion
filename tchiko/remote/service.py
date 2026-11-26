@@ -146,6 +146,7 @@ class RemoteControlService:
         self._telemetry_task: Optional[asyncio.Task[Any]] = None
 
         self.config.subscribe(self._on_config_changed)
+        self.engine.experiences.subscribe(self._on_experiences_changed)
 
     # ── Lifecycle ────────────────────────────────────────────────────────────
     def start(self) -> int:
@@ -347,6 +348,9 @@ class RemoteControlService:
 
     def _on_config_changed(self, data: Dict[str, Any]) -> None:
         self._schedule_send({"type": "config_updated", "config": self._public_config(data)})
+
+    def _on_experiences_changed(self, _event: str, _exp: Any) -> None:
+        self._schedule_send({"type": "experiences_sync", **self._build_experiences_payload()})
 
     def _schedule_send(self, message: Dict[str, Any]) -> None:
         loop = self._loop
@@ -761,6 +765,134 @@ class RemoteControlService:
                 self._apply_config_patch(patch)
             return
 
+        if mtype == "clarification_reply":
+            text = str(msg.get("text") or "").strip()
+            if text:
+                await self._handle_remote_prompt(client, text)
+            return
+
+        if mtype == "experiences_list":
+            await self._send_encrypted(client, {"type": "experiences_sync", **self._build_experiences_payload()})
+            return
+
+        if mtype in ("experience_run", "experience_test"):
+            slug = str(msg.get("slug") or "").strip()
+            params = msg.get("params") if isinstance(msg.get("params"), dict) else {}
+            dry_run = mtype == "experience_test" or bool(msg.get("dry_run", False))
+            if not slug:
+                return
+            res = await asyncio.to_thread(self.engine.experiences.run_experience, slug, params, dry_run)
+            await self._send_encrypted(
+                client,
+                {
+                    "type": "experience_result",
+                    "slug": slug,
+                    "dry_run": dry_run,
+                    "ok": res.ok,
+                    "title": res.title,
+                    "output": res.output[:4000],
+                    "duration_ms": res.duration_ms,
+                },
+            )
+            await self._send_encrypted(client, {"type": "experiences_sync", **self._build_experiences_payload()})
+            return
+
+        if mtype == "experience_approve":
+            slug = str(msg.get("slug") or "").strip()
+            exp = self.engine.experiences.approve_experience(slug) if slug else None
+            await self._send_encrypted(
+                client,
+                {
+                    "type": "experience_result",
+                    "slug": slug,
+                    "ok": exp is not None,
+                    "title": "Approved" if exp else "Not Found",
+                    "output": f"Experience `{slug}` promoted to {exp.maturity}." if exp else f"Experience `{slug}` not found.",
+                },
+            )
+            await self._send_encrypted(client, {"type": "experiences_sync", **self._build_experiences_payload()})
+            return
+
+        if mtype == "experience_toggle":
+            slug = str(msg.get("slug") or "").strip()
+            exp_cur = self.engine.experiences.get_experience(slug) if slug else None
+            if exp_cur is not None:
+                new_state = bool(msg["enabled"]) if "enabled" in msg else (not exp_cur.enabled)
+                self.engine.experiences.set_enabled(slug, new_state)
+            await self._send_encrypted(client, {"type": "experiences_sync", **self._build_experiences_payload()})
+            return
+
+        if mtype == "experience_rollback":
+            slug = str(msg.get("slug") or "").strip()
+            ok_rb, msg_rb = self.engine.experiences.rollback_version(slug) if slug else (False, "Missing slug.")
+            await self._send_encrypted(
+                client,
+                {
+                    "type": "experience_result",
+                    "slug": slug,
+                    "ok": ok_rb,
+                    "title": "Rollback" if ok_rb else "Rollback Notice",
+                    "output": msg_rb,
+                },
+            )
+            await self._send_encrypted(client, {"type": "experiences_sync", **self._build_experiences_payload()})
+            return
+
+        if mtype == "experience_delete":
+            slug = str(msg.get("slug") or "").strip()
+            deleted = self.engine.experiences.delete_experience(slug) if slug else False
+            await self._send_encrypted(
+                client,
+                {
+                    "type": "experience_result",
+                    "slug": slug,
+                    "ok": deleted,
+                    "title": "Deleted" if deleted else "Not Found",
+                    "output": f"Removed Experience `{slug}`." if deleted else f"Experience `{slug}` not found.",
+                },
+            )
+            await self._send_encrypted(client, {"type": "experiences_sync", **self._build_experiences_payload()})
+            return
+
+        if mtype == "experience_learn":
+            custom_name = str(msg.get("name") or "").strip()
+            ep = self.engine.last_episode
+            if not ep and self.engine.memory.get("last_command"):
+                ep = {
+                    "prompt": custom_name or self.engine.memory.get("last_command", "learned-command"),
+                    "steps": [{"tool": "bash", "args_summary": self.engine.memory.get("last_command", ""), "ok": True}],
+                    "succeeded": True,
+                    "verified": True,
+                    "recoveries_succeeded": 0,
+                }
+            if not ep:
+                await self._send_encrypted(
+                    client,
+                    {
+                        "type": "experience_result",
+                        "slug": "",
+                        "ok": False,
+                        "title": "No Recent Episode",
+                        "output": "Run a task in Chat first, then click '+ Learn from Last Task'.",
+                    },
+                )
+                return
+            exp, learn_msg = await asyncio.to_thread(
+                self.engine.experiences.learn_from_episode, ep, custom_name, True
+            )
+            await self._send_encrypted(
+                client,
+                {
+                    "type": "experience_result",
+                    "slug": exp.slug if exp else "",
+                    "ok": exp is not None,
+                    "title": "Experience Learned" if exp else "Learning Skipped",
+                    "output": learn_msg,
+                },
+            )
+            await self._send_encrypted(client, {"type": "experiences_sync", **self._build_experiences_payload()})
+            return
+
         if mtype == "unpair":
             self.revoke_pairing()
             return
@@ -797,6 +929,17 @@ class RemoteControlService:
             self._reply_tools += 1
             self._activity.append({"ts": ts, "kind": "tool", "text": f"{name}  {args}"})
             self._schedule_send({"type": "tool_call", "name": name, "args": args, "ts": ts})
+
+        def on_phase(phase: str, text: str) -> None:
+            ts = _now_hms()
+            self._activity.append({"ts": ts, "kind": phase.lower(), "text": text})
+            self._schedule_send({"type": "phase", "phase": phase, "text": text, "ts": ts})
+
+        def on_clarification(payload: Dict[str, Any]) -> None:
+            self._schedule_send({"type": "clarification_needed", **payload})
+
+        def on_experience_event(payload: Dict[str, Any]) -> None:
+            self._schedule_send({"type": "experience_event", **payload})
 
         def on_token(tok: str) -> None:
             self._schedule_send({"type": "token", "text": tok})
@@ -846,6 +989,9 @@ class RemoteControlService:
             on_complete=on_complete,
             on_state_change=on_state,
             on_approval_needed=on_approval,
+            on_clarification_needed=on_clarification,
+            on_experience_event=on_experience_event,
+            on_phase=on_phase,
         )
 
     def _apply_config_patch(self, patch: Dict[str, Any]) -> None:
@@ -885,6 +1031,18 @@ class RemoteControlService:
             if isinstance(model, str) and model:
                 self.config.data.setdefault("agent", {})["model"] = model
 
+        if isinstance(patch.get("learning"), dict):
+            lp = patch["learning"]
+            learn_cfg = self.config.data.setdefault("learning", {})
+            for lk in (
+                "ask_before_ambiguous",
+                "auto_learn_experiences",
+                "auto_promote_verified",
+                "auto_rollback_on_failure",
+            ):
+                if lk in lp:
+                    learn_cfg[lk] = bool(lp[lk])
+
         if isinstance(patch.get("ghost_widget"), dict):
             gw = self.config.data.setdefault("ghost_widget", {})
             gp = patch["ghost_widget"]
@@ -902,6 +1060,19 @@ class RemoteControlService:
         self.config.save(notify=True)
 
     # ── State snapshot helpers ───────────────────────────────────────────────
+    def _build_experiences_payload(self) -> Dict[str, Any]:
+        items: List[Dict[str, Any]] = []
+        for exp in self.engine.experiences.list_experiences():
+            d = exp.to_manifest_dict()
+            d["code"] = self.engine.experiences.get_script_source(exp.slug)[:12000]
+            d["versions"] = self.engine.experiences.get_versions(exp.slug)
+            d["history"] = self.engine.experiences.get_history(exp.slug, limit=10)
+            items.append(d)
+        return {
+            "experiences": items,
+            "learning_metrics": self.engine.experiences.learning_metrics(),
+        }
+
     def _build_state_sync(self, client: ActiveClient) -> Dict[str, Any]:
         telemetry = self.toolkit.get_system_telemetry()
         skills = [
@@ -912,6 +1083,7 @@ class RemoteControlService:
             {"id": rid, "command": cmd}
             for rid, (cmd, _a, _d) in self._pending_approvals.items()
         ]
+        exp_payload = self._build_experiences_payload()
         return {
             "type": "state_sync",
             "host": socket.gethostname(),
@@ -928,6 +1100,8 @@ class RemoteControlService:
             "activity": list(self._activity),
             "skills": skills,
             "pending_approvals": pending,
+            "experiences": exp_payload["experiences"],
+            "learning_metrics": exp_payload["learning_metrics"],
         }
 
     def _display_cwd(self) -> str:
@@ -940,6 +1114,7 @@ class RemoteControlService:
         return {
             "permissions": data.get("permissions", {}),
             "agent": {"model": data.get("agent", {}).get("model", "gemini-2.5-pro")},
+            "learning": data.get("learning", {}),
             "ghost_widget": data.get("ghost_widget", {}),
         }
 

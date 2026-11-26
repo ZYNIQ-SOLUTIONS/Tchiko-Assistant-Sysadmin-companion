@@ -1,0 +1,44 @@
+{
+  "slug": "systemd-service-doctor",
+  "title": "Systemd Service Doctor",
+  "description": "Audit failed systemd system/user units or inspect a specific service's status and recent errors.",
+  "category": "services",
+  "triggers": [
+    "systemd",
+    "service",
+    "daemon",
+    "failed unit",
+    "journalctl"
+  ],
+  "parameters": {
+    "unit": {
+      "type": "string",
+      "description": "Optional systemd unit name",
+      "default": ""
+    }
+  },
+  "maturity": "VERIFIED",
+  "risk_tier": "SAFE_READONLY",
+  "version": 1,
+  "enabled": true,
+  "source_prompt": "Built-in starter experience",
+  "created_at": 1795696145.951989,
+  "updated_at": 1795696145.951989,
+  "stats": {
+    "runs": 0,
+    "successes": 0,
+    "failures": 0,
+    "consecutive_failures": 0,
+    "recoveries": 0,
+    "avg_duration_ms": 0,
+    "last_run_at": 0.0,
+    "last_error": ""
+  },
+  "evolution_notes": [
+    {
+      "version": 1,
+      "ts": 1795696145.951989,
+      "note": "Starter verified Python experience"
+    }
+  ]
+}

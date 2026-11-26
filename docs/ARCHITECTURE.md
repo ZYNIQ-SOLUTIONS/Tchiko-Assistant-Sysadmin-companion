@@ -155,3 +155,38 @@ sequenceDiagram
 - **Pluggable Skills (`tchiko/skills_loader.py`, `skills/*.md`)**: Loads YAML-frontmatter Markdown runbooks (`nginx-tls-audit`, `postgres-doctor`, `gpu-cuda-doctor`, `git-recovery`) and injects matching procedures into agent prompts.
 - **Proactive System Watchdog (`tchiko/watchdog.py`)**: Polls RAM, disk capacity, and failed `systemd` units in the background with cooldown deduplication, surfacing alerts on the floating desktop companion.
 
+---
+
+## 8. Humanized Conversation, Resilient Loop & Hardened Experiences
+
+### 8.1. Natural Conversation & Interactive Clarification (`tchiko/conversation.py`)
+- **`ConversationAnalyzer`**: Classifies incoming prompts before tool dispatch:
+  - **Casual / Social Chat**: Warm greetings, thanks, and short banter route directly to a natural conversational response without launching unnecessary shell tools.
+  - **Anaphora Resolution**: Phrases like `"run it"` or `"execute that"` resolve against `memory["last_suggested_command"]` (captured automatically from code blocks in prior assistant replies via `extract_suggested_command()`).
+  - **Ambiguity & Underspecification Guard**: Detects vague intents (`"install something"`, `"fix it"`, `"clean up"`, `"restart the service"`, `"delete old files"`) and likely typos (`"install steqm"`), returning a structured `ClarificationRequest` with clickable options and persisting a `PendingTask` in `agent_memory.json`.
+  - **Mid-Execution `<ask_user>` Protocol**: During autonomous execution, the LLM can emit `<ask_user question="..." options="A|B|C" reason="..."/>` to pause cleanly, surface an inline Clarification Card in Chat (Desktop GTK3 and Tchiko RC), and resume with the merged user answer on the next turn.
+
+### 8.2. Resilient Agentic Loop (`tchiko/agent_loop.py`)
+`ResilientAgentLoop` wraps multi-step tool execution in a structured `PLAN → ACT → OBSERVE → TRY/CATCH & RECOVER → VERIFY` state machine:
+- **Tag Auto-Normalization**: Automatically repairs common malformed LLM XML tags (e.g., `<pkexec>apt update</pkexec>` or `<sudo>...</sudo>` → `<bash>pkexec ...</bash>`, `<shell>`/`<cmd>` → `<bash>`).
+- **Typed `FailureClassifier`**: Classifies tool failures into `PERMISSION_DENIED`, `LOCK_OR_BUSY`, `COMMAND_NOT_FOUND`, `NOT_FOUND_OR_404`, `NETWORK_TRANSIENT`, `SYNTAX_OR_USAGE`, `TIMEOUT`, `USER_DENIED`, and `UNKNOWN`, injecting targeted recovery hints back into the agent loop.
+- **Anti-Loop & Auto-Rollback Safety**: Stops repeating identical failing tool calls, aborts after repeated consecutive failures, and triggers snapshot rollback (`auto_rollback_on_failure`) when mutations fail mid-task.
+- **Post-Mutation Verification**: Nudges the agent to verify host state after mutating operations before summarizing completion, and emits a `LoopTrace` for experience distillation.
+
+### 8.3. Hardened Python Experiences (`tchiko/experiences.py`, `experiences/`)
+Verified multi-step workflows are distilled into self-contained, reusable Python 3 CLI tools stored under `experiences/<slug>/`:
+- **Package Layout**: `manifest.json` (metadata, triggers, risk tier, maturity, run stats), `tool.py` (pure Python 3 stdlib CLI supporting `--dry-run`, `--self-test`, and `--params-json`), `versions/` (archived snapshots for rollback), and `history.jsonl` (execution log).
+- **Hardening Pipeline (`ExperienceValidator`)**:
+  1. AST static analysis rejecting syntax errors and unsafe primitives (`eval`, `exec`, `compile`, `__import__`, `ctypes`, `pickle.loads`, raw `os.system`).
+  2. Automatic secret redaction (API keys, Bearer tokens, private key blocks, `PASSWORD=` assignments).
+  3. Risk-tier classification (`SAFE_READONLY`, `MUTATING_LOCAL`, `PRIVILEGED_DESTRUCTIVE`).
+  4. Isolated `--self-test` & `--dry-run` subprocess verification.
+- **Maturity Lifecycle**: `DRAFT` → `VERIFIED` (auto-promoted for non-privileged tools that pass AST + self-test when `auto_promote_verified` is enabled; privileged tools stay `DRAFT` until explicitly approved) → `HARDENED` (after 3+ successful runs with >= 80% success rate) or `NEEDS_REPAIR` (after 2 consecutive failures).
+- **Agent Reuse**: Matching `VERIFIED`/`HARDENED` Experiences are injected into agent prompts and invoked via `<experience slug="..." params='{}'/>` or slash commands (`/experiences`, `/exp run|test|show|approve|rollback <slug>`, `/learn [name]`). Three starter Experiences (`port-socket-inspector`, `systemd-service-doctor`, `disk-space-auditor`) are seeded automatically.
+
+### 8.4. Visual Learning & Experiences Dashboard (`tchiko/experiences_view.py`, `rc/`)
+Both **Desktop GTK3** (`ExperiencesView` + `LearningCurveChart` via PyCairo) and **Tchiko RC** (`#view-experiences` + pure SVG learning curve in `rc/js/app.js`) provide real-time parity:
+- **KPI Strip**: Total Experiences (with maturity breakdown), total tool runs & self-recoveries, and a `RingGauge` rolling reliability score.
+- **Learning Curve Chart**: Dual-series visualization plotting cumulative learned Python tools (vermilion crimson area) against rolling execution success rate % (emerald line).
+- **Interactive Library & Inspector**: Search & maturity filter pills, live Python source viewer, Run / Dry-Run / Approve / Enable-Disable / Rollback / Delete controls, `+ Learn from Last Task` button, and in-chat Clarification Cards + Experience banners with one-click `Inspect` navigation.
+
