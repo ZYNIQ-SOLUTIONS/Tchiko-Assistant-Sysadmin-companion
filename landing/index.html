@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tchiko Assistant — Autonomous Linux Systems Agent &amp; Desktop Companion</title>
-  <meta name="description" content="Open-source Ubuntu systems engineering agent, 5-tier execution engine, Tchiko RC encrypted remote control with Optical Sigil pairing, and interactive BoopFace SVG companion." />
+  <meta name="description" content="Open-source Ubuntu systems engineering agent with a 5-tier execution engine, Tchiko RC encrypted remote control, and BoopFace SVG companion. Tchiko Pro adds learned Experiences and the Learning Curve." />
   <meta property="og:title" content="Tchiko Assistant — Linux Systems Agent &amp; Encrypted Remote Companion" />
   <meta property="og:description" content="5-Tier dispatch engine, AST shell risk classifier, snapshot rollback ledger, ECDH P-256 + AES-256-GCM Tchiko RC remote control, and 188-skin BoopFace SVG overlay." />
   <meta property="og:type" content="website" />
@@ -1046,7 +1046,163 @@
       overflow-x: auto;
     }
 
-    /* ── SECTION 05: BUILD & DEPLOYMENT ─────────────────────────────────── */
+    /* ── SECTION 06: EDITIONS (COMMUNITY · PRO) ─────────────────────────── */
+    .edition-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .edition-cell {
+      padding: 40px 48px;
+      border-right: 1px solid var(--line);
+      background: var(--shell-bg);
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      box-shadow: inset 0 3px 0 var(--green);
+    }
+
+    .edition-cell.is-pro {
+      border-right: none;
+      background: var(--panel);
+      box-shadow: inset 0 3px 0 var(--amber);
+    }
+
+    .edition-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      font-family: var(--mono);
+      font-size: 0.74rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+    }
+
+    .edition-tag {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 3px 10px;
+      border-radius: 999px;
+      color: var(--green);
+      background: var(--green-soft);
+      border: 1px solid var(--green);
+      white-space: nowrap;
+    }
+
+    .edition-tag.is-pro {
+      color: var(--amber);
+      background: var(--amber-soft);
+      border-color: var(--amber);
+    }
+
+    .edition-cell h3 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      letter-spacing: -0.025em;
+    }
+
+    .edition-cell > p {
+      font-size: 0.92rem;
+      color: var(--text-dim);
+      line-height: 1.65;
+    }
+
+    .edition-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      border-top: 1px solid var(--line);
+      flex: 1;
+    }
+
+    .edition-list li {
+      display: flex;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: 0.88rem;
+      color: var(--text-dim);
+    }
+
+    .edition-list li::before {
+      content: "+";
+      font-family: var(--mono);
+      font-weight: 700;
+      color: var(--green);
+    }
+
+    .edition-cell.is-pro .edition-list li::before {
+      color: var(--amber);
+    }
+
+    .edition-list li b {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .edition-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn-pro {
+      background: var(--amber);
+      border-color: var(--amber);
+      color: #14110a;
+    }
+
+    .btn-pro:hover {
+      background: var(--amber);
+      border-color: var(--text);
+      transform: translateY(-1px);
+    }
+
+    .pro-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .pro-grid .spec-cell {
+      box-shadow: inset 0 3px 0 var(--amber);
+      border-bottom: none;
+    }
+
+    .pro-grid .spec-cell:last-child {
+      border-right: none;
+    }
+
+    .pro-grid .spec-cell .spec-cell-top svg {
+      stroke: var(--amber);
+    }
+
+    .pro-grid .spec-cell-top span:first-child {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .edition-pledge {
+      padding: 22px 48px;
+      border-bottom: 1px solid var(--line);
+      background: var(--shell-bg);
+      font-size: 0.88rem;
+      color: var(--text-dim);
+    }
+
+    .edition-pledge b {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    /* ── SECTION 07: BUILD & DEPLOYMENT ─────────────────────────────────── */
     .deploy-split {
       display: grid;
       grid-template-columns: 0.9fr 1.1fr;
@@ -1111,8 +1267,24 @@
       .hero-split,
       .pipeline-grid,
       .studio-split,
+      .edition-grid,
+      .pro-grid,
       .deploy-split {
         grid-template-columns: 1fr;
+      }
+      .edition-cell {
+        border-right: none;
+        border-bottom: 1px solid var(--line);
+        padding: 36px 24px;
+      }
+      .edition-cell.is-pro {
+        border-bottom: none;
+      }
+      .pro-grid .spec-cell:first-child {
+        border-bottom: 1px solid var(--line);
+      }
+      .edition-pledge {
+        padding: 20px 24px;
       }
       .hero-left,
       .tier-selector,
@@ -1168,6 +1340,7 @@
         <a href="#remote">Tchiko RC</a>
         <a href="#specimens">BoopFace Skins</a>
         <a href="#studio">Telemetry</a>
+        <a href="#editions">Editions</a>
         <a href="#deploy">Install</a>
       </nav>
 
@@ -1190,7 +1363,7 @@
         <div class="hero-left">
           <div class="eyebrow-badge">
             <span class="status-dot"></span>
-            <span>Ubuntu 22.04–25.10 · Google Antigravity SDK · Tchiko RC E2E</span>
+            <span>Ubuntu 22.04–25.10 · Open-source Community Edition · Pro available</span>
           </div>
 
           <h1>
@@ -1213,6 +1386,7 @@
 
           <div class="hero-actions">
             <a href="#deploy" class="btn btn-accent">Installation Guide</a>
+            <a href="#editions" class="btn">Community vs Pro</a>
             <a href="https://github.com/ZYNIQ-SOLUTIONS/Tchiko-Assistant-Sysadmin-companion/blob/main/docs/ARCHITECTURE.md" target="_blank" rel="noopener noreferrer" class="btn">
               Architecture
             </a>
@@ -1688,11 +1862,104 @@ python3 main.py --remote --rc-port 8765 --sigil-out sigil.svg</code></pre>
       </div>
     </section>
 
-    <!-- SECTION 06: BUILD & INSTALL -->
-    <div class="sec-bar" id="deploy">
+    <!-- SECTION 06: EDITIONS — COMMUNITY (OPEN SOURCE) & PRO (PAID) -->
+    <div class="sec-bar" id="editions">
       <div class="sec-bar-left">
         <span class="sec-index">06</span>
-        <h2>Ubuntu Installation &amp; Verification</h2>
+        <h2>Editions · Community &amp; Pro</h2>
+      </div>
+      <p>The open-source assistant stays free; Pro is the paid edition with more superpowers</p>
+    </div>
+
+    <section class="edition-grid">
+      <article class="edition-cell">
+        <div class="edition-top">
+          <span>Edition 01 · v1.2</span>
+          <span class="edition-tag">Open Source · MIT</span>
+        </div>
+        <h3>Tchiko Community</h3>
+        <p>
+          The assistant exactly as it is today: full source on GitHub, MIT licensed, free to run, fork, and modify. It stays available as open source.
+        </p>
+        <ul class="edition-list">
+          <li><span><b>5-tier execution pipeline</b> with the Antigravity bridge and ReAct loop</span></li>
+          <li><span><b>Shell risk classifier</b>, RBAC domains, and the snapshot rollback ledger</span></li>
+          <li><span><b>Crash doctor</b> plus container, systemd, network, disk, GPU, TLS, and Git tools</span></li>
+          <li><span><b>Tchiko RC</b> encrypted remote control with Optical Sigil pairing</span></li>
+          <li><span><b>Markdown skills</b>, the proactive watchdog, and all 188 BoopFace skins</span></li>
+        </ul>
+        <div class="edition-actions">
+          <a href="#deploy" class="btn btn-accent">Install Community</a>
+          <a href="https://github.com/ZYNIQ-SOLUTIONS/Tchiko-Assistant-Sysadmin-companion" target="_blank" rel="noopener noreferrer" class="btn">Source on GitHub</a>
+        </div>
+      </article>
+
+      <article class="edition-cell is-pro">
+        <div class="edition-top">
+          <span>Edition 02 · Next release onward</span>
+          <span class="edition-tag is-pro">Pro · Paid license</span>
+        </div>
+        <h3>Tchiko Pro</h3>
+        <p>
+          The enhanced edition, starting with the next release. Everything in Community, plus an assistant that learns from the work it has already done on your machine.
+        </p>
+        <ul class="edition-list">
+          <li><span><b>Everything in Community</b>, on the same safety model</span></li>
+          <li><span><b>Experiences</b>: solved tasks saved as reusable Python procedures</span></li>
+          <li><span><b>Learning Curve</b>: see how Tchiko improves as Experiences accumulate</span></li>
+          <li><span><b>New superpowers</b> land in Pro from this release forward</span></li>
+        </ul>
+        <div class="edition-actions">
+          <a href="https://zyniq.studio" target="_blank" rel="noopener noreferrer" class="btn btn-pro">Request Tchiko Pro</a>
+        </div>
+      </article>
+    </section>
+
+    <section class="pro-grid">
+      <article class="spec-cell">
+        <div>
+          <div class="spec-cell-top">
+            <span>Pro 01 · Experiences <span class="edition-tag is-pro">Pro</span></span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.6 5.6L20 9.3l-4 4.1.9 5.6-4.9-2.7L7.1 19l.9-5.6-4-4.1 5.4-.7L12 3z"/></svg>
+          </div>
+          <h3>Experiences: solve it once, reuse it</h3>
+          <p>
+            When Tchiko finishes a task, Pro turns the working steps into a named, parameterised Python Experience. The next time a similar request comes in, the agent calls that Experience instead of working the problem out again.
+          </p>
+        </div>
+        <div class="spec-meta">
+          <span class="code-tag">&lt;experience name="…" /&gt;</span>
+          <span class="code-tag">ExperienceLearner</span>
+        </div>
+      </article>
+
+      <article class="spec-cell">
+        <div>
+          <div class="spec-cell-top">
+            <span>Pro 02 · Learning Curve <span class="edition-tag is-pro">Pro</span></span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20h18M4 16c5 0 6-9 16-10"/><path d="M16 6h4v4"/></svg>
+          </div>
+          <h3>Learning Curve: watch it get better</h3>
+          <p>
+            Each run records which Experiences were used and how the task went. The Learning Curve shows that history, so you can see what Tchiko has learned on your machine and how often it reuses it.
+          </p>
+        </div>
+        <div class="spec-meta">
+          <span class="code-tag">LoopTrace</span>
+          <span class="code-tag">used_experiences</span>
+        </div>
+      </article>
+    </section>
+
+    <div class="edition-pledge">
+      <b>Open source stays available.</b> You can always get the Community edition. If you want the enhanced version, ask for Tchiko Pro and we provide the paid edition.
+    </div>
+
+    <!-- SECTION 07: BUILD & INSTALL -->
+    <div class="sec-bar" id="deploy">
+      <div class="sec-bar-left">
+        <span class="sec-index">07</span>
+        <h2>Install the Community Edition on Ubuntu</h2>
       </div>
       <p>Native PyGObject (GTK3), PyCairo, and zero-dependency Tchiko RC</p>
     </div>
@@ -1729,7 +1996,7 @@ python3 main.py --remote     <span class="t-muted"># Headless HTTPS/WSS server</
 
   <footer>
     <div>
-      Tchiko Assistant v1.2.0 · MIT License · Engineered by <a href="https://zyniq.studio" target="_blank" rel="noopener noreferrer" style="color:var(--text);font-weight:600;">ZYNIQ Studio</a> · SVG Engine by <a href="https://github.com/CX-ArtLab/BoopFace" target="_blank" rel="noopener noreferrer" style="color:var(--text);">CX-ArtLab/BoopFace</a>
+      Tchiko Community v1.2.0 · MIT License · <a href="#editions" style="color:var(--text);">Tchiko Pro</a> is a paid edition · Engineered by <a href="https://zyniq.studio" target="_blank" rel="noopener noreferrer" style="color:var(--text);font-weight:600;">ZYNIQ Studio</a> · SVG Engine by <a href="https://github.com/CX-ArtLab/BoopFace" target="_blank" rel="noopener noreferrer" style="color:var(--text);">CX-ArtLab/BoopFace</a>
     </div>
     <div class="footer-links">
       <a href="https://github.com/ZYNIQ-SOLUTIONS/Tchiko-Assistant-Sysadmin-companion" target="_blank" rel="noopener noreferrer">GitHub</a>
