@@ -27,6 +27,27 @@
 
 ---
 
+## Tchiko RC Transport & Pairing Security (`tchiko/remote/`, `rc/`)
+
+When **Tchiko RC** is enabled, remote sessions are protected by a zero-trust, single-device encrypted protocol:
+
+1. **Ephemeral Mutual Handshake (`ECDH P-256 + HKDF-SHA256 + HMAC-SHA256`)**:
+   - Every WebSocket connection negotiates fresh ephemeral NIST P-256 keys, validates peer curve points, and derives directional keys via HKDF-SHA256 over the full handshake transcript.
+   - Mutual HMAC-SHA256 proofs verify both endpoints before any application payload is accepted.
+2. **Authenticated Framing (`AES-256-GCM`)**:
+   - Every message is encrypted with AES-256-GCM and bound to a strict monotonic 64-bit per-direction counter. Replayed, reordered, dropped, or tampered frames immediately close the connection.
+3. **One-Time Tchiko Sigil & Visual Safety Code**:
+   - Optical Sigil sessions carry a 12-byte one-time pairing secret, expire after **120 seconds**, and are burned immediately upon pairing.
+   - Both desktop and remote UI display a **6-digit Safety Code** derived from the session transcript to detect MITM attacks on local TLS self-signed certificates.
+4. **Single Active Client & Credential Hygiene**:
+   - Strictly **one** remote client can be active at a time; authenticating a new session evicts any previous client (`4009`).
+   - Paired device credentials in `config/rc_pair.json` and TLS private keys in `~/.config/tchiko/rc-key.pem` are written with `0600` file permissions.
+5. **HTTP & Handshake Hardening**:
+   - Static web assets are served with `Content-Security-Policy: default-src 'self'`, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, WebSocket `Origin` validation, and IP-scoped failure rate limiting (`12` failures per `60s`).
+   - Headless `--rc-no-tls` should only be used behind a trusted TLS-terminating reverse proxy or bound to localhost.
+
+---
+
 ## Reporting a Vulnerability
 
 **Please do NOT open a public GitHub issue for security vulnerabilities.**

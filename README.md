@@ -123,7 +123,7 @@ sequenceDiagram
 
 ## 3. Tchiko RC — Encrypted Remote Control & Tchiko Sigil
 
-**Tchiko RC** (`rc/`, `tchiko/remote/`) is a pure HTML5, CSS, and vanilla ES-module web application allowing you to control Tchiko Desktop remotely from any smartphone, tablet, or browser on your local network with **full desktop parity**.
+**Tchiko RC** (`rc/`, `tchiko/remote/`) is a pure HTML5, CSS, and vanilla ES-module **Tele-Command Link** web application styled as a **Tactile Cyber-Physical Instrumentation Console**, allowing you to control Tchiko Desktop remotely from any smartphone, tablet, or browser on your local network with **full desktop parity**.
 
 ```text
 ┌─────────────────────────────────┐           WebSocket / TLS           ┌─────────────────────────────────┐
@@ -136,15 +136,15 @@ sequenceDiagram
 ```
 
 ### Key Engineering Features
-1. **One-Step Tchiko Sigil Pairing**: A 192-bit circular data pattern drawn around the Tchiko mascot face (16-byte payload + CRC-16 + 6-byte Reed-Solomon parity over GF(256)) that fixes up to 3 corrupted bytes. Pair by scanning with your camera, uploading/dropping a screenshot, or copying the `#pair=<token>` one-step link.
-2. **Zero-Trust End-to-End Encryption**:
-   - Ephemeral **ECDH P-256** key exchange on every connection.
+1. **One-Step Optical Tchiko Sigil Pairing**: A 192-bit circular 3-ring data pattern (`72 / 64 / 56` cells) drawn around the Tchiko specimen (`SYS.01` CRT frame) encoding a 16-byte payload + CRC-16 + 6-byte `GF(256)` Reed-Solomon parity that repairs up to 3 corrupted bytes. Pair by scanning with your camera, dropping/pasting a screenshot, or opening the `#pair=<token>` one-step link.
+2. **Zero-Trust End-to-End Encryption** ([Security Policy](SECURITY.md#tchiko-rc-transport--pairing-security-tchikoremote-rc)):
+   - Ephemeral **ECDH P-256** key exchange on every connection (with explicit curve-point validation).
    - **HKDF-SHA256** session key derivation with mutual HMAC-SHA256 transcript binding.
    - **AES-256-GCM** authenticated framing with strict monotonic 64-bit per-direction counters (replays, drops, and reordering instantly terminate the session).
    - **6-Digit Visual Safety Code** displayed simultaneously on both the desktop window and remote client to verify against MITM attacks.
-3. **Single Active Client Enforcement**: Strictly **one** client can be connected at a time. Authenticating a new client immediately disconnects the previous one with close code `4009`. Unpairing on desktop or remote invalidates saved credentials permanently.
-4. **Full Feature Parity**: Real-time streaming Chat with inline command approvals, live `/proc` CPU/RAM/Disk telemetry with SVG ring gauges, Activity timeline, RBAC permissions toggle, and an animated SVG BoopFace companion matching all desktop coat themes and moods.
-5. **Headless Server Mode**: Run on headless Linux servers via `python3 main.py --remote --rc-port 8765`.
+3. **Single Active Client Enforcement**: Strictly **one** client can be connected at a time. Authenticating a new client immediately disconnects the previous one with close code `4009`, and paired resume credentials are stored in `config/rc_pair.json` (`0600`). Unpairing on desktop or remote invalidates saved credentials permanently.
+4. **Full Feature Parity**: Real-time streaming Chat with inline **Privileged Command Authorization** (`Authorize` / `Authorize All` / `Deny`), live `/proc` CPU/RAM/Disk telemetry with SVG ring gauges, Activity timeline, RBAC permissions sync, and an animated SVG BoopFace companion matching all desktop coat themes and moods.
+5. **Desktop & Headless Server Modes**: Launch the pairing window with `make remote` (`./run_tchiko.sh --open-remote`) or run on headless Linux servers via `make remote-headless` (`python3 main.py --remote --rc-port 8765`).
 
 ---
 

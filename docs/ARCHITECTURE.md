@@ -100,10 +100,58 @@ os.environ.setdefault("GDK_BACKEND", "x11,wayland")
 
 ---
 
-## 5. Unified Design System & Markdown-to-Pango Renderer (`tchiko/ui_theme.py`)
+## 5. Tactile Cyber-Physical Design System & Pango Renderer (`tchiko/ui_theme.py`, `rc/css/rc.css`)
 
-All three desktop surfaces (`FloatingGhostWidget`, `TchikoAssistantWindow`, and `TchikoSettingsWindow`) share a single design-token and stylesheet module (`tchiko/ui_theme.py`):
-- **Design Tokens & CSS (`apply_theme`)**: Graphite surfaces (`#0d0e11`, `#14161a`, `#1a1d23`) paired with a crimson accent (`#e5484d`) and semantic status colors (`SUCCESS`, `WARNING`), installed once per process via `Gtk.CssProvider`.
-- **Coat & Mood Registries (`COAT_NAMES`, `MOOD_NAMES`)**: Maps internal renderer keys (`phantom_cyan`, `astral_violet`, etc.) and emotion IDs to user-facing labels.
-- **Resilient Markdown-to-Pango Renderer (`render_markdown_pango`)**: Converts headings, bold/italic spans, inline code, fenced code blocks, and links into strictly valid Pango markup, gracefully handling partial/streaming LLM chunks without XML parse errors.
-- **Telemetry Widgets (`RingGauge`)**: Cairo-drawn circular gauges for CPU, RAM, and Disk utilization in the System Studio tab.
+Both the desktop surfaces (`FloatingGhostWidget`, `TchikoAssistantWindow`, `TchikoSettingsWindow`, `TchikoPairWindow`) and the **Tchiko RC** web console (`rc/index.html`, `rc/css/rc.css`) share a unified **Tactile Cyber-Physical Instrumentation Console** design language:
+- **Design Tokens & CSS (`apply_theme`, `rc/css/rc.css`)**: Basalt/obsidian surfaces (`#0d0e11` / `#07080a`, `#14161a`, `#1a1d23`) with a micro-grid background, crisp `5px–6px` tactile keycap bevels, mechanical rocker switches with phosphor LEDs, `SYS.01` specimen CRT framing for BoopFace, vermilion crimson accent (`#e5484d`), and semantic status colors (`SUCCESS` `#3ecf8e`, `WARNING` `#f5a524`).
+- **Coat & Mood Registries (`COAT_NAMES`, `MOOD_NAMES`, `rc/js/boopface.js`)**: Maps internal renderer keys (`phantom_cyan`, `astral_violet`, `emerald_matrix`, `solar_gold`) and emotion IDs consistently across PyCairo and Web SVG.
+- **Resilient Markdown-to-Pango & DOM Renderers (`render_markdown_pango`, `rc/js/markdown.js`)**: Desktop converts streaming Markdown into strictly valid Pango markup; Tchiko RC renders XSS-safe DOM Markdown without innerHTML injection.
+- **Telemetry Widgets (`RingGauge`)**: Cairo-drawn (desktop) and SVG-drawn (remote) circular gauges for CPU, RAM, and Disk utilization.
+
+---
+
+## 6. Tchiko RC — Encrypted Remote Control & Optical Sigil (`tchiko/remote/`, `rc/`)
+
+**Tchiko RC** exposes full Tchiko Desktop parity to any mobile or desktop browser over an end-to-end encrypted WebSocket tunnel (`RemoteControlService`) served by a zero-dependency `asyncio` HTTPS + RFC 6455 WebSocket server (`tchiko/remote/server.py`).
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Desktop as Tchiko Desktop (tchiko/remote/service.py)
+    participant Sigil as Optical Sigil (sigil.py / sigil.js)
+    participant Browser as Tchiko RC Browser (rc/js/channel.js)
+
+    Desktop->>Sigil: Generate 24B codeword (16B payload + CRC-16 + 6B RS GF(256)), 120s TTL
+    Browser->>Sigil: Scan camera / drop image / #pair= fragment -> Berlekamp-Massey decode
+    Browser->>Desktop: WSS /ws client_hello (ephemeral ECDH P-256 pub, mode=pair|resume)
+    Desktop->>Browser: server_hello (ephemeral ECDH P-256 pub, salt, HMAC transcript proof)
+    Note over Desktop,Browser: Both sides derive directional AES-256-GCM keys via HKDF-SHA256<br/>and compute matching 6-digit Safety Code
+    Browser->>Desktop: client_auth (HMAC proof over transcript + pairing secret / resume_secret)
+    Desktop-->>Browser: auth_ok (issues device_id + resume_secret -> config/rc_pair.json 0600)
+    Note over Desktop,Browser: Encrypted bidirectional frames with monotonic 64-bit counters
+```
+
+### 6.1. Optical Tchiko Sigil (`tchiko/remote/sigil.py`, `rc/js/sigil.js`)
+- **Codeword Layout (24 bytes / 192 bits)**:
+  - `payload` (`16 B`): `version/flags` (`1 B`) | `session_id` (`3 B`) | one-time `pairing_secret` (`12 B`).
+  - `message` (`18 B`): `payload` | `CRC-16/CCITT` (`2 B`).
+  - `codeword` (`24 B`): `message` | `Reed-Solomon parity over GF(256)` (`6 B`, primitive polynomial `0x11D`), capable of repairing up to **3 corrupted bytes** (`24` total symbols).
+- **Circular Ring Geometry**:
+  - Drawn around the centered BoopFace specimen (`FACE_RADIUS = 0.40`) across three concentric rings of `72`, `64`, and `56` cells (`RING_RADII = (0.765, 0.645, 0.525)`), surrounded by a solid locator ring (`LOCATOR_INNER = 0.88`, `LOCATOR_OUTER = 1.0`).
+  - Decoded in pure JavaScript (`rc/js/sigil.js`) via adaptive thresholding, ellipse/affine locator fitting, rotation alignment, and Berlekamp-Massey error correction.
+
+### 6.2. Cryptographic Tunnel & Session Isolation (`tchiko/remote/crypto.py`, `rc/js/channel.js`)
+- **Primitives**: Ephemeral **ECDH on NIST P-256** (with explicit curve-point validation), **HKDF-SHA256** key derivation (`RFC 5869`), **HMAC-SHA256** transcript verification, and **AES-256-GCM** (96-bit nonce, 128-bit tag).
+- **Monotonic 64-Bit Counters**: Independent `DIR_CLIENT_TO_SERVER` and `DIR_SERVER_TO_CLIENT` monotonic sequence numbers bound to each AEAD nonce; any replay, drop, or out-of-order frame terminates the channel immediately.
+- **Single-Device & Single-Connection Rule**: Pairing burns the 120s sigil immediately and overwrites `config/rc_pair.json` (`0600`). At most one authenticated WebSocket client may remain connected; authenticating a new session immediately evicts any prior client with close code `4009`.
+- **Self-Signed TLS SAN Server (`tchiko/remote/server.py`)**: Automatically generates and caches `rc-cert.pem` + `rc-key.pem` (`0600`) in `~/.config/tchiko/` with SANs for `127.0.0.1` and active LAN IPv4 addresses, serving `rc/` with strict CSP (`default-src 'self'`), `X-Frame-Options: DENY`, and IP-scoped handshake failure rate limiting (`12 failures / 60s`).
+
+---
+
+## 7. Safety Governance, Skills & Watchdog (`config_manager.py`, `skills_loader.py`, `watchdog.py`)
+
+- **3-Tier Shell Risk Classifier (`ConfigManager.classify_command`)**: Parses chained shell commands (`&&`, `||`, `;`, `|`) into `SAFE_READONLY`, `MUTATING_LOCAL`, or `PRIVILEGED_DESTRUCTIVE`. In Supervised Review mode, `SAFE_READONLY` telemetry commands run automatically while mutating/privileged commands require inline **Privileged Command Authorization** (mirrored to both Desktop and Tchiko RC).
+- **Snapshot & Rollback Ledger (`config/snapshots/`, `config/action_ledger.json`)**: Records SHA-256 checksums and pre-edit file snapshots prior to any `patch_file_content()` or `write_file_content()` call, allowing `/undo` or `/rollback <tx_id>` restoration.
+- **Pluggable Skills (`tchiko/skills_loader.py`, `skills/*.md`)**: Loads YAML-frontmatter Markdown runbooks (`nginx-tls-audit`, `postgres-doctor`, `gpu-cuda-doctor`, `git-recovery`) and injects matching procedures into agent prompts.
+- **Proactive System Watchdog (`tchiko/watchdog.py`)**: Polls RAM, disk capacity, and failed `systemd` units in the background with cooldown deduplication, surfacing alerts on the floating desktop companion.
+

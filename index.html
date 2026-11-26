@@ -4,9 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tchiko Assistant — Autonomous Linux Systems Agent &amp; Desktop Companion</title>
-  <meta name="description" content="Open-source Ubuntu systems engineering agent, 5-tier execution engine, 6-step crash doctor, and interactive BoopFace SVG desktop companion." />
-  <meta property="og:title" content="Tchiko Assistant — Linux Systems Agent &amp; Desktop Companion" />
-  <meta property="og:description" content="5-Tier dispatch engine, AST shell risk classifier, snapshot rollback ledger, pluggable skills, and 188-skin BoopFace SVG overlay for Ubuntu Linux." />
+  <meta name="description" content="Open-source Ubuntu systems engineering agent, 5-tier execution engine, Tchiko RC encrypted remote control with Optical Sigil pairing, and interactive BoopFace SVG companion." />
+  <meta property="og:title" content="Tchiko Assistant — Linux Systems Agent &amp; Encrypted Remote Companion" />
+  <meta property="og:description" content="5-Tier dispatch engine, AST shell risk classifier, snapshot rollback ledger, ECDH P-256 + AES-256-GCM Tchiko RC remote control, and 188-skin BoopFace SVG overlay." />
   <meta property="og:type" content="website" />
   <meta name="theme-color" content="#0d0e11" />
   <link rel="icon" type="image/svg+xml" href="landing/assets/tchiko-logo.svg" />
@@ -966,6 +966,86 @@
       color: var(--text-dim);
     }
 
+    /* ── TCHIKO RC & OPTICAL SIGIL SHOWCASE ─────────────────────────────── */
+    .rc-sigil-bay {
+      position: relative;
+      background:
+        radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.05) 1px, transparent 0),
+        #07080a;
+      background-size: 20px 20px, 100% 100%;
+      border: 1px solid var(--line-strong);
+      border-radius: 8px;
+      padding: 24px 20px 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 20px;
+      box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.75);
+    }
+
+    .rc-sigil-bay::before {
+      content: "SYS.01 // OPTICAL SIGIL · 192-BIT GF(256)";
+      position: absolute;
+      top: 10px;
+      left: 14px;
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      letter-spacing: 0.08em;
+    }
+
+    .rc-sigil-ring-wrap {
+      position: relative;
+      width: 210px;
+      height: 210px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 12px;
+    }
+
+    .rc-sigil-ring-wrap svg.sigil-svg {
+      position: absolute;
+      inset: 0;
+      width: 210px;
+      height: 210px;
+    }
+
+    .rc-safety-strip {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 14px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+    }
+
+    .rc-safety-digits {
+      color: var(--green);
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      font-size: 0.92rem;
+    }
+
+    .rc-cli-snippet {
+      margin-top: 18px;
+      padding: 12px 14px;
+      background: var(--code-bg);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      font-family: var(--mono);
+      font-size: 0.76rem;
+      line-height: 1.7;
+      color: #dce2ec;
+      overflow-x: auto;
+    }
+
     /* ── SECTION 05: BUILD & DEPLOYMENT ─────────────────────────────────── */
     .deploy-split {
       display: grid;
@@ -1085,6 +1165,7 @@
       <nav class="nav-links" aria-label="Primary">
         <a href="#pipeline">Pipeline</a>
         <a href="#subsystems">Subsystems</a>
+        <a href="#remote">Tchiko RC</a>
         <a href="#specimens">BoopFace Skins</a>
         <a href="#studio">Telemetry</a>
         <a href="#deploy">Install</a>
@@ -1109,16 +1190,16 @@
         <div class="hero-left">
           <div class="eyebrow-badge">
             <span class="status-dot"></span>
-            <span>Ubuntu 22.04–25.10 · Google Antigravity SDK · MIT Open Source</span>
+            <span>Ubuntu 22.04–25.10 · Google Antigravity SDK · Tchiko RC E2E</span>
           </div>
 
           <h1>
             Autonomous Linux systems agent
-            <span>and desktop companion.</span>
+            <span>and encrypted remote companion.</span>
           </h1>
 
           <p class="hero-lead">
-            Tchiko pairs sub-15ms local system diagnostics with the Antigravity NDJSON stream bridge, a 3-tier shell risk classifier, snapshot-backed file rollbacks, and an interactive BoopFace SVG overlay.
+            Tchiko pairs sub-15ms local system diagnostics with the Antigravity NDJSON stream bridge, a 3-tier shell risk classifier, snapshot-backed rollbacks, and <strong>Tchiko RC</strong> — an ECDH P-256 + AES-256-GCM remote Tele-Command Link paired via the circular Optical Sigil.
           </p>
 
           <div class="hero-cli-card">
@@ -1212,15 +1293,15 @@
         </div>
         <div class="metric-cell">
           <small>Execution Pipeline</small>
-          <strong>5 Tiers</strong>
+          <strong>5 Tiers · 6 RBAC</strong>
         </div>
         <div class="metric-cell">
-          <small>Permission Model</small>
-          <strong>6 RBAC Domains</strong>
+          <small>Remote Tunnel</small>
+          <strong>ECDH P-256 · GCM</strong>
         </div>
         <div class="metric-cell">
-          <small>Avatar Materials</small>
-          <strong>188 SVG Skins</strong>
+          <small>Optical Pairing</small>
+          <strong>192-bit Sigil · GF(256)</strong>
         </div>
       </div>
     </section>
@@ -1400,10 +1481,89 @@
       </article>
     </section>
 
-    <!-- SECTION 03: BOOPFACE SVG SPECIMEN MATRIX -->
-    <div class="sec-bar" id="specimens">
+    <!-- SECTION 03: TCHIKO RC — ENCRYPTED REMOTE CONTROL & OPTICAL SIGIL -->
+    <div class="sec-bar" id="remote">
       <div class="sec-bar-left">
         <span class="sec-index">03</span>
+        <h2>Tchiko RC · Tele-Command Link &amp; Optical Sigil</h2>
+      </div>
+      <p>Zero-trust ECDH P-256 + AES-256-GCM remote control over local HTTPS/WSS with zero external dependencies</p>
+    </div>
+
+    <section class="studio-split">
+      <div class="studio-pane">
+        <span class="pane-label">One-Step Optical Sigil Pairing (192-bit · 3 Rings · GF(256) FEC)</span>
+        <div class="rc-sigil-bay">
+          <div class="rc-sigil-ring-wrap">
+            <svg id="landing-sigil-svg" class="sigil-svg" viewBox="-122 -122 244 244" aria-label="Optical Tchiko Sigil pattern"></svg>
+            <boop-face size="72" skin="901" color="#131620" motion="reduce" press-squeeze="false" antenna-drag="false"></boop-face>
+          </div>
+          <div class="rc-safety-strip">
+            <span style="color:var(--text-dim);">SAFETY CODE</span>
+            <span id="landing-safety-code" class="rc-safety-digits">482 917</span>
+            <button type="button" class="inst-btn" onclick="regenerateLandingSigil()">New Sigil (120s TTL)</button>
+          </div>
+        </div>
+
+        <span class="pane-label">Pairing Channels &amp; Desktop Parity</span>
+        <div class="spec-meta">
+          <span class="code-tag">Camera Scan (getUserMedia)</span>
+          <span class="code-tag">Drop / Paste Screenshot</span>
+          <span class="code-tag">#pair=&lt;token&gt; One-Step Link</span>
+          <span class="code-tag">Privileged Command Authorization</span>
+          <span class="code-tag">Live /proc SVG Gauges</span>
+        </div>
+      </div>
+
+      <div class="studio-pane">
+        <span class="pane-label">Zero-Trust Tunnel Architecture (tchiko/remote/ ↔ rc/)</span>
+        <table class="doctor-table">
+          <tbody>
+            <tr>
+              <td>01</td>
+              <td>ECDH P-256</td>
+              <td>Ephemeral NIST P-256 key exchange with curve-point validation on every session.</td>
+            </tr>
+            <tr>
+              <td>02</td>
+              <td>HKDF + HMAC</td>
+              <td>RFC 5869 directional session keys + mutual HMAC-SHA256 transcript proof.</td>
+            </tr>
+            <tr>
+              <td>03</td>
+              <td>AES-256-GCM</td>
+              <td>Authenticated framing with monotonic 64-bit counters (replay/drop = instant close).</td>
+            </tr>
+            <tr>
+              <td>04</td>
+              <td>Optical Sigil</td>
+              <td>72 / 64 / 56 ring cells + CRC-16 + 6-byte GF(256) RS parity (fixes up to 3 bytes).</td>
+            </tr>
+            <tr>
+              <td>05</td>
+              <td>Single Client</td>
+              <td>Strictly 1 active client at a time (4009 eviction); 0600 rc_pair.json credentials.</td>
+            </tr>
+            <tr>
+              <td>06</td>
+              <td>Tactile Console</td>
+              <td>Zero-framework ES-module SPA matching desktop coat themes, RBAC, and /proc telemetry.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <pre class="rc-cli-snippet"><code><span class="t-muted"># Launch desktop with Tchiko RC pairing window</span>
+make remote   <span class="t-muted"># or ./run_tchiko.sh --open-remote</span>
+
+<span class="t-muted"># Run headless encrypted HTTPS/WSS server (LAN SAN TLS cert)</span>
+python3 main.py --remote --rc-port 8765 --sigil-out sigil.svg</code></pre>
+      </div>
+    </section>
+
+    <!-- SECTION 04: BOOPFACE SVG SPECIMEN MATRIX -->
+    <div class="sec-bar" id="specimens">
+      <div class="sec-bar-left">
+        <span class="sec-index">04</span>
         <h2>BoopFace SVG Material &amp; Expression Gallery</h2>
       </div>
       <p>Click any live SVG specimen to equip its skin and state in the top workbench</p>
@@ -1444,10 +1604,10 @@
       </div>
     </section>
 
-    <!-- SECTION 04: GTK3 STUDIO & CRASH DOCTOR PIPELINE -->
+    <!-- SECTION 05: GTK3 STUDIO & CRASH DOCTOR PIPELINE -->
     <div class="sec-bar" id="studio">
       <div class="sec-bar-left">
-        <span class="sec-index">04</span>
+        <span class="sec-index">05</span>
         <h2>Desktop Telemetry &amp; 6-Stage Crash Doctor</h2>
       </div>
       <p>Direct /proc metrics and automated application repair with snapshot backups</p>
@@ -1528,20 +1688,20 @@
       </div>
     </section>
 
-    <!-- SECTION 05: BUILD & INSTALL -->
+    <!-- SECTION 06: BUILD & INSTALL -->
     <div class="sec-bar" id="deploy">
       <div class="sec-bar-left">
-        <span class="sec-index">05</span>
+        <span class="sec-index">06</span>
         <h2>Ubuntu Installation &amp; Verification</h2>
       </div>
-      <p>Native PyGObject (GTK3) and PyCairo — zero Electron overhead</p>
+      <p>Native PyGObject (GTK3), PyCairo, and zero-dependency Tchiko RC</p>
     </div>
 
     <section class="deploy-split">
       <div class="deploy-info">
         <h3>Run natively on Ubuntu 22.04, 24.04 &amp; 25.10.</h3>
         <p>
-          Uses system python3-gi and python3-gi-cairo packages for direct X11/XWayland RGBA compositing, streaming runtime logs to logs/tchiko.log.
+          Uses system python3-gi and python3-gi-cairo packages for direct X11/XWayland RGBA compositing, streaming runtime logs to logs/tchiko.log and serving Tchiko RC over local TLS on port 8765.
         </p>
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
           <button type="button" class="btn btn-accent" onclick="copyCli(this)">Copy Install Script</button>
@@ -1555,13 +1715,15 @@
 sudo apt update &amp;&amp; sudo apt install -y \
   python3 python3-venv python3-gi python3-gi-cairo gir1.2-gtk-3.0 xclip
 
-<span class="t-muted"># 2. Clone repository &amp; run verification suite</span>
+<span class="t-muted"># 2. Clone repository &amp; run verification suite (includes RC crypto &amp; sigil E2E)</span>
 git clone https://github.com/ZYNIQ-SOLUTIONS/Tchiko-Assistant-Sysadmin-companion.git
 cd Tchiko-Assistant-Sysadmin-companion
 make self-test &amp;&amp; make test
 
-<span class="t-muted"># 3. Launch desktop companion (logs to logs/tchiko.log)</span>
-./run_tchiko.sh</code></pre>
+<span class="t-muted"># 3. Launch desktop companion (or open Tchiko RC pairing / headless server)</span>
+./run_tchiko.sh              <span class="t-muted"># Desktop + RC server</span>
+make remote                  <span class="t-muted"># Desktop + Tele-Command Sigil window</span>
+python3 main.py --remote     <span class="t-muted"># Headless HTTPS/WSS server</span></code></pre>
     </section>
   </main>
 
@@ -1817,6 +1979,58 @@ Copied 94 bytes to system clipboard.`
       document.getElementById('term-output').innerHTML = data.body;
     };
     window.selectTier(document.querySelector('.tier-row.active'), 'tier1');
+
+    window.regenerateLandingSigil = function () {
+      const svg = document.getElementById('landing-sigil-svg');
+      const codeEl = document.getElementById('landing-safety-code');
+      if (!svg) return;
+
+      const ns = 'http://www.w3.org/2000/svg';
+      svg.innerHTML = '';
+
+      // Outer locator ring (R=100, inner=88 matching tchiko/remote/sigil.py)
+      const locator = document.createElementNS(ns, 'circle');
+      locator.setAttribute('cx', '0');
+      locator.setAttribute('cy', '0');
+      locator.setAttribute('r', '94');
+      locator.setAttribute('fill', 'none');
+      locator.setAttribute('stroke', '#eceef2');
+      locator.setAttribute('stroke-width', '12');
+      svg.appendChild(locator);
+
+      const ringCells = [72, 64, 56];
+      const ringRadii = [76.5, 64.5, 52.5];
+      const colors = ['#eceef2', '#e5484d'];
+
+      ringCells.forEach((cells, rIdx) => {
+        const radius = ringRadii[rIdx];
+        const step = (Math.PI * 2) / cells;
+        for (let i = 0; i < cells; i++) {
+          const bit = (Math.random() > 0.42) ? 1 : 0;
+          if (!bit) continue;
+          const a0 = -Math.PI / 2 + i * step + step * 0.08;
+          const a1 = -Math.PI / 2 + (i + 1) * step - step * 0.08;
+          const x0 = Math.cos(a0) * radius;
+          const y0 = Math.sin(a0) * radius;
+          const x1 = Math.cos(a1) * radius;
+          const y1 = Math.sin(a1) * radius;
+          const arc = document.createElementNS(ns, 'path');
+          arc.setAttribute('d', `M ${x0.toFixed(2)} ${y0.toFixed(2)} A ${radius} ${radius} 0 0 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`);
+          arc.setAttribute('fill', 'none');
+          arc.setAttribute('stroke', (rIdx === 0 && i % 6 === 0) ? colors[1] : colors[0]);
+          arc.setAttribute('stroke-width', '6.8');
+          arc.setAttribute('stroke-linecap', 'butt');
+          svg.appendChild(arc);
+        }
+      });
+
+      if (codeEl) {
+        const a = String(Math.floor(100 + Math.random() * 900));
+        const b = String(Math.floor(100 + Math.random() * 900));
+        codeEl.textContent = `${a} ${b}`;
+      }
+    };
+    window.regenerateLandingSigil();
   </script>
 </body>
 </html>

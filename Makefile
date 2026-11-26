@@ -4,7 +4,7 @@
 
 PYTHON ?= python3
 
-.PHONY: help run chat settings self-test test doctor export-svg lint typecheck install-desktop clean
+.PHONY: help run chat settings remote remote-headless self-test test doctor export-svg lint typecheck install-desktop clean
 
 help: ## Display available engineering targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-16s\033[0m %s\n", $$1, $$2}'
@@ -17,6 +17,12 @@ chat: ## Launch Tchiko with the full Chat & System Studio window open
 
 settings: ## Launch Tchiko with the Settings & RBAC Permissions window open
 	./run_tchiko.sh --open-settings
+
+remote: ## Launch Tchiko with the Tchiko RC Tele-Command Link pairing window open
+	./run_tchiko.sh --open-remote
+
+remote-headless: ## Run Tchiko RC in headless HTTPS/WSS server mode (port 8765)
+	$(PYTHON) main.py --remote
 
 self-test: ## Run the end-to-end subsystem self-test & export canonical SVGs
 	$(PYTHON) main.py --self-test
