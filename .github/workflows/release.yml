@@ -67,12 +67,12 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"  # global WebSocket (used by the RC channel E2E test) needs Node 22+
 
       - name: Install Ubuntu GTK3 & Cairo system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y python3 python3-gi python3-gi-cairo gir1.2-gtk-3.0 xclip xvfb
+          sudo apt-get install -y python3 python3-gi python3-gi-cairo gir1.2-gtk-3.0 librsvg2-common xclip xvfb
 
       - name: Unit & integration tests
         run: xvfb-run -a python3 -m unittest discover -s tests -v
