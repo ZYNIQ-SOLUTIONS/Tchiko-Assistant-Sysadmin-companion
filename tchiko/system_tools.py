@@ -12,6 +12,7 @@ import json
 import os
 import platform
 import re
+import shlex
 import shutil
 import subprocess
 import time
@@ -19,7 +20,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from .config_manager import ConfigManager
+from .config_manager import ConfigManager, ollama_base_urls
 
 
 @dataclass
@@ -971,8 +972,9 @@ class LinuxSystemToolkit:
         elif shutil.which("rocm-smi"):
             gpu_section = self.run_shell_command("rocm-smi --showuse --showtemp 2>&1", timeout=8).output
 
+        ollama_url = ollama_base_urls()[0]
         ollama_out = self.run_shell_command(
-            "curl -s --max-time 2 http://127.0.0.1:11434/api/tags | head -c 600 || echo 'Not running'",
+            f"curl -s --max-time 2 {shlex.quote(ollama_url + '/api/tags')} | head -c 600 || echo 'Not running'",
             timeout=6,
         ).output
         vllm_out = self.run_shell_command(
@@ -986,7 +988,7 @@ class LinuxSystemToolkit:
             output=(
                 "### 🎮 GPU & Local AI Health\n"
                 f"**GPU:**\n```text\n{gpu_section}\n```\n\n"
-                f"**Ollama (`:11434`):**\n```text\n{ollama_out or 'No response'}\n```\n\n"
+                f"**Ollama (`{ollama_url}`):**\n```text\n{ollama_out or 'No response'}\n```\n\n"
                 f"**vLLM / OpenAI Router (`:8000`):**\n```text\n{vllm_out or 'No response'}\n```"
             ),
             command="nvidia-smi",

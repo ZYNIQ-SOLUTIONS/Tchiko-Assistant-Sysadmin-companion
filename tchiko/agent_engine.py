@@ -42,9 +42,8 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from .agent_loop import ResilientAgentLoop
-from .config_manager import ConfigManager, PROJECT_ROOT
+from .config_manager import ConfigManager, PROJECT_ROOT, ollama_base_urls
 from .conversation import (
-    ClarificationRequest,
     ConversationAnalyzer,
     PendingTask,
     extract_suggested_command,
@@ -135,11 +134,8 @@ class TchikoAgentEngine:
         )
         self.conversation = ConversationAnalyzer()
         self.last_episode: Optional[Dict[str, Any]] = None
-        self.agy_bin = shutil.which("agy") or (
-            "/home/level-78/.local/bin/agy"
-            if os.path.exists("/home/level-78/.local/bin/agy")
-            else None
-        )
+        _local_agy = os.path.expanduser("~/.local/bin/agy")
+        self.agy_bin = shutil.which("agy") or (_local_agy if os.path.exists(_local_agy) else None)
         self.memory: Dict[str, Any] = self._load_memory()
         self._prompt_lock = threading.Lock()  # one prompt at a time: tiers share memory + agy session
         self._machine_profile_cache: Optional[str] = None
@@ -1911,7 +1907,7 @@ class TchikoAgentEngine:
         learning_cfg = self.config.data.get("learning", {})
         gemini_key = (os.getenv("GEMINI_API_KEY") or agent_cfg.get("gemini_api_key", "")).strip()
         has_gemini = bool(gemini_key) and gemini_key != "your_gemini_api_key_here"
-        ollama_target: List[Any] = []  # [port, model] once a local server has been found
+        ollama_target: List[Any] = []  # [base_url, model] once an Ollama server has been found
 
         async def _query_llm(cur_messages: List[Dict[str, str]]) -> Optional[str]:
             if has_gemini:
@@ -1921,20 +1917,22 @@ class TchikoAgentEngine:
                     return res_txt
                 self._backend_notes.append("**Gemini API:** request failed or returned nothing.")
             if not ollama_target:
-                for port in (11434, 11435):
-                    models = await asyncio.to_thread(self._list_ollama_models, port)
+                for base_url in ollama_base_urls():
+                    models = await asyncio.to_thread(self._list_ollama_models, base_url)
                     model = self._pick_ollama_model(models, str(agent_cfg.get("ollama_model", "")))
                     if model:
-                        ollama_target.extend([port, model])
+                        ollama_target.extend([base_url, model])
                         break
             if not ollama_target:
                 self._backend_notes.append(
-                    "**Local Ollama:** no server with a chat model on ports 11434/11435 (`ollama serve`)."
+                    "**Ollama:** no server with a chat model at "
+                    + ", ".join(ollama_base_urls())
+                    + " (run `ollama serve`, or set `OLLAMA_HOST`)."
                 )
                 return None
-            port, model = ollama_target
+            base_url, model = ollama_target
             on_thought(f"Thinking with local model `{model}`...")
-            res_txt = await asyncio.to_thread(self._call_local_ollama, port, model, sys_prompt, cur_messages)
+            res_txt = await asyncio.to_thread(self._call_local_ollama, base_url, model, sys_prompt, cur_messages)
             if not res_txt:
                 self._backend_notes.append(f"**Local Ollama (`{model}`):** no reply (timed out or errored).")
             return res_txt
@@ -2152,9 +2150,9 @@ class TchikoAgentEngine:
             return None
 
     @staticmethod
-    def _list_ollama_models(port: int) -> List[Dict[str, Any]]:
+    def _list_ollama_models(base_url: str) -> List[Dict[str, Any]]:
         try:
-            with urllib.request.urlopen(f"http://127.0.0.1:{port}/api/tags", timeout=0.8) as resp:
+            with urllib.request.urlopen(f"{base_url}/api/tags", timeout=2.0) as resp:
                 return list(json.loads(resp.read().decode("utf-8")).get("models", []))
         except Exception:
             return []
@@ -2188,7 +2186,7 @@ class TchikoAgentEngine:
 
     @staticmethod
     def _call_local_ollama(
-        port: int,
+        base_url: str,
         model_name: str,
         sys_prompt: str,
         messages: List[Dict[str, str]],
@@ -2203,7 +2201,7 @@ class TchikoAgentEngine:
         }
         try:
             req = urllib.request.Request(
-                f"http://127.0.0.1:{port}/api/chat",
+                f"{base_url}/api/chat",
                 data=json.dumps(payload).encode("utf-8"),
                 headers={"Content-Type": "application/json"},
                 method="POST",

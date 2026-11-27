@@ -22,12 +22,13 @@ os.environ.setdefault("DISPLAY", ":0")
 
 from tchiko.agent_engine import TchikoAgentEngine
 from tchiko.config_manager import ConfigManager, PROJECT_ROOT
-from tchiko.svg_ghost_renderer import SvgGhostRenderer
 from tchiko.system_tools import LinuxSystemToolkit
 
 
 def run_self_test() -> int:
     """Verify ConfigManager, LinuxSystemToolkit, AgentEngine, and GdkPixbuf rendering."""
+    from tchiko.svg_ghost_renderer import SvgGhostRenderer
+
     print("🔍 [1/4] Testing ConfigManager & Permission Policies...")
     cfg = ConfigManager()
     cfg.set_all_permissions(True)
@@ -220,12 +221,22 @@ class TchikoApplication:
         self.Gtk.main()
 
 
-def run_remote_headless(port: int = 8765, use_tls: bool = True, sigil_out: Optional[str] = None) -> int:
-    """Run Tchiko RC headless (no GTK display required) for servers / SSH sessions."""
+def run_remote_headless(
+    port: int = 8765,
+    use_tls: bool = True,
+    sigil_out: Optional[str] = None,
+    public_url: Optional[str] = None,
+) -> int:
+    """Run Tchiko RC headless (no GTK display required) for servers / SSH sessions / containers.
+
+    `public_url` (e.g. `https://my-host:8765`) replaces the auto-detected LAN address in the
+    printed links; inside a container the detected address is the unreachable bridge IP.
+    While no device is paired, an expired one-time pairing link is re-issued automatically.
+    """
     import time
     from pathlib import Path
 
-    from tchiko.remote.service import RemoteControlService
+    from tchiko.remote.service import PAIR_TTL_SEC, PairingSession, RemoteControlService
 
     cfg = ConfigManager()
     toolkit = LinuxSystemToolkit(cfg)
@@ -256,19 +267,32 @@ def run_remote_headless(port: int = 8765, use_tls: bool = True, sigil_out: Optio
         on_status_change=_on_status,
     )
     bound = service.start()
-    session = service.new_pairing_session()
-    primary = service.primary_url()
-    one_step = f"{primary}/#pair={session.pair_fragment()}"
-
+    primary = (public_url or "").rstrip("/") or service.primary_url()
     out_path = Path(sigil_out) if sigil_out else (PROJECT_ROOT / "config" / "tchiko_sigil.svg")
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    out_path.write_text(session.svg(size=420), encoding="utf-8")
+
+    def _issue_pairing() -> PairingSession:
+        session = service.new_pairing_session()
+        try:
+            out_path.parent.mkdir(parents=True, exist_ok=True)
+            out_path.write_text(session.svg(size=420), encoding="utf-8")
+            sigil_note = f"{out_path} (valid for {int(PAIR_TTL_SEC)}s, single-use)"
+        except OSError as exc:
+            sigil_note = f"not written ({exc}); use the One-Step Link"
+        print(f"  One-Step Link: {primary}/#pair={session.pair_fragment()}")
+        print(f"  Tchiko Sigil : {sigil_note}", flush=True)
+        return session
 
     print(f"Tchiko RC listening on port {bound} ({'HTTPS/WSS' if use_tls else 'HTTP/WS'})")
+    if public_url:
+        print(f"  Public URL   : {primary}")
     for url in service.urls():
         print(f"  Web App      : {url}")
-    print(f"  One-Step Link: {one_step}")
-    print(f"  Tchiko Sigil : {out_path} (valid for 120s, single-use)")
+    session: Optional[PairingSession]
+    if service.status_snapshot().get("paired"):
+        print("  Paired device on record: reconnect from it. Tap Unpair in the web app to pair a new one.")
+        session = None
+    else:
+        session = _issue_pairing()
     print("Press Ctrl+C to stop.", flush=True)
 
     stop_flag = {"stop": False}
@@ -280,8 +304,23 @@ def run_remote_headless(port: int = 8765, use_tls: bool = True, sigil_out: Optio
     signal.signal(signal.SIGTERM, _handle_sig)
 
     try:
+        ticks = 0
         while not stop_flag["stop"]:
             time.sleep(0.5)
+            ticks += 1
+            if session is not None and session.active:
+                continue
+            if session is None and ticks % 4:
+                continue  # idle while paired: poll the pairing state every 2s
+            snap = service.status_snapshot()
+            if snap.get("paired") or snap.get("connected"):
+                session = None
+                continue
+            if session is None:
+                print("\n[Tchiko RC] No device paired (unpaired); issuing a new pairing link.")
+            else:
+                print("\n[Tchiko RC] Pairing link expired; issuing a new one.")
+            session = _issue_pairing()
     finally:
         service.stop()
         try:
@@ -331,6 +370,13 @@ def main() -> int:
         help="Disable TLS in headless --remote mode (only for localhost/reverse-proxy setups)",
     )
     parser.add_argument(
+        "--rc-public-url",
+        type=str,
+        default=os.environ.get("TCHIKO_RC_PUBLIC_URL") or None,
+        help="Externally reachable base URL printed in pairing links, e.g. https://host:8765 "
+        "(env: TCHIKO_RC_PUBLIC_URL; useful behind NAT, Docker, or a reverse proxy)",
+    )
+    parser.add_argument(
         "--sigil-out",
         type=str,
         default=None,
@@ -342,7 +388,12 @@ def main() -> int:
         return run_self_test()
 
     if args.remote:
-        return run_remote_headless(port=args.rc_port, use_tls=not args.rc_no_tls, sigil_out=args.sigil_out)
+        return run_remote_headless(
+            port=args.rc_port,
+            use_tls=not args.rc_no_tls,
+            sigil_out=args.sigil_out,
+            public_url=args.rc_public_url,
+        )
 
     app = TchikoApplication(
         open_chat=args.open_chat,

@@ -1,0 +1,20 @@
+# Allowlist build context: only what the headless Tchiko RC image needs.
+# Everything else (venvs, brag-output, logs, local config/chat memory, landing/, .git) stays out.
+*
+
+!main.py
+!pyproject.toml
+!LICENSE
+!antigravity.yaml
+!tchiko/
+!rc/
+!skills/
+!experiences/
+!docker/
+
+# Never ship caches or locally generated experience history.
+**/__pycache__
+**/*.py[cod]
+experiences/*/history.jsonl
+experiences/*/versions/
+experiences/*/.tool_candidate.py

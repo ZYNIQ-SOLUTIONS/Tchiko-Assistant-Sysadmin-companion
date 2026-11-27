@@ -625,7 +625,7 @@ class ResilientAgentLoop:
             batch_any_fail = False
             batch_user_denied = False
 
-            for act, (t_kind, res) in zip(batch_to_run, results):
+            for act, (t_kind, res) in zip(batch_to_run, results, strict=False):
                 if t_kind == "experience" and act.get("name"):
                     exp_name = str(act.get("name"))
                     if exp_name not in trace.used_experiences:

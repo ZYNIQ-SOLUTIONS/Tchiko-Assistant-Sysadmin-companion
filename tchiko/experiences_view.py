@@ -112,7 +112,7 @@ class LearningCurveChart(Gtk.DrawingArea):
         gr, gg, gb = _hex_to_rgb(ui.BORDER)
         cr.set_line_width(1.0)
         cr.set_font_size(8.5)
-        for idx, frac in enumerate((0.0, 0.5, 1.0)):
+        for frac in (0.0, 0.5, 1.0):
             y = pad_t + plot_h * (1.0 - frac)
             cr.set_source_rgba(gr, gg, gb, 0.75)
             cr.move_to(pad_l, y)
@@ -179,7 +179,7 @@ class LearningCurveChart(Gtk.DrawingArea):
         cr.stroke()
 
         # Point markers
-        for (cx, cy), (rx, ry) in zip(cum_coords, rate_coords):
+        for (cx, cy), (rx, ry) in zip(cum_coords, rate_coords, strict=False):
             cr.set_source_rgb(ar, ag, ab)
             cr.arc(cx, cy, 2.8, 0, math.tau)
             cr.fill()

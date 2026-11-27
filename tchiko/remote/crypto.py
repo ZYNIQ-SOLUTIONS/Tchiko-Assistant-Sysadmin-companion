@@ -309,7 +309,7 @@ class _PureAESGCM:
         for off in range(0, len(data), 16):
             ks = enc(nonce + counter.to_bytes(4, "big"))
             chunk = data[off : off + 16]
-            out += bytes(a ^ b for a, b in zip(chunk, ks))
+            out += bytes(a ^ b for a, b in zip(chunk, ks, strict=False))
             counter = (counter + 1) & 0xFFFFFFFF
         return bytes(out)
 

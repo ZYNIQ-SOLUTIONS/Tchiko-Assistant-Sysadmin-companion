@@ -13,7 +13,7 @@ import re
 import secrets
 import time
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 
 PENDING_TASK_TTL_SEC = 15 * 60  # 15 minutes before a stale clarification auto-expires
@@ -130,7 +130,7 @@ class ClarificationRequest:
         }
 
     def format_markdown(self) -> str:
-        lines = [f"### 💬 Quick Clarification", self.question]
+        lines = ["### 💬 Quick Clarification", self.question]
         if self.context:
             lines.append(f"*{self.context}*")
         if self.options:

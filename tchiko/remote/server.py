@@ -22,6 +22,7 @@ import socket
 import ssl
 import struct
 import subprocess
+import time
 from pathlib import Path
 from typing import Awaitable, Callable, Dict, List, Optional, Tuple
 from urllib.parse import urlparse
@@ -78,8 +79,23 @@ def detect_lan_ips() -> List[str]:
     return ips
 
 
+CERT_VALID_DAYS = 365
+CERT_RENEW_AFTER_SEC = 300 * 86400  # renew well before the 365-day expiry
+
+
+def _explicit_sans() -> List[str]:
+    """Extra SANs from `TCHIKO_RC_SANS` (comma-separated IPs and/or DNS names)."""
+    raw = os.environ.get("TCHIKO_RC_SANS", "")
+    return [part.strip() for part in raw.split(",") if part.strip()]
+
+
 def ensure_tls_cert(cert_dir: Path, extra_ips: Optional[List[str]] = None) -> Tuple[Path, Path]:
-    """Ensure a valid local self-signed TLS certificate exists for localhost + LAN IPs."""
+    """Ensure a valid local self-signed TLS certificate exists for localhost + LAN IPs.
+
+    When `TCHIKO_RC_SANS` is set (e.g. by the container entrypoint from the public URL), those
+    names replace the auto-detected interface IPs, so the certificate matches the address
+    clients actually use and is not reissued when a container's bridge IP changes.
+    """
     cert_dir.mkdir(parents=True, exist_ok=True)
     try:
         os.chmod(cert_dir, 0o700)
@@ -90,11 +106,14 @@ def ensure_tls_cert(cert_dir: Path, extra_ips: Optional[List[str]] = None) -> Tu
     key_path = cert_dir / "rc-key.pem"
     ips_path = cert_dir / "rc-sans.txt"
 
-    lan_ips = sorted(set(["127.0.0.1"] + detect_lan_ips() + (extra_ips or [])))
+    explicit = _explicit_sans()
+    detected = [] if explicit else detect_lan_ips()
+    lan_ips = sorted(set(["127.0.0.1"] + detected + explicit + (extra_ips or [])))
     san_signature = ",".join(lan_ips)
     if cert_path.exists() and key_path.exists() and ips_path.exists():
         try:
-            if ips_path.read_text(encoding="utf-8").strip() == san_signature:
+            fresh = (time.time() - cert_path.stat().st_mtime) < CERT_RENEW_AFTER_SEC
+            if fresh and ips_path.read_text(encoding="utf-8").strip() == san_signature:
                 return cert_path, key_path
         except OSError:
             pass
@@ -131,7 +150,8 @@ def _generate_cert_with_cryptography(cert_path: Path, key_path: Path, ips: List[
             try:
                 san_entries.append(x509.IPAddress(ipaddress.ip_address(raw_ip)))
             except ValueError:
-                pass
+                if _is_dns_name(raw_ip):
+                    san_entries.append(x509.DNSName(raw_ip))
 
         now = dt.datetime.now(dt.timezone.utc)
         cert = (
@@ -141,7 +161,7 @@ def _generate_cert_with_cryptography(cert_path: Path, key_path: Path, ips: List[
             .public_key(key.public_key())
             .serial_number(x509.random_serial_number())
             .not_valid_before(now - dt.timedelta(days=1))
-            .not_valid_after(now + dt.timedelta(days=365))
+            .not_valid_after(now + dt.timedelta(days=CERT_VALID_DAYS))
             .add_extension(x509.SubjectAlternativeName(san_entries), critical=False)
             .add_extension(x509.BasicConstraints(ca=False, path_length=None), critical=True)
             .sign(key, hashes.SHA256())
@@ -159,8 +179,24 @@ def _generate_cert_with_cryptography(cert_path: Path, key_path: Path, ips: List[
         return False
 
 
+def _is_dns_name(name: str) -> bool:
+    labels = name.rstrip(".").split(".")
+    return bool(name) and len(name) <= 253 and all(
+        0 < len(lbl) <= 63 and lbl.replace("-", "").isalnum() and not lbl.startswith("-") for lbl in labels
+    )
+
+
+def _san_part(entry: str) -> Optional[str]:
+    try:
+        return f"IP:{ipaddress.ip_address(entry)}"
+    except ValueError:
+        return f"DNS:{entry}" if _is_dns_name(entry) else None
+
+
 def _generate_cert_with_openssl(cert_path: Path, key_path: Path, ips: List[str]) -> None:
-    san_parts = ["DNS:localhost", f"DNS:{socket.gethostname()}", "IP:::1"] + [f"IP:{ip}" for ip in ips]
+    san_parts = ["DNS:localhost", f"DNS:{socket.gethostname()}", "IP:::1"] + [
+        part for part in (_san_part(ip) for ip in ips) if part
+    ]
     cmd = [
         "openssl",
         "req",
@@ -175,7 +211,7 @@ def _generate_cert_with_openssl(cert_path: Path, key_path: Path, ips: List[str])
         "-out",
         str(cert_path),
         "-days",
-        "365",
+        str(CERT_VALID_DAYS),
         "-subj",
         "/CN=Tchiko RC Local",
         "-addext",
