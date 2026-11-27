@@ -9,6 +9,9 @@
   <a href="https://launchnest.io/p/tchiko-assistant" target="_blank">
     <img src="https://launchnest.io/badge/tchiko-assistant.svg?variant=featured" alt="Tchiko Assistant on LaunchNest" width="220" height="56" />
   </a>
+  <a href="https://launchnest.io/p/tchiko-assistant" rel="dofollow" title="zyniq-solutions.github.io — Domain Rating by LaunchNest">
+    <img src="https://launchnest.io/api/badge/dr?domain=zyniq-solutions.github.io&style=normal&shape=rect&color=dark" alt="zyniq-solutions.github.io Domain Rating" width="240" />
+  </a>
 
   [![Google Antigravity SDK](https://img.shields.io/badge/Google_Antigravity-SDK_%2B_CLI_Stream--JSON-ef4444?style=for-the-badge)](antigravity.yaml)
   [![Runtime](https://img.shields.io/badge/Python-3.10%2B_%7C_Asyncio-38bdf8?style=for-the-badge)](pyproject.toml)
