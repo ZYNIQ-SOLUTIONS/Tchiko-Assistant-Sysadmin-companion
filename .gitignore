@@ -27,6 +27,10 @@ config/agent_memory.json
 config/action_ledger.json
 config/rc_pair.json
 config/snapshots/
+config/tchiko_sigil.svg
+experiences/*/history.jsonl
+experiences/*/versions/
+experiences/*/.tool_candidate.py
 logs/
 brag-output*/
 .concord/

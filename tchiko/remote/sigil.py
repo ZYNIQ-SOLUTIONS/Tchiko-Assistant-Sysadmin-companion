@@ -185,7 +185,7 @@ def render_svg(codeword: bytes, size: int = 360, with_card: bool = True) -> str:
 
     # Data rings.
     width = RING_WIDTH * scale
-    for bits, radius, cells in zip(codeword_bits(codeword), RING_RADII, RING_CELLS):
+    for bits, radius, cells in zip(codeword_bits(codeword), RING_RADII, RING_CELLS, strict=False):
         r = radius * scale
         cell = 2 * math.pi / cells
         cell_len = cell * r

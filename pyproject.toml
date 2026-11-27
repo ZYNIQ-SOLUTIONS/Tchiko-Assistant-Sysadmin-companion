@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tchiko-assistant"
-version = "1.2.0"
+version = "2.0.0"
 description = "Autonomous Linux Systems Engineer, DevOps Companion & Parametric Cairo Desktop Agent powered by Google Antigravity"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -41,6 +41,9 @@ desktop = [
 ]
 sdk = [
   "google-antigravity>=0.1.0",
+]
+remote = [
+  "cryptography>=44",
 ]
 dev = [
   "pytest>=8.0.0",

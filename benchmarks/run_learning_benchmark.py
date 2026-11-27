@@ -29,13 +29,11 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from tchiko.agent_loop import FailureClass, FailureClassifier, ResilientAgentLoop
 from tchiko.config_manager import ConfigManager
-from tchiko.conversation import ConversationAnalyzer, PendingTask
+from tchiko.conversation import ConversationAnalyzer
 from tchiko.experiences import (
     ExperienceRegistry,
     ExperienceValidator,
-    MATURITY_DRAFT,
     MATURITY_HARDENED,
-    MATURITY_NEEDS_REPAIR,
     MATURITY_VERIFIED,
 )
 from tchiko.system_tools import LinuxSystemToolkit, ToolResult
@@ -598,11 +596,11 @@ def main() -> int:
         f"| Clarify F1={c['clarification_f1']*100:.1f}% (P={c['clarification_precision']*100:.0f}% R={c['clarification_recall']*100:.0f}% FPR={c['false_positive_rate']*100:.1f}%) "
         f"| Casual={c['casual_accuracy']*100:.0f}% | Anaphora={c['anaphora_accuracy']*100:.0f}%"
     )
-    l = report["agent_loop"]
+    loop_r = report["agent_loop"]
     print(
-        f"[B] Resilient Agentic Loop       : TagRepair={l['tag_repair_passed']}/{l['tag_repair_total']} ({l['tag_repair_rate']*100:.1f}%) "
-        f"| FailClassify={l['failure_classify_passed']}/{l['failure_classify_total']} ({l['failure_classify_rate']*100:.1f}%) "
-        f"| LoopScenarios={l['scenarios_passed']}/{l['scenarios_total']}"
+        f"[B] Resilient Agentic Loop       : TagRepair={loop_r['tag_repair_passed']}/{loop_r['tag_repair_total']} ({loop_r['tag_repair_rate']*100:.1f}%) "
+        f"| FailClassify={loop_r['failure_classify_passed']}/{loop_r['failure_classify_total']} ({loop_r['failure_classify_rate']*100:.1f}%) "
+        f"| LoopScenarios={loop_r['scenarios_passed']}/{loop_r['scenarios_total']}"
     )
     e = report["learning_curve"]
     print(
@@ -619,11 +617,11 @@ def main() -> int:
         print("  Weak points [A Conversation]:")
         for f in c["failures"]:
             print(f"    - {f['prompt']!r} ({f['category']}): expected {f['expected']}, got {f['got']}")
-    if l["tag_failures"] or l["classify_failures"]:
+    if loop_r["tag_failures"] or loop_r["classify_failures"]:
         print("  Weak points [B Agent Loop]:")
-        for f in l["tag_failures"]:
+        for f in loop_r["tag_failures"]:
             print(f"    - Tag {f['raw']!r}: expected {f['expected']!r}, got {f['got']!r}")
-        for f in l["classify_failures"]:
+        for f in loop_r["classify_failures"]:
             print(f"    - Classify {f['output']!r}: expected {f['expected']}, got {f['got']}")
     if e["retrieval_misses"] or not e["dedup_evolution_ok"] or e["episodes_distilled"] < e["episodes_total"]:
         print("  Weak points [C Learning Curve]:")

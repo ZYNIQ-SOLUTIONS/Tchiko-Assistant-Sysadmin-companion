@@ -323,8 +323,54 @@ python3 main.py --help
 #   --remote         Run Tchiko RC in headless server mode without launching the GTK desktop UI
 #   --rc-port PORT   TCP port for the Tchiko RC HTTPS/WSS server (default: 8765)
 #   --rc-no-tls      Disable TLS in headless --remote mode (only for localhost / reverse-proxy setups)
+#   --rc-public-url URL  Base URL printed in pairing links (env: TCHIKO_RC_PUBLIC_URL; NAT / Docker / reverse proxy)
 #   --sigil-out PATH Optional path to write the Tchiko Sigil SVG in --remote mode
 ```
+
+### 7.4. Container Image (Headless Tchiko RC)
+
+Every release publishes a multi-arch (`linux/amd64`, `linux/arm64`) image of the **headless Tchiko RC server** to GHCR, with an SBOM and build-provenance attestation. The image runs `main.py --remote` with no GTK, as non-root user `tchiko` (UID `10001`) under `tini`. You pair a phone or laptop browser with it over the end-to-end encrypted Tchiko RC channel.
+
+```bash
+# LLM backend: pass GEMINI_API_KEY, or use an Ollama on the Docker host with
+#   -e OLLAMA_HOST=http://host.docker.internal:11434 --add-host=host.docker.internal:host-gateway
+# (the host's Ollama must then listen beyond 127.0.0.1, e.g. OLLAMA_HOST=0.0.0.0 in its systemd unit)
+docker run -d --name tchiko -p 8765:8765 \
+  -e TCHIKO_RC_PUBLIC_URL=https://<docker-host-ip>:8765 \
+  -e GEMINI_API_KEY="$GEMINI_API_KEY" \
+  -v tchiko-config:/app/config \
+  -v tchiko-experiences:/app/experiences \
+  -v tchiko-tls:/home/tchiko/.config/tchiko \
+  ghcr.io/zyniq-solutions/tchiko-assistant:2.0.0
+
+docker logs -f tchiko   # copy the "One-Step Link" into your browser
+```
+
+Or use the bundled [`compose.yaml`](compose.yaml): `docker compose up -d && docker compose logs -f tchiko`. To build locally, run `make docker-build && make docker-run`. `docker-run` passes `TCHIKO_RC_PUBLIC_URL`, `GEMINI_API_KEY` and `OLLAMA_HOST` through from your shell, so export them first.
+
+| Variable | Default | Purpose |
+| :--- | :--- | :--- |
+| `TCHIKO_RC_PUBLIC_URL` | auto-detected | Base URL printed in pairing links. Inside a container the detected address is the bridge IP, so set this to the host address your device uses. |
+| `TCHIKO_RC_SANS` | public URL host | Comma-separated TLS certificate names (IPs / DNS). When set, container IPs are left out, so the certificate stays stable across container re-creation. |
+| `TCHIKO_RC_PORT` | `8765` | Listen port inside the container. |
+| `TCHIKO_RC_TLS` | `1` | `0` serves plain HTTP/WS. Use it only behind a TLS-terminating reverse proxy that forwards the original `Host` header plus `Upgrade`/`Connection`. |
+| `TCHIKO_PERMISSIONS` | `supervised` | Applied only when the config volume has no readable `settings.json` (first start, or an unreadable file, which is backed up first). `supervised` means agent shell commands that are not read-only diagnostics need approval in Tchiko RC. `autonomous` lets them run without review. |
+| `GEMINI_API_KEY` | none | Gemini REST LLM backend. |
+| `OLLAMA_HOST` | `127.0.0.1:11434/11435` | Ollama server, e.g. `http://host.docker.internal:11434`. |
+
+| Volume | Contents |
+| :--- | :--- |
+| `/app/config` | `settings.json`, agent memory, undo ledger & snapshots, paired-device record (`rc_pair.json`) |
+| `/app/experiences` | Learned Python experiences. Starters are seeded into a new, empty volume only. |
+| `/home/tchiko/.config/tchiko` | Self-signed TLS certificate & key |
+
+Things to know:
+
+- **Pairing:** the one-step link is single-use and valid for 120 s. While no device is paired, the server prints a fresh link whenever the previous one expires or the device is unpaired. After pairing, the device reconnects with the credential stored in `/app/config/rc_pair.json`. To pair a different device, tap **Unpair** in the Tchiko RC web app. You can also delete that file, but that only takes effect after `docker restart tchiko`. Pairing links appear in container logs, so treat those logs as sensitive.
+- **TLS:** the certificate is self-signed. With `TCHIKO_RC_PUBLIC_URL` set, it is issued for that host (plus `localhost`), and it persists in the TLS volume until it is renewed after 300 days. Browsers still warn because it is self-signed: accept it once per device, or put a reverse proxy with a real certificate in front and set `TCHIKO_RC_TLS=0`. That proxy must forward the original `Host` header plus `Upgrade`/`Connection`.
+- **Supervised mode** gates agent tool commands through the shell risk classifier. Built-in shortcuts such as the app-update helper can still run their own commands. `terminal_sandbox` is a recorded preference, not an isolation layer, so the container boundary and the non-root user are the real sandbox.
+- **Scope:** agent commands run **inside the container**. `/doctor`, `/net`, `/disk` and similar tools describe the container, not the Docker host. `systemctl`, `journalctl`, GPU and desktop tools are not available. Host inspection needs extra privileges (`--pid=host`, `--network=host`, host mounts), and each of those widens what a paired device can reach.
+- The `agy` CLI and the Antigravity SDK are not bundled. The supported LLM backends are Gemini REST and Ollama.
 
 ---
 

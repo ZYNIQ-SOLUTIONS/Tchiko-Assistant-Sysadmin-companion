@@ -1,0 +1,218 @@
+name: Release
+
+# Push a tag `vX.Y.Z` (matching pyproject.toml and tchiko/__init__.py) to:
+#   1. run the full test + lint gate,
+#   2. build and push the multi-arch headless image to GHCR with provenance,
+#   3. publish a GitHub Release whose notes are the matching CHANGELOG.md section.
+on:
+  push:
+    tags: ["v*.*.*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing tag to (re)release, e.g. v2.0.0"
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.event.inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+env:
+  IMAGE: ghcr.io/zyniq-solutions/tchiko-assistant
+  TAG: ${{ github.event.inputs.tag || github.ref_name }}
+
+jobs:
+  verify:
+    name: Verify version, tests & lint
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      prerelease: ${{ steps.version.outputs.prerelease }}
+      latest: ${{ steps.version.outputs.latest }}
+      sha: ${{ steps.version.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+          fetch-depth: 0
+
+      - name: Check tag matches package version
+        id: version
+        run: |
+          version="${TAG#v}"
+          py_version=$(sed -n 's/^version = "\(.*\)"$/\1/p' pyproject.toml)
+          pkg_version=$(sed -n 's/^__version__ = "\(.*\)"$/\1/p' tchiko/__init__.py)
+          echo "tag=$version pyproject=$py_version package=$pkg_version"
+          if [ "$version" != "$py_version" ] || [ "$version" != "$pkg_version" ]; then
+            echo "::error::Tag $TAG does not match pyproject.toml ($py_version) / tchiko/__init__.py ($pkg_version)"
+            exit 1
+          fi
+          grep -q "^## \[$version\]" CHANGELOG.md || { echo "::error::CHANGELOG.md has no [$version] section"; exit 1; }
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          case "$version" in
+            *-*) prerelease=true ;;
+            *) prerelease=false ;;
+          esac
+          echo "prerelease=$prerelease" >> "$GITHUB_OUTPUT"
+          # Only the highest stable tag may move :latest / the "Latest" release, so re-running
+          # an older tag via workflow_dispatch never downgrades users.
+          highest=$(git tag --list 'v*.*.*' | grep -v -- '-' | sort -V | tail -n 1)
+          if [ "$prerelease" = "false" ] && [ "$highest" = "$TAG" ]; then latest=true; else latest=false; fi
+          echo "latest=$latest (highest stable tag: $highest)"
+          echo "latest=$latest" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Ubuntu GTK3 & Cairo system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3 python3-gi python3-gi-cairo gir1.2-gtk-3.0 xclip xvfb
+
+      - name: Unit & integration tests
+        run: xvfb-run -a python3 -m unittest discover -s tests -v
+
+      - name: End-to-end self-test
+        run: xvfb-run -a python3 main.py --self-test
+
+      - name: Headless import without GTK/Cairo
+        run: python3 -I -c "import sys; sys.path.insert(0, '.'); sys.modules['gi'] = None; sys.modules['cairo'] = None; import main, tchiko.remote.service"
+
+      - name: Ruff
+        run: |
+          python3 -m pip install --user --break-system-packages "ruff==0.17.6"
+          python3 -m ruff check main.py tchiko tests benchmarks
+
+  image:
+    name: Build & push container image
+    needs: verify
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Image metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE }}
+          tags: |
+            type=semver,pattern={{version}},value=${{ env.TAG }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ env.TAG }}
+            type=semver,pattern={{major}},value=${{ env.TAG }}
+          flavor: |
+            latest=${{ needs.verify.outputs.latest }}
+          labels: |
+            org.opencontainers.image.revision=${{ needs.verify.outputs.sha }}
+
+      # Build and smoke-test locally first: nothing is pushed unless the image actually runs.
+      - name: Build amd64 image for smoke test
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64
+          load: true
+          push: false
+          tags: tchiko-assistant:smoke
+          build-args: |
+            VERSION=${{ needs.verify.outputs.version }}
+            VCS_REF=${{ needs.verify.outputs.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Smoke test before publishing
+        run: |
+          docker run -d --name tchiko-smoke -p 8765:8765 tchiko-assistant:smoke
+          for i in $(seq 1 30); do
+            if curl -fsk https://127.0.0.1:8765/health; then echo; break; fi
+            sleep 2
+          done
+          docker logs tchiko-smoke
+          curl -fsk https://127.0.0.1:8765/health
+          docker logs tchiko-smoke | grep -q "One-Step Link"
+          docker rm -f tchiko-smoke
+
+      - name: Build & push (linux/amd64, linux/arm64)
+        id: push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            VERSION=${{ needs.verify.outputs.version }}
+            VCS_REF=${{ needs.verify.outputs.sha }}
+          provenance: mode=max
+          sbom: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ${{ env.IMAGE }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
+
+  github-release:
+    name: Publish GitHub Release
+    needs: [verify, image]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+
+      - name: Extract release notes from CHANGELOG.md
+        env:
+          VERSION: ${{ needs.verify.outputs.version }}
+        run: |
+          awk -v v="$VERSION" '
+            $0 ~ "^## \\[" v "\\]" { on = 1; next }
+            on && /^## \[/ { exit }
+            on { print }
+          ' CHANGELOG.md | sed -e '/^---$/d' > notes.md
+          test -s notes.md || { echo "::error::Empty release notes for $VERSION"; exit 1; }
+          cat >> notes.md <<EOF
+
+          ## Container image
+
+          \`\`\`bash
+          docker pull ${IMAGE}:${VERSION}
+          \`\`\`
+
+          Multi-arch (linux/amd64, linux/arm64) image of the headless Tchiko RC server, with SBOM and build provenance attestation.
+          See the README section "Container image (headless Tchiko RC)" for volumes and pairing.
+          EOF
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.TAG }}
+          name: Tchiko Assistant ${{ env.TAG }}
+          body_path: notes.md
+          prerelease: ${{ needs.verify.outputs.prerelease == 'true' }}
+          make_latest: ${{ needs.verify.outputs.latest }}

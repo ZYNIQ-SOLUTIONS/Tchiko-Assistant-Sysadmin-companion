@@ -1,0 +1,30 @@
+# Tchiko Assistant: headless Tchiko RC server.
+#   docker compose up -d && docker compose logs -f tchiko   # pairing link
+# Set TCHIKO_RC_PUBLIC_URL to the address your phone/laptop uses to reach this host.
+services:
+  tchiko:
+    image: ghcr.io/zyniq-solutions/tchiko-assistant:${TCHIKO_TAG:-latest}
+    build: .
+    container_name: tchiko
+    restart: unless-stopped
+    ports:
+      - "8765:8765"
+    environment:
+      TCHIKO_RC_PUBLIC_URL: ${TCHIKO_RC_PUBLIC_URL:-}
+      TCHIKO_PERMISSIONS: ${TCHIKO_PERMISSIONS:-supervised}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      # Ollama on the Docker host: set OLLAMA_HOST=http://host.docker.internal:11434 and make
+      # the host's Ollama listen beyond loopback (e.g. its systemd unit with
+      # Environment=OLLAMA_HOST=0.0.0.0), allowing the Docker subnet through any host firewall.
+      OLLAMA_HOST: ${OLLAMA_HOST:-}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - tchiko-config:/app/config
+      - tchiko-experiences:/app/experiences
+      - tchiko-tls:/home/tchiko/.config/tchiko
+
+volumes:
+  tchiko-config:
+  tchiko-experiences:
+  tchiko-tls:

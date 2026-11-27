@@ -4,8 +4,8 @@
 
 | Version | Supported |
 | :--- | :--- |
-| `1.2.x` (latest `main`) | ✅ Active support & security fixes |
-| `< 1.2.0` | ❌ Please upgrade to the latest release |
+| `2.0.x` (latest release & `main`) | ✅ Active support & security fixes |
+| `< 2.0.0` | ❌ Please upgrade to the latest release |
 
 ---
 

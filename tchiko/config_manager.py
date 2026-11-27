@@ -20,9 +20,48 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 CONFIG_PATH = PROJECT_ROOT / "config" / "settings.json"
 ANTIGRAVITY_YAML_PATH = PROJECT_ROOT / "antigravity.yaml"
 
+
+def ollama_base_urls() -> List[str]:
+    """Ollama endpoints to try, in order.
+
+    `OLLAMA_HOST` (the variable the Ollama CLI itself honours) selects the server, e.g.
+    `http://host.docker.internal:11434` from inside a container. Without it, or when it is a
+    server bind address with no explicit port (`0.0.0.0`, `:`), the local default ports 11434
+    and 11435 are probed on loopback. Parsing follows the Ollama CLI: a bare host means
+    `http://<host>:11434`, `:PORT` means loopback, and a bare IPv6 address is bracketed.
+    """
+    defaults = ["http://127.0.0.1:11434", "http://127.0.0.1:11435"]
+    raw = os.environ.get("OLLAMA_HOST", "").strip()
+    if not raw:
+        return defaults
+    scheme, sep, rest = raw.partition("://")
+    if not sep:
+        scheme, rest = "http", raw
+    scheme = scheme.lower() or "http"
+    hostport, slash, path = rest.partition("/")
+    path = (slash + path).rstrip("/")
+    host, port = hostport, ""
+    if hostport.startswith("["):  # [v6] or [v6]:port
+        host, _, tail = hostport[1:].partition("]")
+        port = tail[1:] if tail.startswith(":") else ""
+    elif hostport.count(":") == 1:  # host:port or :port
+        host, port = hostport.split(":")
+    # else: plain host, or an unbracketed IPv6 address (several colons) treated as a host
+    if port and not port.isdigit():
+        return defaults
+    if host in ("", "0.0.0.0", "::"):
+        if not port:
+            return defaults
+        host = "127.0.0.1"
+    if not port and scheme == "http":
+        port = "11434"
+    if ":" in host:
+        host = f"[{host}]"
+    return [f"{scheme}://{host}{':' + port if port else ''}{path}"]
+
 DEFAULT_SETTINGS: Dict[str, Any] = {
     "app_name": "Tchiko Assistant",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "permissions": {
         "approve_all_system_permissions": True,
         "tool_execution_policy": "always-proceed",
@@ -107,10 +146,14 @@ class ConfigManager:
     def save(self, notify: bool = True) -> None:
         """Persist configuration to `config/settings.json` and `antigravity.yaml`."""
         self.config_path.parent.mkdir(parents=True, exist_ok=True)
-        self.config_path.write_text(
+        # Atomic replace: an interrupted write must never leave a truncated settings.json
+        # (load() would then silently fall back to the permissive defaults).
+        tmp_path = self.config_path.with_name(f".{self.config_path.name}.{os.getpid()}.tmp")
+        tmp_path.write_text(
             json.dumps(self.data, indent=2, ensure_ascii=False) + "\n",
             encoding="utf-8",
         )
+        os.replace(tmp_path, self.config_path)
         self._sync_antigravity_yaml()
         if notify:
             for callback in list(self._listeners):

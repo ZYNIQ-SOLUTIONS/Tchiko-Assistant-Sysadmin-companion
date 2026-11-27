@@ -6,7 +6,6 @@ import time
 import unittest
 
 from tchiko.conversation import (
-    ClarificationRequest,
     ConversationAnalyzer,
     PendingTask,
     extract_suggested_command,

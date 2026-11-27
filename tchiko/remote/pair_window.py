@@ -1,7 +1,7 @@
 """Tchiko RC pairing window (`tchiko/remote/pair_window.py`).
 
-Displays the generated Tchiko Sigil (circular pairing pattern), the local HTTPS address,
-one-step link copy, live expiry countdown, and active remote connection status with the
+Displays the generated Tchiko Sigil (circular pairing pattern), a QR code that opens the
+web app address on a phone, one-step link copy, live expiry countdown, and active remote connection status with the
 6-digit end-to-end Safety Code and disconnect/unpair controls.
 """
 
@@ -18,7 +18,10 @@ gi.require_version("GdkPixbuf", "2.0")
 from gi.repository import Gdk, GdkPixbuf, GLib, Gtk, Pango
 
 from .. import ui_theme as ui
+from . import qr
 from .service import PAIR_TTL_SEC, PairingSession, RemoteControlService
+
+QR_TARGET_PX = 144  # logical size the web-app QR code is fitted to (whole modules only)
 
 
 class TchikoPairWindow(Gtk.Window):
@@ -29,6 +32,7 @@ class TchikoPairWindow(Gtk.Window):
         self.service = service
         self._current_session: Optional[PairingSession] = None
         self._tick_id: Optional[int] = None
+        self._qr_url: Optional[str] = None
 
         ui.apply_theme()
         self.get_style_context().add_class("tchiko-window")
@@ -118,8 +122,8 @@ class TchikoPairWindow(Gtk.Window):
         sigil_card.pack_start(self.ttl_bar, False, False, 0)
 
         hint = ui.label(
-            "Open the address below in your phone or browser and scan this Tchiko Sigil. "
-            "Each sigil is single-use and pairs one device at a time.",
+            "Scan the QR code below with your phone to open the web app, then scan this "
+            "Tchiko Sigil. Each sigil is single-use and pairs one device at a time.",
             "dim",
             xalign=0.5,
             wrap=True,
@@ -143,21 +147,34 @@ class TchikoPairWindow(Gtk.Window):
         sigil_card.pack_start(btn_row, False, False, 0)
         root.pack_start(sigil_card, False, False, 0)
 
-        # ── Address card ─────────────────────────────────────────────────────
-        addr_card = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        # ── Web app QR card ──────────────────────────────────────────────────
+        addr_card = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=16)
         addr_card.get_style_context().add_class("tchiko-card")
         addr_card.get_style_context().add_class("tchiko-card-pad")
 
-        addr_text = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
-        addr_text.pack_start(ui.label("WEB APP ADDRESS", "caption"), False, False, 0)
-        self.url_lbl = ui.label("", "tchiko-code-text", selectable=True)
-        self.url_lbl.set_ellipsize(Pango.EllipsizeMode.END)
-        addr_text.pack_start(self.url_lbl, False, False, 0)
-        addr_card.pack_start(addr_text, True, True, 0)
+        self.qr_image = Gtk.Image()
+        self.qr_image.set_valign(Gtk.Align.CENTER)
+        addr_card.pack_start(self.qr_image, False, False, 0)
 
-        self.copy_url_btn = ui.icon_button("edit-copy-symbolic", "Copy URL")
+        addr_text = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        addr_text.set_valign(Gtk.Align.CENTER)
+        addr_text.pack_start(ui.label("SCAN TO OPEN WEB APP", "caption"), False, False, 0)
+        addr_text.pack_start(
+            ui.label(
+                "Point your phone camera at this code to open Tchiko RC in the browser.",
+                "dim",
+                wrap=True,
+            ),
+            False,
+            False,
+            0,
+        )
+        self.copy_url_btn = Gtk.Button(label="Copy Address")
+        self.copy_url_btn.get_style_context().add_class("tchiko-btn")
+        self.copy_url_btn.set_halign(Gtk.Align.START)
         self.copy_url_btn.connect("clicked", self._on_copy_url)
-        addr_card.pack_end(self.copy_url_btn, False, False, 0)
+        addr_text.pack_start(self.copy_url_btn, False, False, 0)
+        addr_card.pack_start(addr_text, True, True, 0)
         root.pack_start(addr_card, False, False, 0)
 
         self.add(root)
@@ -198,6 +215,29 @@ class TchikoPairWindow(Gtk.Window):
         if pixbuf is not None:
             ui.set_hidpi_pixbuf(self.sigil_image, pixbuf, logical)
 
+    def _render_url_qr(self, url: str) -> None:
+        """Show `url` as a QR code (re-rendered only when the address changes)."""
+        if not url or url == self._qr_url:
+            return
+        self._qr_url = url
+        self.qr_image.set_tooltip_text(url)
+        try:
+            matrix = qr.encode(url, ec="M")
+        except ValueError:
+            self.qr_image.clear()
+            return
+        modules = len(matrix) + 2 * 4  # symbol + quiet zone
+        module_px = max(2, QR_TARGET_PX // modules)
+        logical = modules * module_px
+        scale = max(1, self.get_scale_factor())
+        svg_bytes = qr.render_svg(matrix, module_px=module_px * scale).encode("utf-8")
+        loader = GdkPixbuf.PixbufLoader.new_with_type("svg")
+        loader.write(svg_bytes)
+        loader.close()
+        pixbuf = loader.get_pixbuf()
+        if pixbuf is not None:
+            ui.set_hidpi_pixbuf(self.qr_image, pixbuf, logical)
+
     def _on_tick(self) -> bool:
         if not self.get_visible():
             self._tick_id = None
@@ -220,7 +260,7 @@ class TchikoPairWindow(Gtk.Window):
         GLib.idle_add(self._apply_status, snapshot)
 
     def _apply_status(self, snapshot: Dict[str, Any]) -> bool:
-        self.url_lbl.set_text(snapshot.get("primary_url", ""))
+        self._render_url_qr(str(snapshot.get("primary_url", "")))
         connected = bool(snapshot.get("connected"))
         paired = bool(snapshot.get("paired"))
 
@@ -272,7 +312,8 @@ class TchikoPairWindow(Gtk.Window):
     def _on_copy_url(self, btn: Gtk.Button) -> None:
         url = self.service.primary_url()
         Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD).set_text(url, -1)
-        ui.flash_button_icon(btn)
+        btn.set_label("Copied!")
+        GLib.timeout_add(1600, lambda: (btn.set_label("Copy Address"), False)[1])
 
     def _on_copy_one_step_link(self, _btn: Gtk.Button) -> None:
         self._ensure_sigil()

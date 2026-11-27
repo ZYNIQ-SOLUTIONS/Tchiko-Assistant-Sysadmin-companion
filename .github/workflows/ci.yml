@@ -35,12 +35,36 @@ jobs:
       - name: Run end-to-end subsystem self-test
         run: xvfb-run -a python3 main.py --self-test
 
-      - name: Install optional dev linters (ruff, mypy)
-        run: |
-          python3 -m pip install --user --break-system-packages ruff mypy || true
+      - name: Headless mode imports without GTK/Cairo
+        run: python3 -I -c "import sys; sys.path.insert(0, '.'); sys.modules['gi'] = None; sys.modules['cairo'] = None; import main, tchiko.remote.service"
 
-      - name: Run ruff lint (non-blocking if not installed)
+      - name: Install pinned ruff
+        run: python3 -m pip install --user --break-system-packages "ruff==0.17.6"
+
+      - name: Run ruff lint
+        run: python3 -m ruff check main.py tchiko tests benchmarks
+
+  container:
+    name: Container image build & smoke test
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build headless image
+        run: docker build --build-arg VERSION=ci --build-arg VCS_REF=${{ github.sha }} -t tchiko-assistant:ci .
+
+      - name: Start container and wait for /health
         run: |
-          if command -v ruff >/dev/null 2>&1 || python3 -m ruff --version >/dev/null 2>&1; then
-            python3 -m ruff check main.py tchiko tests
-          fi
+          docker run -d --name tchiko-ci -p 8765:8765 tchiko-assistant:ci
+          for i in $(seq 1 30); do
+            if curl -fsk https://127.0.0.1:8765/health; then echo; break; fi
+            sleep 2
+          done
+          docker logs tchiko-ci
+          curl -fsk https://127.0.0.1:8765/health
+          curl -fsk https://127.0.0.1:8765/ | grep -qi "<html"
+          docker logs tchiko-ci | grep -q "One-Step Link"
+          docker exec tchiko-ci python -c "import json; p = json.load(open('/app/config/settings.json'))['permissions']; assert p['approve_all_system_permissions'] is False, p"
+          test "$(docker exec tchiko-ci id -u)" = "10001"

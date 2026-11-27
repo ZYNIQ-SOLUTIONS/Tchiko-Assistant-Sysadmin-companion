@@ -4,7 +4,10 @@
 
 PYTHON ?= python3
 
-.PHONY: help run chat settings remote remote-headless self-test test doctor export-svg lint typecheck install-desktop clean
+.PHONY: help run chat settings remote remote-headless self-test test doctor export-svg lint typecheck install-desktop docker-build docker-run clean
+
+VERSION := $(shell sed -n 's/^version = "\(.*\)"$$/\1/p' pyproject.toml)
+IMAGE ?= ghcr.io/zyniq-solutions/tchiko-assistant
 
 help: ## Display available engineering targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-16s\033[0m %s\n", $$1, $$2}'
@@ -49,6 +52,15 @@ install-desktop: ## Install Tchiko-Assistant.desktop into ~/.local/share/applica
 	     -e "s|^Icon=.*|Icon=$(CURDIR)/assets/tchiko-logo.svg|" \
 	     Tchiko-Assistant.desktop > ~/.local/share/applications/Tchiko-Assistant.desktop
 	@echo "Installed ~/.local/share/applications/Tchiko-Assistant.desktop"
+
+docker-build: ## Build the headless Tchiko RC container image ($(IMAGE):$(VERSION))
+	docker build --build-arg VERSION=$(VERSION) --build-arg VCS_REF=$$(git rev-parse --short HEAD) -t $(IMAGE):$(VERSION) -t $(IMAGE):latest .
+
+docker-run: ## Run the container image locally on port 8765 with persistent named volumes
+	docker run --rm -it --name tchiko -p 8765:8765 \
+	  -e TCHIKO_RC_PUBLIC_URL -e GEMINI_API_KEY -e OLLAMA_HOST --add-host=host.docker.internal:host-gateway \
+	  -v tchiko-config:/app/config -v tchiko-experiences:/app/experiences \
+	  -v tchiko-tls:/home/tchiko/.config/tchiko $(IMAGE):$(VERSION)
 
 clean: ## Remove Python bytecode caches
 	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true

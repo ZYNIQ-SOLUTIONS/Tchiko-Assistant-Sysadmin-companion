@@ -46,12 +46,20 @@ class TestRemoteSigil(unittest.TestCase):
         self.assertEqual(sum(len(r) for r in rings), CODEWORD_BYTES * 8)
 
     def test_render_svg_structure(self) -> None:
-        payload = SigilPayload.generate()
+        # Fixed payload (renders 23 arcs): the arc count depends on the bit pattern, and random
+        # payloads render 14-32 arcs, which made a `> 20` check fail ~20% of the time.
+        payload = SigilPayload(0x123456, bytes(range(0x30, 0x3C)))
         svg = render_svg(payload.codeword(), size=360, with_card=True)
         self.assertIn("<svg", svg)
         self.assertIn("viewBox=", svg)
         self.assertIn("</svg>", svg)
         self.assertGreater(svg.count("<path"), 20)
+        # Random payloads must always render as well-formed SVG with data arcs.
+        for _ in range(25):
+            rand_svg = render_svg(SigilPayload.generate().codeword(), size=360, with_card=True)
+            self.assertIn("<svg", rand_svg)
+            self.assertIn("</svg>", rand_svg)
+            self.assertGreater(rand_svg.count("<path"), 0)
 
     def test_js_visual_decoder_and_reed_solomon_roundtrip(self) -> None:
         """Render warped/rotated/sheared/noisy sigil PNGs and verify rc/js/sigil.js decodes 100%."""
