@@ -6,6 +6,10 @@
   # TCHIKO ASSISTANT
   **Autonomous Linux Systems Agent, 5-Tier DevOps Engine & BoopFace Cairo/SVG Desktop Companion**
 
+  <a href="https://launchnest.io/p/tchiko-assistant" target="_blank">
+    <img src="https://launchnest.io/badge/tchiko-assistant.svg?variant=featured" alt="Tchiko Assistant on LaunchNest" width="220" height="56" />
+  </a>
+
   [![Google Antigravity SDK](https://img.shields.io/badge/Google_Antigravity-SDK_%2B_CLI_Stream--JSON-ef4444?style=for-the-badge)](antigravity.yaml)
   [![Runtime](https://img.shields.io/badge/Python-3.10%2B_%7C_Asyncio-38bdf8?style=for-the-badge)](pyproject.toml)
   [![Graphics](https://img.shields.io/badge/GTK3_%2B_PyCairo-BoopFace_SVG_Engine-10b981?style=for-the-badge)](tchiko/svg_ghost_renderer.py)
